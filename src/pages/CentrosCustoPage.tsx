@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Filter, Download, Upload, TrendingUp, AlertTriangle } from "lucide-react";
+import { Plus, Filter, Download, Upload, TrendingUp, AlertTriangle, LineChart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,13 @@ import { Progress } from "@/components/ui/progress";
 import { useCentrosCusto, useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
 import { CentroCustoModal } from "@/components/modals/CentroCustoModal";
 import { ImportFOAModal } from "@/components/modals/ImportFOAModal";
+import { MovimentoFinanceiroModal } from "@/components/modals/MovimentoFinanceiroModal";
+import { GraficoLinhaMovimentos } from "@/components/financial/GraficoLinhaMovimentos";
+import { GraficoBarrasCategorias } from "@/components/financial/GraficoBarrasCategorias";
 import { useProjectContext } from "@/contexts/ProjectContext";
 import { formatCurrencyInput } from "@/utils/currency";
 import { generateFOAExcel } from "@/utils/excelExporter";
+import { useMovimentosFinanceiros } from "@/hooks/useMovimentosFinanceiros";
 import { toast } from "sonner";
 
 export default function CentrosCustoPage() {
@@ -20,6 +24,8 @@ export default function CentrosCustoPage() {
   const selectedProject = projectData?.project;
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [movimentoModalOpen, setMovimentoModalOpen] = useState(false);
+  const [selectedCentro, setSelectedCentro] = useState<any>(null);
   const [filterTipo, setFilterTipo] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -36,6 +42,12 @@ export default function CentrosCustoPage() {
 
   const { data: centrosCusto, isLoading: loadingCentros } = useCentrosCusto(selectedProject?.id);
   const { data: saldos, isLoading: loadingSaldos } = useSaldosCentrosCusto(selectedProject?.id);
+  const { data: movimentos, refetch: refetchMovimentos } = useMovimentosFinanceiros(selectedProject?.id);
+
+  const handleAddMovimento = (centro: any) => {
+    setSelectedCentro(centro);
+    setMovimentoModalOpen(true);
+  };
 
   if (!selectedProject) {
     return (
@@ -150,6 +162,14 @@ export default function CentrosCustoPage() {
         </Card>
       </div>
 
+      {/* Gráficos */}
+      {movimentos && movimentos.length > 0 && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <GraficoLinhaMovimentos movimentos={movimentos} />
+          <GraficoBarrasCategorias movimentos={movimentos} />
+        </div>
+      )}
+
       {/* Filtros */}
       <Card>
         <CardHeader>
@@ -196,11 +216,19 @@ export default function CentrosCustoPage() {
                 <TableHead className="text-right">Saldo</TableHead>
                 <TableHead>Utilização</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredSaldos?.map((saldo) => (
-                <TableRow key={saldo.centro_custo_id}>
+                <TableRow 
+                  key={saldo.centro_custo_id}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => {
+                    const centro = centrosCusto?.find(c => c.id === saldo.centro_custo_id);
+                    if (centro) handleAddMovimento(centro);
+                  }}
+                >
                   <TableCell className="font-mono">{saldo.codigo}</TableCell>
                   <TableCell className="font-medium">{saldo.nome}</TableCell>
                   <TableCell>
@@ -209,10 +237,10 @@ export default function CentrosCustoPage() {
                   <TableCell className="text-right">
                     {formatCurrencyInput(saldo.orcamento_mensal)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right text-red-600">
                     {formatCurrencyInput(saldo.total_saidas)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className={`text-right font-bold ${saldo.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrencyInput(saldo.saldo)}
                   </TableCell>
                   <TableCell>
@@ -230,6 +258,19 @@ export default function CentrosCustoPage() {
                     <Badge variant={getStatusColor(saldo.percentual_utilizado)}>
                       {getStatusText(saldo.percentual_utilizado)}
                     </Badge>
+                  </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const centro = centrosCusto?.find(c => c.id === saldo.centro_custo_id);
+                        if (centro) handleAddMovimento(centro);
+                      }}
+                    >
+                      <LineChart className="h-4 w-4 mr-2" />
+                      Movimento
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -249,6 +290,18 @@ export default function CentrosCustoPage() {
         onOpenChange={setImportModalOpen}
         projectId={selectedProject.id}
       />
+
+      {selectedCentro && (
+        <MovimentoFinanceiroModal
+          open={movimentoModalOpen}
+          onOpenChange={(open) => {
+            setMovimentoModalOpen(open);
+            if (!open) setSelectedCentro(null);
+          }}
+          movimento={undefined}
+          projectId={selectedProject.id}
+        />
+      )}
     </div>
   );
 }

@@ -9,40 +9,47 @@ export function useMovimentosFinanceiros(projectId?: number, filters?: {
   dataFim?: string;
   tipo?: string;
 }) {
-  return useQuery({
+  const query = useQuery({
     queryKey: ["movimentos-financeiros", projectId, filters],
     queryFn: async () => {
-      let query = supabase
+      let queryBuilder = supabase
         .from("movimentos_financeiros")
         .select("*")
         .order("data_movimento", { ascending: false });
       
       if (projectId) {
-        query = query.eq("projeto_id", projectId);
+        queryBuilder = queryBuilder.eq("projeto_id", projectId);
       }
       
       if (filters?.centroCustoId) {
-        query = query.eq("centro_custo_id", filters.centroCustoId);
+        queryBuilder = queryBuilder.eq("centro_custo_id", filters.centroCustoId);
       }
       
       if (filters?.dataInicio) {
-        query = query.gte("data_movimento", filters.dataInicio);
+        queryBuilder = queryBuilder.gte("data_movimento", filters.dataInicio);
       }
       
       if (filters?.dataFim) {
-        query = query.lte("data_movimento", filters.dataFim);
+        queryBuilder = queryBuilder.lte("data_movimento", filters.dataFim);
       }
       
       if (filters?.tipo) {
-        query = query.eq("tipo_movimento", filters.tipo);
+        queryBuilder = queryBuilder.eq("tipo_movimento", filters.tipo);
       }
       
-      const { data, error } = await query;
+      const { data, error } = await queryBuilder;
       
       if (error) throw error;
       return data as MovimentoFinanceiro[];
     },
   });
+
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+  };
 }
 
 export function useCreateMovimentoFinanceiro() {

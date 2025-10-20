@@ -21,7 +21,7 @@ export function MovimentoFinanceiroModal({ open, onOpenChange, movimento, projec
     projeto_id: movimento?.projeto_id || projectId,
     centro_custo_id: movimento?.centro_custo_id || "",
     data_movimento: movimento?.data_movimento || new Date().toISOString().split('T')[0],
-    tipo_movimento: movimento?.tipo_movimento || "saida",
+    tipo_movimento: movimento?.tipo_movimento || "entrada",
     fonte_financiamento: movimento?.fonte_financiamento,
     categoria: movimento?.categoria || "",
     subcategoria: movimento?.subcategoria || "",
