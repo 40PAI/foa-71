@@ -163,9 +163,13 @@ export function AppSidebar() {
             <SidebarGroup>
               <SidebarMenuItem>
                 <SidebarMenuButton 
+                  type="button"
                   onClick={() => setFinancasOpen(!financasOpen)}
                   className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent min-h-[40px] sm:min-h-[48px] px-2 sm:px-3 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
                   isActive={isFinancasPathActive}
+                  tooltip="Finanças"
+                  aria-expanded={financasOpen}
+                  aria-controls="financas-submenu"
                 >
                   <Banknote className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                   {!isCollapsed && <span className="truncate flex-1 text-xs sm:text-sm">Finanças</span>}
@@ -175,8 +179,8 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               
-              {financasOpen && !isCollapsed && (
-                <SidebarMenuSub>
+              {financasOpen && (
+                <SidebarMenuSub id="financas-submenu">
                   {financasSubItems.map(item => (
                     <SidebarMenuSubItem key={item.path}>
                       <SidebarMenuSubButton asChild isActive={currentPath === item.path}>
