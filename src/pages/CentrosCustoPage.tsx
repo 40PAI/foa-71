@@ -1,16 +1,12 @@
 import { useState } from "react";
-import { Plus, Filter, Download, Upload, TrendingUp, AlertTriangle, LineChart } from "lucide-react";
+import { Plus, Filter, Download, Upload, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { useCentrosCusto, useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
+import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
 import { CentroCustoModal } from "@/components/modals/CentroCustoModal";
 import { ImportFOAModal } from "@/components/modals/ImportFOAModal";
-import { MovimentoFinanceiroModal } from "@/components/modals/MovimentoFinanceiroModal";
 import { GraficoLinhaMovimentos } from "@/components/financial/GraficoLinhaMovimentos";
 import { GraficoBarrasCategorias } from "@/components/financial/GraficoBarrasCategorias";
 import { useProjectContext } from "@/contexts/ProjectContext";
@@ -18,14 +14,13 @@ import { formatCurrencyInput } from "@/utils/currency";
 import { generateFOAExcel } from "@/utils/excelExporter";
 import { useMovimentosFinanceiros } from "@/hooks/useMovimentosFinanceiros";
 import { toast } from "sonner";
+import { MovimentacoesFinanceirasCard } from "@/components/financial/MovimentacoesFinanceirasCard";
 
 export default function CentrosCustoPage() {
   const { selectedProjectId, projectData } = useProjectContext();
   const selectedProject = projectData?.project;
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
-  const [movimentoModalOpen, setMovimentoModalOpen] = useState(false);
-  const [selectedCentro, setSelectedCentro] = useState<any>(null);
   const [filterTipo, setFilterTipo] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -40,14 +35,8 @@ export default function CentrosCustoPage() {
     }
   };
 
-  const { data: centrosCusto, isLoading: loadingCentros } = useCentrosCusto(selectedProject?.id);
   const { data: saldos, isLoading: loadingSaldos } = useSaldosCentrosCusto(selectedProject?.id);
-  const { data: movimentos, refetch: refetchMovimentos } = useMovimentosFinanceiros(selectedProject?.id);
-
-  const handleAddMovimento = (centro: any) => {
-    setSelectedCentro(centro);
-    setMovimentoModalOpen(true);
-  };
+  const { data: movimentos } = useMovimentosFinanceiros(selectedProject?.id);
 
   if (!selectedProject) {
     return (
@@ -57,12 +46,6 @@ export default function CentrosCustoPage() {
     );
   }
 
-  const filteredSaldos = saldos?.filter(saldo => {
-    const matchesTipo = filterTipo === "all" || saldo.tipo === filterTipo;
-    const matchesSearch = saldo.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         saldo.codigo.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesTipo && matchesSearch;
-  });
 
   // Calcular KPIs
   const totalOrcamento = saldos?.reduce((acc, s) => acc + s.orcamento_mensal, 0) || 0;
@@ -70,19 +53,6 @@ export default function CentrosCustoPage() {
   const totalSaldo = saldos?.reduce((acc, s) => acc + s.saldo, 0) || 0;
   const centrosEmAlerta = saldos?.filter(s => s.percentual_utilizado >= 80).length || 0;
 
-  const getStatusColor = (percentual: number) => {
-    if (percentual >= 100) return "destructive";
-    if (percentual >= 90) return "destructive";
-    if (percentual >= 80) return "secondary";
-    return "default";
-  };
-
-  const getStatusText = (percentual: number) => {
-    if (percentual >= 100) return "Excedido";
-    if (percentual >= 90) return "Crítico";
-    if (percentual >= 80) return "Atenção";
-    return "Normal";
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -170,114 +140,9 @@ export default function CentrosCustoPage() {
         </div>
       )}
 
-      {/* Filtros */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <Filter className="h-5 w-5" />
-            <div className="flex-1 flex gap-4">
-              <Input
-                placeholder="Buscar por nome ou código..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
-              />
-              <Select value={filterTipo} onValueChange={setFilterTipo}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Tipos</SelectItem>
-                  <SelectItem value="projeto">Projeto</SelectItem>
-                  <SelectItem value="departamento">Departamento</SelectItem>
-                  <SelectItem value="categoria">Categoria</SelectItem>
-                  <SelectItem value="fornecedor">Fornecedor</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
 
-      {/* Tabela */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Centros de Custo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Código</TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Orçamento</TableHead>
-                <TableHead className="text-right">Gasto</TableHead>
-                <TableHead className="text-right">Saldo</TableHead>
-                <TableHead>Utilização</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredSaldos?.map((saldo) => (
-                <TableRow 
-                  key={saldo.centro_custo_id}
-                  className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => {
-                    const centro = centrosCusto?.find(c => c.id === saldo.centro_custo_id);
-                    if (centro) handleAddMovimento(centro);
-                  }}
-                >
-                  <TableCell className="font-mono">{saldo.codigo}</TableCell>
-                  <TableCell className="font-medium">{saldo.nome}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{saldo.tipo}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrencyInput(saldo.orcamento_mensal)}
-                  </TableCell>
-                  <TableCell className="text-right text-red-600">
-                    {formatCurrencyInput(saldo.total_saidas)}
-                  </TableCell>
-                  <TableCell className={`text-right font-bold ${saldo.saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrencyInput(saldo.saldo)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Progress 
-                        value={Math.min(saldo.percentual_utilizado, 100)} 
-                        className="w-[100px]"
-                      />
-                      <span className="text-sm">
-                        {Math.round(saldo.percentual_utilizado)}%
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusColor(saldo.percentual_utilizado)}>
-                      {getStatusText(saldo.percentual_utilizado)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const centro = centrosCusto?.find(c => c.id === saldo.centro_custo_id);
-                        if (centro) handleAddMovimento(centro);
-                      }}
-                    >
-                      <LineChart className="h-4 w-4 mr-2" />
-                      Movimento
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* Movimentações Financeiras */}
+      <MovimentacoesFinanceirasCard projectId={selectedProject.id} />
 
       <CentroCustoModal
         open={modalOpen}
@@ -290,18 +155,6 @@ export default function CentrosCustoPage() {
         onOpenChange={setImportModalOpen}
         projectId={selectedProject.id}
       />
-
-      {selectedCentro && (
-        <MovimentoFinanceiroModal
-          open={movimentoModalOpen}
-          onOpenChange={(open) => {
-            setMovimentoModalOpen(open);
-            if (!open) setSelectedCentro(null);
-          }}
-          movimento={undefined}
-          projectId={selectedProject.id}
-        />
-      )}
     </div>
   );
 }

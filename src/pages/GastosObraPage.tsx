@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Download, Calendar } from "lucide-react";
+import { Download, Calendar } from "lucide-react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { useProjectState } from "@/hooks/useContextHooks";
 import { GastosObraKPICards } from "@/components/financial/GastosObraKPICards";
-import { GastosObraTable } from "@/components/financial/GastosObraTable";
-import { GastoObraModal } from "@/components/modals/GastoObraModal";
-import { useGastosObra, useGastosObraSummary, GastoObra } from "@/hooks/useGastosObra";
+import { useGastosObraSummary } from "@/hooks/useGastosObra";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import * as XLSX from "xlsx";
 import { formatCurrency } from "@/utils/currency";
-import { format } from "date-fns";
 import { useProjects } from "@/hooks/useProjects";
+import { useGastosObra } from "@/hooks/useGastosObra";
+import { format } from "date-fns";
 
 export default function GastosObraPage() {
   const { selectedProjectId } = useProjectState();
@@ -36,14 +35,11 @@ function GastosObraContent({ projectId }: { projectId: number }) {
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
   const [filterType, setFilterType] = useState<"all" | "month">("month");
-  
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingGasto, setEditingGasto] = useState<GastoObra | undefined>();
 
   const { data: projects } = useProjects();
   const currentProject = projects?.find(p => p.id === projectId);
 
-  const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId);
+  const { data: gastos } = useGastosObra(projectId);
   const { data: summary, isLoading: summaryLoading } = useGastosObraSummary(
     projectId,
     filterType === "month" ? selectedMonth : undefined,
@@ -56,16 +52,6 @@ function GastosObraContent({ projectId }: { projectId: number }) {
         const gastoDate = new Date(gasto.data_movimento);
         return gastoDate.getMonth() + 1 === selectedMonth && gastoDate.getFullYear() === selectedYear;
       }) || [];
-
-  const handleEdit = (gasto: GastoObra) => {
-    setEditingGasto(gasto);
-    setModalOpen(true);
-  };
-
-  const handleNewGasto = () => {
-    setEditingGasto(undefined);
-    setModalOpen(true);
-  };
 
   const handleExport = () => {
     if (!filteredGastos.length) return;
@@ -127,10 +113,6 @@ function GastosObraContent({ projectId }: { projectId: number }) {
           <Button onClick={handleExport} variant="outline" disabled={!filteredGastos.length}>
             <Download className="mr-2 h-4 w-4" />
             Exportar Excel
-          </Button>
-          <Button onClick={handleNewGasto}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Gasto
           </Button>
         </div>
       </div>
@@ -222,32 +204,17 @@ function GastosObraContent({ projectId }: { projectId: number }) {
         <GastosObraKPICards summary={summary} isLoading={summaryLoading} />
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Movimentações Financeiras</CardTitle>
-          <CardDescription>
-            Lista completa de entradas e saídas com saldo acumulado
+      <Card className="border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <CardTitle className="mb-2">Ver Movimentações Completas</CardTitle>
+          <CardDescription className="mb-4">
+            Para visualizar todas as movimentações financeiras detalhadas, acesse a página de Centros de Custo
           </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {gastosLoading ? (
-            <div className="space-y-2">
-              {[...Array(5)].map((_, i) => (
-                <Skeleton key={i} className="h-16 w-full" />
-              ))}
-            </div>
-          ) : (
-            <GastosObraTable gastos={filteredGastos} onEdit={handleEdit} />
-          )}
+          <Button onClick={() => window.location.href = '/centros-custo'}>
+            Ir para Centros de Custo
+          </Button>
         </CardContent>
       </Card>
-
-      <GastoObraModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        projectId={projectId}
-        gasto={editingGasto}
-      />
     </div>
   );
 }
