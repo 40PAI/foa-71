@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -22,24 +21,11 @@ const ResponsiveLayout = () => {
       )}>
         <Header />
         <MainContent />
-=======
-const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-foreground mb-4">
-          Hygdrasil Obras
-        </h1>
-        <p className="text-muted-foreground">
-          Sistema de Gestão de Obras
-        </p>
->>>>>>> 385105deeaeec01a51b29ec67774ee6d4c608afa
       </div>
     </div>
   );
 };
 
-<<<<<<< HEAD
 const Index = () => {
   return (
     <SidebarProvider defaultOpen={false}>
@@ -48,6 +34,4 @@ const Index = () => {
   );
 };
 
-=======
->>>>>>> 385105deeaeec01a51b29ec67774ee6d4c608afa
 export default Index;
