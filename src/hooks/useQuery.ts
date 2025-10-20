@@ -67,8 +67,8 @@ export function useOptimizedQuery<TData = unknown, TError = unknown>(
 }
 
 // ============= MUTATION HOOK =============
-interface BaseMutationOptions<TData = unknown, TError = unknown, TVariables = unknown> 
-  extends Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'> {
+interface BaseMutationOptions<TData = unknown, TError = unknown, TVariables = unknown, TContext = unknown> 
+  extends Omit<UseMutationOptions<TData, TError, TVariables, TContext>, 'mutationFn'> {
   mutationFn: (variables: TVariables) => Promise<TData>;
   invalidateKeys?: unknown[][];
   projectSpecific?: boolean;
@@ -77,8 +77,8 @@ interface BaseMutationOptions<TData = unknown, TError = unknown, TVariables = un
 /**
  * Optimized mutation with automatic cache invalidation
  */
-export function useOptimizedMutation<TData = unknown, TError = unknown, TVariables = unknown>(
-  options: BaseMutationOptions<TData, TError, TVariables>
+export function useOptimizedMutation<TData = unknown, TError = unknown, TVariables = unknown, TContext = unknown>(
+  options: BaseMutationOptions<TData, TError, TVariables, TContext>
 ) {
   const queryClient = useQueryClient();
   const { selectedProjectId } = useProjectContext();

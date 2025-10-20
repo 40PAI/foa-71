@@ -6,7 +6,7 @@ interface NotificationContextType {
   error: (message: string, options?: NotificationOptions) => void;
   warning: (message: string, options?: NotificationOptions) => void;
   info: (message: string, options?: NotificationOptions) => void;
-  loading: (message: string, options?: LoadingNotificationOptions) => string | number;
+  loading: (message: string, options?: LoadingNotificationOptions) => string | number | { unwrap: () => Promise<any> };
   dismiss: (toastId?: string | number) => void;
 }
 

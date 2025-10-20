@@ -66,9 +66,10 @@ function GastosObraContent({ projectId }: { projectId: number }) {
   const handleExport = () => {
     if (!filteredGastos.length) return;
 
-    const exportData = filteredGastos.map((gasto, index) => {
-      const previousBalance = index > 0 ? exportData[index - 1]["Saldo Acumulado"] : 0;
+    let accumulatedBalance = 0;
+    const exportData = filteredGastos.map((gasto) => {
       const movimento = gasto.recebimento_foa + gasto.fof_financiamento + gasto.foa_auto - gasto.saida;
+      accumulatedBalance += movimento;
       
       return {
         "Data": format(new Date(gasto.data_movimento), "dd/MM/yyyy"),
@@ -77,7 +78,7 @@ function GastosObraContent({ projectId }: { projectId: number }) {
         "FOF Financiamento": gasto.fof_financiamento > 0 ? formatCurrency(gasto.fof_financiamento) : "",
         "FOA Auto": gasto.foa_auto > 0 ? formatCurrency(gasto.foa_auto) : "",
         "Saída": gasto.saida > 0 ? formatCurrency(gasto.saida) : "",
-        "Saldo Acumulado": formatCurrency(previousBalance + movimento),
+        "Saldo Acumulado": formatCurrency(accumulatedBalance),
         "Observações": gasto.observacoes || "",
         "Centro de Custo": gasto.centro_custo_nome || "",
       };
