@@ -454,11 +454,11 @@ export function FinanceForm({ projectId, finance, onSuccess }: FinanceFormProps)
               name="centro_custo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Centro de Custo</FormLabel>
+                  <FormLabel>Centro de Custo Polo</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o centro de custo" />
+                        <SelectValue placeholder="Selecione o centro de custo polo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>

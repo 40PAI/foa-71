@@ -74,13 +74,13 @@ export function CentrosCustoSummary({ projectId }: CentrosCustoSummaryProps) {
         <CardContent>
           {topCentros.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>Nenhum centro de custo cadastrado.</p>
+              <p>Nenhum centro de custo polo cadastrado.</p>
               <Button 
                 variant="link" 
                 onClick={() => navigate('/centros-custo')}
                 className="mt-2"
               >
-                Criar primeiro centro de custo
+                Criar primeiro centro de custo polo
               </Button>
             </div>
           ) : (

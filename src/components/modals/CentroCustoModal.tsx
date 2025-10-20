@@ -167,7 +167,7 @@ export function CentroCustoModal({ open, onOpenChange, centroCusto, projectId }:
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {centroCusto ? "Editar Centro de Custo" : "Novo Centro de Custo"}
+            {centroCusto ? "Editar Centro de Custo Polo" : "Novo Centro de Custo Polo"}
           </DialogTitle>
         </DialogHeader>
         

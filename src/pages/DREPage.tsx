@@ -134,7 +134,7 @@ export default function DREPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Centro de Custo</TableHead>
+                  <TableHead>Centro de Custo Polo</TableHead>
                   <TableHead className="text-right">Receita Cliente</TableHead>
                   <TableHead className="text-right">FOF Financiamento</TableHead>
                   <TableHead className="text-right">FOA Auto</TableHead>

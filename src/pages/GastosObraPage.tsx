@@ -70,7 +70,7 @@ function GastosObraContent({ projectId }: { projectId: number }) {
         "Saída": gasto.saida > 0 ? formatCurrency(gasto.saida) : "",
         "Saldo Acumulado": formatCurrency(accumulatedBalance),
         "Observações": gasto.observacoes || "",
-        "Centro de Custo": gasto.centro_custo_nome || "",
+        "Centro de Custo Polo": gasto.centro_custo_nome || "",
       };
     });
 
