@@ -15,7 +15,7 @@ import { FinanceModal } from "@/components/modals/FinanceModal";
 import { OptimizedApprovalInterface } from "@/components/OptimizedApprovalInterface";
 import { DiscrepancyReport } from "@/components/DiscrepancyReport";
 import { IntegratedFinancialDashboard } from "@/components/IntegratedFinancialDashboard";
-import { EnhancedFinancialDashboard } from "@/components/EnhancedFinancialDashboard";
+
 import { ExpenseManagement } from "@/components/ExpenseManagement";
 import { TaskFinancialBreakdown } from "@/components/financial/TaskFinancialBreakdown";
 import { TaskVsRealityAnalysis } from "@/components/financial/TaskVsRealityAnalysis";
@@ -148,14 +148,6 @@ export function OptimizedFinancasPage() {
     ).length;
   }, [requisitions, selectedProjectId]);
 
-  // Calculate critical alerts
-  const criticalAlerts = useMemo(() => {
-    let count = 0;
-    if (discrepancies.length > 0) count++;
-    if (summaryStats.approvalRate < 50) count++;
-    if ((taskAnalytics?.efficiency_score || 0) < 60) count++;
-    return count;
-  }, [discrepancies.length, summaryStats.approvalRate, taskAnalytics]);
 
   if (!selectedProjectId) {
     return (
@@ -313,15 +305,6 @@ export function OptimizedFinancasPage() {
 
       {/* Collapsible Sections with Accordion */}
       <Accordion type="multiple" className="w-full space-y-3">
-        <CollapsibleFinancialSection
-          value="dashboard"
-          title="Dashboard Avançado"
-          icon={Activity}
-          badge={criticalAlerts > 0 ? { text: `${criticalAlerts} alertas`, variant: "destructive" } : undefined}
-        >
-          <EnhancedFinancialDashboard projectId={selectedProjectId} />
-        </CollapsibleFinancialSection>
-        
         <CollapsibleFinancialSection
           value="charts"
           title="Análise Visual e Gráficos"
