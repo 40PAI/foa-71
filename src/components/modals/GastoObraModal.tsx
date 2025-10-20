@@ -160,7 +160,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="centro_custo_id">Centro de Custo Polo</Label>
+            <Label htmlFor="centro_custo_id">Centro de Custo</Label>
             <Select
               value={formData.centro_custo_id}
               onValueChange={(value) => setFormData({ ...formData, centro_custo_id: value })}

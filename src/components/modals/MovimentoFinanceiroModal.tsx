@@ -95,13 +95,13 @@ export function MovimentoFinanceiroModal({ open, onOpenChange, movimento, projec
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="centro_custo_id">Centro de Custo Polo</Label>
+              <Label htmlFor="centro_custo_id">Centro de Custo</Label>
               <Select
                 value={formData.centro_custo_id}
                 onValueChange={(value) => setFormData({ ...formData, centro_custo_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um centro de custo polo" />
+                  <SelectValue placeholder="Selecione um centro de custo" />
                 </SelectTrigger>
                 <SelectContent>
                   {centrosCusto?.map((cc) => (

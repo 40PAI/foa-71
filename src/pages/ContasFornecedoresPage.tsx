@@ -194,7 +194,7 @@ function ContaRow({ conta }: { conta: any }) {
                   <TableRow>
                     <TableHead>Data</TableHead>
                     <TableHead>Descrição</TableHead>
-                    <TableHead>Centro de Custo Polo</TableHead>
+                    <TableHead>Centro de Custo</TableHead>
                     <TableHead className="text-right">Crédito</TableHead>
                     <TableHead className="text-right">Débito</TableHead>
                     <TableHead className="text-right">Saldo</TableHead>
