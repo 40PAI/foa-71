@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
@@ -11,8 +11,14 @@ interface AppLayoutProps {
 }
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { state } = useSidebar();
+  const { state, setOpen, isMobile } = useSidebar();
   const isCollapsed = state === "collapsed";
+  
+  useEffect(() => {
+    if (!isMobile) {
+      setOpen(true);
+    }
+  }, [isMobile, setOpen]);
   
   return (
     <div className="min-h-screen flex w-full">
