@@ -35,7 +35,7 @@ export default function ContasFornecedoresPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Contas Correntes - Fornecedores</h1>
-          <p className="text-muted-foreground">Projeto: {projectData?.project?.nome || "Nenhum projeto selecionado"}</p>
+          <p className="text-muted-foreground">Controlo de crédito e débito com fornecedores</p>
         </div>
         <Button onClick={() => setContaModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

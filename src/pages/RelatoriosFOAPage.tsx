@@ -74,7 +74,7 @@ export default function RelatoriosFOAPage() {
       <div>
         <h1 className="text-3xl font-bold">Relatórios FOA</h1>
         <p className="text-muted-foreground">
-          Projeto: {selectedProject?.nome || "Nenhum projeto selecionado"}
+          Gere relatórios financeiros completos do projeto
         </p>
       </div>
 

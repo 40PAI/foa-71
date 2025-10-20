@@ -22,7 +22,7 @@ export function Header() {
 
   return (
     <header className="flex h-14 sm:h-16 shrink-0 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 lg:px-6">
-      <SidebarTrigger className="h-8 w-8 p-0 hover:bg-muted" />
+      {isCollapsed && <SidebarTrigger className="h-8 w-8 p-0 hover:bg-muted lg:hidden" />}
       
       <div className="flex-1 flex items-center justify-between gap-2 sm:gap-4 min-w-0">
         <div className="flex items-center gap-2 min-w-0">
