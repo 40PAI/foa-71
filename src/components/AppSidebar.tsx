@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar, SidebarGroup, SidebarGroupLabel, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from "@/components/ui/sidebar";
 import { Settings, HardHat, Banknote, Wallet, ShoppingCart, Package, Users, Shield, CheckCircle, BarChart3, LogOut, User, UserCog, Menu, X, FileText, Building2, ChevronRight } from "lucide-react";
@@ -104,6 +104,14 @@ export function AppSidebar() {
   const hasFinancasAccess = canAccessModule("financas");
   const isFinancasPathActive = financasSubItems.some(item => currentPath === item.path);
   const [financasOpen, setFinancasOpen] = useState(isFinancasPathActive);
+  
+  // Sync dropdown state with current route
+  useEffect(() => {
+    if (isFinancasPathActive) {
+      setFinancasOpen(true);
+    }
+  }, [isFinancasPathActive]);
+  
   const handleNavClick = () => {
     setOpenMobile(false);
   };
