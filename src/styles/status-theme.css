@@ -1,0 +1,132 @@
+/* Status theme utilities - semantic tokens and classes for light/dark */
+
+/* Light mode tokens (HSL only) */
+:root {
+  /* Success */
+  --status-success-bg: 142 76% 97%;
+  --status-success-text: 142 71% 29%;
+  --status-success-border: 142 76% 85%;
+
+  /* Warning */
+  --status-warning-bg: 38 92% 95%;
+  --status-warning-text: 32 94% 37%;
+  --status-warning-border: 38 92% 85%;
+
+  /* Danger */
+  --status-danger-bg: 0 93% 95%;
+  --status-danger-text: 0 84% 60%;
+  --status-danger-border: 0 93% 85%;
+
+  /* Info */
+  --status-info-bg: 221 83% 96%;
+  --status-info-text: 221 83% 45%;
+  --status-info-border: 221 83% 86%;
+
+  /* Neutral */
+  --status-neutral-bg: 240 5% 96%;
+  --status-neutral-text: 240 5% 26%;
+  --status-neutral-border: 240 5% 84%;
+}
+
+/* Dark mode tokens */
+.dark {
+  /* Success */
+  --status-success-bg: 142 71% 15%;
+  --status-success-text: 142 70% 80%;
+  --status-success-border: 142 71% 25%;
+
+  /* Warning */
+  --status-warning-bg: 32 94% 15%;
+  --status-warning-text: 38 92% 85%;
+  --status-warning-border: 32 94% 25%;
+
+  /* Danger */
+  --status-danger-bg: 0 84% 15%;
+  --status-danger-text: 0 90% 75%;
+  --status-danger-border: 0 84% 25%;
+
+  /* Info */
+  --status-info-bg: 221 83% 16%;
+  --status-info-text: 221 83% 80%;
+  --status-info-border: 221 83% 26%;
+
+  /* Neutral */
+  --status-neutral-bg: 240 6% 12%;
+  --status-neutral-text: 0 0% 98%;
+  --status-neutral-border: 240 6% 22%;
+}
+
+/* Composite status badges (bg + text + border) */
+.status-success {
+  background-color: hsl(var(--status-success-bg));
+  color: hsl(var(--status-success-text));
+  border: 1px solid hsl(var(--status-success-border));
+}
+
+.status-warning {
+  background-color: hsl(var(--status-warning-bg));
+  color: hsl(var(--status-warning-text));
+  border: 1px solid hsl(var(--status-warning-border));
+}
+
+.status-danger {
+  background-color: hsl(var(--status-danger-bg));
+  color: hsl(var(--status-danger-text));
+  border: 1px solid hsl(var(--status-danger-border));
+}
+
+.status-info {
+  background-color: hsl(var(--status-info-bg));
+  color: hsl(var(--status-info-text));
+  border: 1px solid hsl(var(--status-info-border));
+}
+
+.status-neutral {
+  background-color: hsl(var(--status-neutral-bg));
+  color: hsl(var(--status-neutral-text));
+  border: 1px solid hsl(var(--status-neutral-border));
+}
+
+/* Utility classes (single responsibility) */
+.text-success { color: hsl(var(--status-success-text)); }
+.text-warning { color: hsl(var(--status-warning-text)); }
+.text-danger  { color: hsl(var(--status-danger-text)); }
+.text-info    { color: hsl(var(--status-info-text)); }
+.text-neutral { color: hsl(var(--status-neutral-text)); }
+
+.bg-success { background-color: hsl(var(--status-success-bg)); }
+.bg-warning { background-color: hsl(var(--status-warning-bg)); }
+.bg-danger  { background-color: hsl(var(--status-danger-bg)); }
+.bg-info    { background-color: hsl(var(--status-info-bg)); }
+.bg-neutral { background-color: hsl(var(--status-neutral-bg)); }
+
+.border-success { border-color: hsl(var(--status-success-border)); }
+.border-warning { border-color: hsl(var(--status-warning-border)); }
+.border-danger  { border-color: hsl(var(--status-danger-border)); }
+.border-info    { border-color: hsl(var(--status-info-border)); }
+.border-neutral { border-color: hsl(var(--status-neutral-border)); }
+
+/* Dark mode safety overrides for legacy hardcoded colors */
+.dark .text-black,
+.dark .text-gray-900,
+.dark .text-gray-800 {
+  color: hsl(var(--foreground)) !important;
+}
+
+.dark .bg-white {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.dark .border-black,
+.dark .border-gray-900 {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Fix for lucide icons with text-muted-foreground in dark mode */
+.dark .text-muted-foreground[class*="lucide"],
+.dark svg.text-muted-foreground,
+.dark .text-muted-foreground svg {
+  color: hsl(var(--foreground)) !important;
+  opacity: 0.7;
+}
