@@ -35,12 +35,13 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
   );
 
   // Calculate accumulated balance
-  const gastosComSaldo = filteredGastos.map((gasto, index) => {
-    const previousBalance = index > 0 ? gastosComSaldo[index - 1].saldoAcumulado : 0;
+  let accumulatedBalance = 0;
+  const gastosComSaldo = filteredGastos.map((gasto) => {
     const movimento = gasto.recebimento_foa + gasto.fof_financiamento + gasto.foa_auto - gasto.saida;
+    accumulatedBalance += movimento;
     return {
       ...gasto,
-      saldoAcumulado: previousBalance + movimento,
+      saldoAcumulado: accumulatedBalance,
     };
   });
 
