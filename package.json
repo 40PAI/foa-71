@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
@@ -84,5 +85,19 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
+=======
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.1",
+    "@tanstack/react-query": "^5.90.5",
+    "@vitejs/plugin-react-swc": "^4.1.0",
+    "lovable-tagger": "^1.1.11",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router-dom": "^7.9.4",
+    "tailwindcss": "^4.1.14",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.11"
+>>>>>>> 385105deeaeec01a51b29ec67774ee6d4c608afa
   }
 }

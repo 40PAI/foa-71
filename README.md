@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Sistema de Gestão de Obras (Construction Management System)
 
 Sistema completo de gestão de projetos de construção civil desenvolvido com React, TypeScript, e Supabase.
@@ -228,3 +229,6 @@ Simply open [Lovable](https://lovable.dev/projects/da228528-d665-47dc-8ad2-ae904
 ### Custom Domain
 
 Navigate to Project > Settings > Domains and click Connect Domain. [Learn more](https://docs.lovable.dev/tips-tricks/custom-domain)
+=======
+# foa-71
+>>>>>>> 385105deeaeec01a51b29ec67774ee6d4c608afa
