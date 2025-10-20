@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import * as XLSX from "xlsx";
 import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
+import { useProjects } from "@/hooks/useProjects";
 
 export default function GastosObraPage() {
   const { selectedProjectId } = useProjectState();
@@ -38,6 +39,9 @@ function GastosObraContent({ projectId }: { projectId: number }) {
   
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGasto, setEditingGasto] = useState<GastoObra | undefined>();
+
+  const { data: projects } = useProjects();
+  const currentProject = projects?.find(p => p.id === projectId);
 
   const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId);
   const { data: summary, isLoading: summaryLoading } = useGastosObraSummary(
@@ -117,7 +121,7 @@ function GastosObraContent({ projectId }: { projectId: number }) {
       <div className="flex items-center justify-between">
         <PageHeader
           title="Gastos da Obra"
-          description="Controle completo de entradas e saídas financeiras do projeto"
+          description={`Projeto: ${currentProject?.nome || ''}`}
         />
         <div className="flex gap-2">
           <Button onClick={handleExport} variant="outline" disabled={!filteredGastos.length}>

@@ -11,7 +11,7 @@ import { FileDown, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function DREPage() {
-  const { selectedProjectId } = useProjectState();
+  const { selectedProjectId, projectData } = useProjectState();
   const currentDate = new Date();
   const [mes, setMes] = useState(currentDate.getMonth() + 1);
   const [ano, setAno] = useState(currentDate.getFullYear());
@@ -73,9 +73,7 @@ export default function DREPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">DRE - Demonstração de Resultados</h1>
-          <p className="text-muted-foreground">
-            Receitas e custos por centro de custo
-          </p>
+          <p className="text-muted-foreground">Projeto: {projectData?.project?.nome}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExportar} variant="outline">

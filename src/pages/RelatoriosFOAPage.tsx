@@ -73,9 +73,7 @@ export default function RelatoriosFOAPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Relatórios FOA</h1>
-        <p className="text-muted-foreground">
-          Gere relatórios financeiros completos do projeto
-        </p>
+        <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
