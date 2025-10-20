@@ -131,9 +131,9 @@ export function AppSidebar() {
                 <span className="text-xs sm:text-sm font-semibold truncate">SmartSite</span>
               </div>}
           </div>
-          {!isCollapsed && <Button variant="ghost" size="sm" onClick={toggleSidebar} className="h-8 w-8 p-0 hover:bg-sidebar-accent text-sidebar-foreground" title="Fechar menu">
-              <X className="h-4 w-4" />
-            </Button>}
+          <Button variant="ghost" size="sm" onClick={toggleSidebar} className="h-8 w-8 p-0 hover:bg-sidebar-accent text-sidebar-foreground" title={isCollapsed ? "Abrir menu" : "Fechar menu"}>
+            {isCollapsed ? <Menu className="h-4 w-4" /> : <X className="h-4 w-4" />}
+          </Button>
         </div>
       </SidebarHeader>
       
