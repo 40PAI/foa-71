@@ -15,7 +15,7 @@ import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
 
 export default function GastosObraPage() {
-  const { selectedProjectId } = useProjectState();
+  const { selectedProjectId, projectData } = useProjectState();
 
   if (!selectedProjectId) {
     return (
@@ -31,6 +31,7 @@ export default function GastosObraPage() {
 }
 
 function GastosObraContent({ projectId }: { projectId: number }) {
+  const { projectData } = useProjectState();
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
@@ -115,10 +116,12 @@ function GastosObraContent({ projectId }: { projectId: number }) {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <PageHeader
-          title="Gastos da Obra"
-          description="Controle completo de entradas e saídas financeiras do projeto"
-        />
+        <div>
+          <h1 className="text-3xl font-bold">Gastos da Obra</h1>
+          <p className="text-muted-foreground">
+            Projeto: {projectData?.project?.nome || "Carregando..."}
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button onClick={handleExport} variant="outline" disabled={!filteredGastos.length}>
             <Download className="mr-2 h-4 w-4" />
