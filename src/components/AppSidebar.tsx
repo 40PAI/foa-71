@@ -131,7 +131,7 @@ export function AppSidebar() {
       navigate("/auth");
     }
   };
-  return <Sidebar className="bg-sidebar text-sidebar-foreground transition-all duration-300" collapsible="icon" variant="sidebar">
+  return <Sidebar className="bg-sidebar text-sidebar-foreground transition-all duration-300 w-72" collapsible="icon" variant="sidebar">
       <SidebarHeader className="p-2 sm:p-3 lg:p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
