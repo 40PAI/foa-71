@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Header } from "@/components/Header";
@@ -11,21 +11,15 @@ interface AppLayoutProps {
 }
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
-  const { state, setOpen, isMobile } = useSidebar();
+  const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
-  
-  useEffect(() => {
-    if (!isMobile) {
-      setOpen(true);
-    }
-  }, [isMobile, setOpen]);
   
   return (
     <div className="min-h-screen flex w-full">
       <AppSidebar />
       <div className={cn(
         "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-        isCollapsed ? "md:ml-14" : "md:ml-72"
+        isCollapsed ? "md:ml-14" : "md:ml-64"
       )}>
         <Header />
         <main className="flex-1 min-w-0 w-full px-2 py-1">
@@ -40,7 +34,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <LayoutContent>
         {children}
       </LayoutContent>
