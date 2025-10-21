@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion } from "@/components/ui/accordion";
 import { BarChart3, Download } from "lucide-react";
 import { useProjectChartData } from "@/hooks/useProjectChartData";
 import { useEnhancedFinancialChartData } from "@/hooks/useEnhancedFinancialChartData";
@@ -156,7 +157,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
 
               {/* Seções Colapsáveis */}
               {financialData && (
-                <>
+                <Accordion type="multiple" className="space-y-4">
                   <CollapsibleFinancialSection title="Centros de Custo" value="centros" icon={DollarSign} defaultOpen={false}>
                     <CentrosCustoChartSection data={financialData.centrosCusto} />
                   </CollapsibleFinancialSection>
@@ -176,7 +177,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   <CollapsibleFinancialSection title="Análise de Tarefas" value="tarefas" icon={TrendingUp} defaultOpen={false}>
                     <TasksFinancialSection data={financialData.tarefas} />
                   </CollapsibleFinancialSection>
-                </>
+                </Accordion>
               )}
             </TabsContent>
 
