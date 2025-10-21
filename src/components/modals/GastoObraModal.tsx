@@ -26,6 +26,9 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
   const createMutation = useCreateGastoObra();
   const updateMutation = useUpdateGastoObra();
 
+  // Encontrar nome do centro de custo selecionado
+  const selectedCentroCusto = centrosCusto?.find(cc => cc.id === defaultCentroCustoId);
+
   const [formData, setFormData] = useState({
     data_movimento: gasto?.data_movimento || new Date().toISOString().split("T")[0],
     descricao: gasto?.descricao || "",
@@ -111,7 +114,13 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
     <BaseModal
       open={open}
       onOpenChange={onOpenChange}
-      title={gasto ? "Editar Movimento" : "Novo Movimento"}
+      title={
+        gasto 
+          ? "Editar Movimento" 
+          : selectedCentroCusto 
+            ? `Novo Movimento - ${selectedCentroCusto.codigo} - ${selectedCentroCusto.nome}`
+            : "Novo Movimento"
+      }
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -211,25 +220,28 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="centro_custo_id">Centro de Custo Polo</Label>
-            <Select
-              value={formData.centro_custo_id}
-              onValueChange={(value) => setFormData({ ...formData, centro_custo_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent className="bg-background z-50">
-                {centrosCusto?.map((cc) => (
-                  <SelectItem key={cc.id} value={cc.id}>
-                    {cc.codigo} - {cc.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        <div className={defaultCentroCustoId ? "space-y-2" : "grid grid-cols-2 gap-4"}>
+          {/* Mostrar campo Centro de Custo apenas se NÃO houver filtro ativo */}
+          {!defaultCentroCustoId && (
+            <div className="space-y-2">
+              <Label htmlFor="centro_custo_id">Centro de Custo Polo</Label>
+              <Select
+                value={formData.centro_custo_id}
+                onValueChange={(value) => setFormData({ ...formData, centro_custo_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  {centrosCusto?.map((cc) => (
+                    <SelectItem key={cc.id} value={cc.id}>
+                      {cc.codigo} - {cc.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável</Label>
