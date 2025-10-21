@@ -118,7 +118,6 @@ export default function ContasFornecedoresPage() {
                   <TableHead>Fornecedor</TableHead>
                   <TableHead>NIF</TableHead>
                   <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Saldo Inicial</TableHead>
                   <TableHead className="text-right">Crédito</TableHead>
                   <TableHead className="text-right">Débito</TableHead>
                   <TableHead className="text-right">Saldo Atual</TableHead>
@@ -174,9 +173,8 @@ function ContaRow({ conta }: { conta: any }) {
         <TableCell className="font-medium">{conta.fornecedores?.nome || "N/A"}</TableCell>
         <TableCell>{conta.fornecedores?.nif || "-"}</TableCell>
         <TableCell>
-          <Badge variant="outline">{conta.fornecedores?.categoria_principal || "N/A"}</Badge>
+          <Badge variant="outline">{conta.categoria || conta.fornecedores?.categoria_principal || "N/A"}</Badge>
         </TableCell>
-        <TableCell className="text-right">{formatCurrency(conta.saldo_inicial)}</TableCell>
         <TableCell className="text-right text-green-600">{formatCurrency(conta.saldo?.total_credito || 0)}</TableCell>
         <TableCell className="text-right text-red-600">{formatCurrency(conta.saldo?.total_debito || 0)}</TableCell>
         <TableCell className="text-right font-bold">
@@ -199,7 +197,7 @@ function ContaRow({ conta }: { conta: any }) {
 
       {expanded && lancamentos && lancamentos.length > 0 && (
         <TableRow>
-          <TableCell colSpan={9} className="bg-muted/50 p-4">
+          <TableCell colSpan={8} className="bg-muted/50 p-4">
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Material Recebido / Lançamentos:</h4>
               <Table>

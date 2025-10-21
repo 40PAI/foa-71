@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/ui/currency-input";
-import { useCreateContaFornecedor } from "@/hooks/useContasFornecedores";
+import { useCreateContaFornecedor, useCreateLancamento } from "@/hooks/useContasFornecedores";
 import { useFornecedores } from "@/hooks/useFornecedores";
 import { useProjectState } from "@/hooks/useContextHooks";
+import { toast } from "sonner";
 
 interface ContaFornecedorModalProps {
   open: boolean;
@@ -18,32 +19,50 @@ interface ContaFornecedorModalProps {
 export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModalProps) {
   const { projectData } = useProjectState();
   const [fornecedorId, setFornecedorId] = useState<string>("");
-  const [saldoInicial, setSaldoInicial] = useState<number>(0);
+  const [valorCredito, setValorCredito] = useState<number>(0);
   const [descricao, setDescricao] = useState<string>("");
   const [dataVencimento, setDataVencimento] = useState<string>("");
   const [categoria, setCategoria] = useState<string>("");
   
   const { data: fornecedores, isLoading: loadingFornecedores } = useFornecedores();
-  const createConta = useCreateContaFornecedor();
+  const { mutateAsync: createConta, isPending: creatingConta } = useCreateContaFornecedor();
+  const { mutateAsync: createLancamento, isPending: creatingLancamento } = useCreateLancamento();
 
   const handleSubmit = async () => {
-    if (!fornecedorId || !projectData) return;
+    if (!fornecedorId || !projectData || !valorCredito || valorCredito <= 0) {
+      toast.error("Preencha todos os campos obrigatórios e insira um valor válido");
+      return;
+    }
 
-    await createConta.mutateAsync({
-      fornecedor_id: fornecedorId,
-      projeto_id: projectData.id,
-      saldo_inicial: saldoInicial,
-      descricao,
-      data_vencimento: dataVencimento || null,
-      categoria,
-    });
+    try {
+      // Criar conta com saldo inicial 0
+      const novaConta = await createConta({
+        fornecedor_id: fornecedorId,
+        projeto_id: projectData.id,
+        saldo_inicial: 0,
+        descricao,
+        data_vencimento: dataVencimento || null,
+        categoria,
+      });
 
-    onOpenChange(false);
-    setFornecedorId("");
-    setSaldoInicial(0);
-    setDescricao("");
-    setDataVencimento("");
-    setCategoria("");
+      // Criar lançamento de crédito
+      await createLancamento({
+        conta_fornecedor_id: novaConta.id,
+        data_lancamento: new Date().toISOString().split('T')[0],
+        descricao: descricao || "Crédito inicial",
+        credito: valorCredito,
+        debito: 0,
+      });
+
+      onOpenChange(false);
+      setFornecedorId("");
+      setValorCredito(0);
+      setDescricao("");
+      setDataVencimento("");
+      setCategoria("");
+    } catch (error) {
+      console.error("Erro ao criar crédito:", error);
+    }
   };
 
   return (
@@ -77,15 +96,15 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="saldo">Valor</Label>
+          <Label htmlFor="valor">Valor do Crédito *</Label>
           <CurrencyInput
-            id="saldo"
-            value={saldoInicial}
-            onValueChange={setSaldoInicial}
+            id="valor"
+            value={valorCredito}
+            onValueChange={setValorCredito}
             placeholder="0,00 Kz"
           />
           <p className="text-xs text-muted-foreground">
-            Valor positivo indica crédito a favor da empresa
+            Valor do crédito a registrar
           </p>
         </div>
 
@@ -111,7 +130,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="categoria">Categoria</Label>
+          <Label htmlFor="categoria">Categoria *</Label>
           <Select
             value={categoria}
             onValueChange={setCategoria}
@@ -120,16 +139,16 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
               <SelectValue placeholder="Selecione uma categoria..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="mao_de_obra">Mão de obra</SelectItem>
-              <SelectItem value="materiais_construcao">Materiais de construção</SelectItem>
-              <SelectItem value="equipamentos_ferramentas">Equipamentos e ferramentas</SelectItem>
-              <SelectItem value="transporte_combustivel">Transporte e combustível</SelectItem>
-              <SelectItem value="servicos_subcontratados">Serviços subcontratados</SelectItem>
-              <SelectItem value="licencas_taxas">Licenças e taxas</SelectItem>
-              <SelectItem value="imprevistos">Imprevistos</SelectItem>
-              <SelectItem value="seguranca_epi">Segurança e EPI</SelectItem>
-              <SelectItem value="manutencao_equipamentos">Manutenção de equipamentos</SelectItem>
-              <SelectItem value="despesas_admin_ti">Despesas administrativas e comunicação/TI</SelectItem>
+              <SelectItem value="Mão de obra">Mão de obra</SelectItem>
+              <SelectItem value="Materiais de construção">Materiais de construção</SelectItem>
+              <SelectItem value="Equipamentos e ferramentas">Equipamentos e ferramentas</SelectItem>
+              <SelectItem value="Transporte e combustível">Transporte e combustível</SelectItem>
+              <SelectItem value="Serviços subcontratados">Serviços subcontratados</SelectItem>
+              <SelectItem value="Licenças e taxas">Licenças e taxas</SelectItem>
+              <SelectItem value="Imprevistos">Imprevistos</SelectItem>
+              <SelectItem value="Segurança e EPI">Segurança e EPI</SelectItem>
+              <SelectItem value="Manutenção de equipamentos">Manutenção de equipamentos</SelectItem>
+              <SelectItem value="Despesas administrativas e comunicação/TI">Despesas administrativas e comunicação/TI</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -140,9 +159,9 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={!fornecedorId || createConta.isPending}
+            disabled={!fornecedorId || !categoria || !valorCredito || creatingConta || creatingLancamento}
           >
-            {createConta.isPending ? "Criando..." : "Criar Crédito"}
+            {(creatingConta || creatingLancamento) ? "Criando..." : "Criar Crédito"}
           </Button>
         </div>
       </div>
