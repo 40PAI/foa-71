@@ -42,7 +42,7 @@ export function GastosObraKPICards({ summary, isLoading }: GastosObraKPICardsPro
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Custo</CardTitle>
+          <CardTitle className="text-sm font-medium">Custo Total</CardTitle>
           <ArrowDownCircle className="h-4 w-4 text-red-600" />
         </CardHeader>
         <CardContent>
