@@ -38,15 +38,9 @@ export default function ContasFornecedoresPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Contas Correntes - Fornecedores</h1>
-          <p className="text-muted-foreground">Projeto: {projectData?.nome}</p>
-        </div>
-        <Button onClick={() => setContaModalOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nova Lançamento
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold">Contas Correntes - Fornecedores</h1>
+        <p className="text-muted-foreground">Projeto: {projectData?.nome}</p>
       </div>
 
       {/* KPIs */}
@@ -96,8 +90,12 @@ export default function ContasFornecedoresPage() {
 
       {/* Tabela de Contas */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Contas Correntes por Fornecedor</CardTitle>
+          <Button onClick={() => setContaModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Novo Lançamento
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
