@@ -22,7 +22,7 @@ export function ProjectFinancialInfo({ form, centrosCusto, onCentrosCustoChange,
           name="limite_aprovacao"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Limite de Aprovação (Kz) *</FormLabel>
+              <FormLabel>Limite de Aprovação de Movimento (Kz) *</FormLabel>
               <FormControl>
                 <CurrencyInput
                   placeholder="0,00"
@@ -40,7 +40,7 @@ export function ProjectFinancialInfo({ form, centrosCusto, onCentrosCustoChange,
           name="limite_gastos"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Limite de Gastos do Projeto (Kz)</FormLabel>
+              <FormLabel>Limite de Custos Total do Projeto (Kz)</FormLabel>
               <FormControl>
                 <CurrencyInput
                   placeholder="0,00"
