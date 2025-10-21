@@ -1261,6 +1261,53 @@ export type Database = {
           },
         ]
       }
+      fornecedor_documentos: {
+        Row: {
+          created_at: string
+          fornecedor_id: string
+          id: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes: number | null
+          tipo_documento: string | null
+          updated_at: string
+          uploaded_by: string | null
+          url_documento: string | null
+        }
+        Insert: {
+          created_at?: string
+          fornecedor_id: string
+          id?: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes?: number | null
+          tipo_documento?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          url_documento?: string | null
+        }
+        Update: {
+          created_at?: string
+          fornecedor_id?: string
+          id?: string
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho_bytes?: number | null
+          tipo_documento?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          url_documento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedor_documentos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedores: {
         Row: {
           avaliacao_qualidade: number | null

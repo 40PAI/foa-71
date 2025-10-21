@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Star } from "lucide-react";
 import type { Fornecedor } from "@/types/contasCorrentes";
+import { FornecedorDocumentUpload } from "./FornecedorDocumentUpload";
 
 const fornecedorSchema = z.object({
   nome: z.string().trim().min(1, "Nome obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
@@ -382,6 +383,9 @@ export function FornecedorForm({
             )}
           />
         </div>
+
+        {/* Documentos */}
+        <FornecedorDocumentUpload fornecedorId={fornecedor?.id} />
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">

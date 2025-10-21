@@ -89,6 +89,11 @@ export function formatFileSize(bytes: number): string {
 }
 
 /**
+ * Alias for formatFileSize
+ */
+export const formatBytes = formatFileSize;
+
+/**
  * Format relative time (e.g., "2 dias atrás")
  */
 export function formatRelativeTime(date: Date | string): string {

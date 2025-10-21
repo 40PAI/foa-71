@@ -39,6 +39,7 @@ export { useDREPorCentro, useSalvarDRE } from "./useDREPorCentro";
 export { useNotificacoes, useMarcarComoLida, useVerificarOrcamentos } from "./useNotificacoes";
 export { useReembolsosFOA, useCreateReembolso, useUpdateReembolso, useDeleteReembolso, useReembolsosAcumulados } from "./useReembolsosFOA";
 export { useContasFornecedores, useKPIsContasFornecedores, useLancamentosFornecedor, useCreateContaFornecedor, useCreateLancamento, useSaldoContaFornecedor } from "./useContasFornecedores";
+export { useFornecedorDocumentos, useUploadFornecedorDocumento, useDeleteFornecedorDocumento } from "./useFornecedorDocumentos";
 
 // ============= DOMAIN-SPECIFIC HOOKS =============
 // Projects
