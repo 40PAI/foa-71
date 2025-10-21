@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { useProjectState } from "@/hooks/useContextHooks";
 import {
   useContasFornecedores,
@@ -26,9 +27,23 @@ export default function ContasFornecedoresPage() {
   const [lancamentoModalOpen, setLancamentoModalOpen] = useState(false);
   const [contaModalOpen, setContaModalOpen] = useState(false);
   const [amortizacaoModalOpen, setAmortizacaoModalOpen] = useState(false);
+  const [filtroFornecedor, setFiltroFornecedor] = useState<string>("");
 
   const { data: contas, isLoading } = useContasFornecedores(projectData?.id);
   const kpis = useKPIsContasFornecedores(projectData?.id);
+
+  // Filtrar contas por fornecedor
+  const contasFiltradas = contas?.filter((conta: any) => {
+    if (!filtroFornecedor) return true;
+    const searchTerm = filtroFornecedor.toLowerCase();
+    const fornecedorNome = conta.fornecedores?.nome?.toLowerCase() || "";
+    const fornecedorNif = conta.fornecedores?.nif?.toLowerCase() || "";
+    const categoria = conta.categoria?.toLowerCase() || conta.fornecedores?.categoria_principal?.toLowerCase() || "";
+    
+    return fornecedorNome.includes(searchTerm) || 
+           fornecedorNif.includes(searchTerm) || 
+           categoria.includes(searchTerm);
+  });
 
   if (!projectData) {
     return (
@@ -105,13 +120,23 @@ export default function ContasFornecedoresPage() {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Filtro de busca */}
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por fornecedor, NIF ou categoria..."
+              value={filtroFornecedor}
+              onChange={(e) => setFiltroFornecedor(e.target.value)}
+              className="pl-10"
+            />
+          </div>
           {isLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          ) : contas && contas.length > 0 ? (
+          ) : contasFiltradas && contasFiltradas.length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
@@ -126,11 +151,17 @@ export default function ContasFornecedoresPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contas.map((conta: any) => (
+                {contasFiltradas.map((conta: any) => (
                   <ContaRow key={conta.id} conta={conta} />
                 ))}
               </TableBody>
             </Table>
+          ) : filtroFornecedor ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Search className="mx-auto h-12 w-12 mb-2 opacity-50" />
+              <p>Nenhum fornecedor encontrado</p>
+              <p className="text-sm">Tente ajustar os termos de busca</p>
+            </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="mx-auto h-12 w-12 mb-2 opacity-50" />
