@@ -6,12 +6,12 @@ export interface GastoObra {
   id: string;
   data_movimento: string;
   descricao: string;
+  categoria?: string;
   recebimento_foa: number;
   fof_financiamento: number;
   foa_auto: number;
   saida: number;
   observacoes?: string;
-  categoria?: string;
   comprovante_url?: string;
   projeto_id: number;
   centro_custo_id?: string;
@@ -100,11 +100,11 @@ export function useCreateGastoObra() {
       };
 
       // Adicionar campos opcionais apenas se tiverem valor
-      // Para entradas sem fonte especificada, usar REC_FOA como padrão
-      if (gasto.tipo_movimento === "entrada") {
-        insertData.fonte_financiamento = gasto.fonte_financiamento || "REC_FOA";
-      } else if (gasto.fonte_financiamento) {
+      if (gasto.fonte_financiamento) {
         insertData.fonte_financiamento = gasto.fonte_financiamento;
+      } else if (gasto.tipo_movimento === "entrada") {
+        // Se não especificou fonte, usar REC_FOA como padrão para entradas
+        insertData.fonte_financiamento = "REC_FOA";
       }
       if (gasto.observacoes) {
         insertData.observacoes = gasto.observacoes;
