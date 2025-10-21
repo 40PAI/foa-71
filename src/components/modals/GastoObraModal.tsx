@@ -82,7 +82,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
     <BaseModal
       open={open}
       onOpenChange={onOpenChange}
-      title={gasto ? "Editar Gasto da Obra" : "Novo Gasto da Obra"}
+      title={gasto ? "Editar Movimento" : "Novo Movimento"}
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
