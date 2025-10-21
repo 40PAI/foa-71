@@ -3,7 +3,6 @@ import { UseFormReturn } from "react-hook-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProjectBasicInfo } from "./ProjectBasicInfo";
 import { ProjectFinancialInfo } from "./ProjectFinancialInfo";
-import { ProjectLocationInfo } from "./ProjectLocationInfo";
 import { ProjectStagesForm } from "../ProjectStagesForm";
 import { ProjectCentrosCustoForm, type ProjectCentroCusto } from "./ProjectCentrosCustoForm";
 import type { ProjectFormDataType, ProjectStage } from "./types";
@@ -29,11 +28,10 @@ export function ProjectFormTabs({
 }: ProjectFormTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="geral">Geral</TabsTrigger>
         <TabsTrigger value="etapas">Etapas</TabsTrigger>
         <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-        <TabsTrigger value="localizacao">Localização</TabsTrigger>
       </TabsList>
 
       <TabsContent value="geral" className="space-y-4">
@@ -62,10 +60,6 @@ export function ProjectFormTabs({
           onCentrosCustoChange={onCentrosCustoChange}
           stages={stages}
         />
-      </TabsContent>
-
-      <TabsContent value="localizacao" className="space-y-4">
-        <ProjectLocationInfo form={form} />
       </TabsContent>
     </Tabs>
   );

@@ -16,65 +16,42 @@ interface ProjectFinancialInfoProps {
 export function ProjectFinancialInfo({ form, centrosCusto, onCentrosCustoChange, stages }: ProjectFinancialInfoProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <FormDescription className="text-xs text-muted-foreground">
-          Os valores serão arredondados para o inteiro mais próximo (ex: 1.232,50 Kz → 1.233 Kz)
-        </FormDescription>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <FormField
-            control={form.control}
-            name="orcamento"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Orçamento Total (Kz) *</FormLabel>
-                <FormControl>
-                  <CurrencyInput
-                    placeholder="0,00"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="limite_aprovacao"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Limite de Aprovação (Kz) *</FormLabel>
+              <FormControl>
+                <CurrencyInput
+                  placeholder="0,00"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="limite_aprovacao"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Limite de Aprovação (Kz) *</FormLabel>
-                <FormControl>
-                  <CurrencyInput
-                    placeholder="0,00"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="limite_gastos"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Limite de Gastos do Projeto (Kz)</FormLabel>
-                <FormControl>
-                  <CurrencyInput
-                    placeholder="0,00"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="limite_gastos"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Limite de Gastos do Projeto (Kz)</FormLabel>
+              <FormControl>
+                <CurrencyInput
+                  placeholder="0,00"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       <Separator className="my-6" />

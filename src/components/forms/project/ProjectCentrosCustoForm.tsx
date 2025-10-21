@@ -75,8 +75,8 @@ export function ProjectCentrosCustoForm({
           </p>
         </div>}
 
-      {centrosCusto.map((centro, index) => <div key={index} className="border rounded-lg p-4 space-y-4">
-          <div className="flex justify-between items-center bg-slate-200">
+      {centrosCusto.map((centro, index) => <div key={index} className="border rounded-lg p-4 space-y-4 bg-card">
+          <div className="flex justify-between items-center pb-3 border-l-4 border-accent pl-3 bg-accent/10 rounded-sm">
             <div className="flex items-center gap-2">
               <h4 className="font-semibold">Centro {index + 1}</h4>
               {isCentroValido(centro) ? <Badge variant="default" className="bg-green-500">✓ Válido</Badge> : <Badge variant="destructive">✗ Campos obrigatórios</Badge>}

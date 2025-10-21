@@ -90,8 +90,8 @@ export function ProjectStagesForm({
         </div>
       </div>
 
-      {stages.map((stage, index) => <div key={index} className="border rounded-lg p-4 space-y-4">
-          <div className="flex justify-between items-center bg-slate-300">
+      {stages.map((stage, index) => <div key={index} className="border rounded-lg p-4 space-y-4 bg-card">
+          <div className="flex justify-between items-center pb-3 border-l-4 border-accent pl-3 bg-accent/10 rounded-sm">
             <div className="flex items-center gap-2">
               <h4 className="font-semibold">Etapa {stage.numero_etapa}</h4>
               {stage.nome_etapa.trim() ? <Badge variant="default" className="bg-green-500">✓ Válida</Badge> : <Badge variant="destructive">✗ Nome obrigatório</Badge>}

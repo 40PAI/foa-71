@@ -4,7 +4,6 @@
 // Project domain
 export * from "../forms/project/ProjectBasicInfo";
 export * from "../forms/project/ProjectFinancialInfo";
-export * from "../forms/project/ProjectLocationInfo";
 export * from "../forms/project/ProjectFormTabs";
 
 // Financial domain

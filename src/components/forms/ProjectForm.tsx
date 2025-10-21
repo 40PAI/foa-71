@@ -375,7 +375,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   };
 
   const handleTabNavigation = (direction: 'next' | 'prev') => {
-    const tabs = ["geral", "etapas", "financeiro", "localizacao"];
+    const tabs = ["geral", "etapas", "financeiro"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (direction === 'next' && currentIndex < tabs.length - 1) {
@@ -410,7 +410,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
               </Button>
             )}
             
-            {activeTab !== "localizacao" && (
+            {activeTab !== "financeiro" && (
               <Button
                 type="button"
                 variant="outline"
