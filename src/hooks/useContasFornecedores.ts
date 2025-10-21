@@ -7,6 +7,9 @@ export interface ContaFornecedor {
   fornecedor_id: string;
   projeto_id: number;
   saldo_inicial: number;
+  descricao?: string;
+  data_vencimento?: string;
+  categoria?: string;
   created_at: string;
   updated_at: string;
 }
