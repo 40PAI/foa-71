@@ -28,9 +28,6 @@ import { useRequisitions } from "@/hooks/useRequisitions";
 import { CategoryExpenseCard } from "@/components/financial/CategoryExpenseCard";
 import { Building, Users, Truck, DollarSign } from "lucide-react";
 import { useDetailedExpenses } from "@/hooks/useIntegratedFinances";
-import { CashFlowKPICards } from "@/components/financial/CashFlowKPICards";
-import { CashFlowTable } from "@/components/financial/CashFlowTable";
-import { useCashFlowSummary } from "@/hooks/useCashFlow";
 import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
 import { CentrosCustoSummary } from "@/components/financial/CentrosCustoSummary";
 import { useClientes } from "@/hooks/useClientes";
@@ -75,7 +72,6 @@ export function OptimizedFinancasPage() {
   const { data: taskAnalytics } = useTaskFinancialAnalytics(selectedProjectId);
   const { data: requisitions = [] } = useRequisitions();
   const { data: allExpenses = [] } = useDetailedExpenses(selectedProjectId);
-  const { data: cashflowSummary } = useCashFlowSummary(selectedProjectId);
   const { data: saldos = [] } = useSaldosCentrosCusto(selectedProjectId);
   const { data: clientes = [] } = useClientes(selectedProjectId);
   const [expandedDashboardOpen, setExpandedDashboardOpen] = useState(false);
@@ -485,21 +481,6 @@ export function OptimizedFinancasPage() {
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection
-          value="cashflow"
-          title="Fluxo de Caixa"
-          icon={Wallet}
-          badge={{ 
-            text: `Saldo: ${formatCurrency(cashflowSummary?.saldo || 0)}`, 
-            variant: (cashflowSummary?.saldo || 0) >= 0 ? "default" : "destructive" 
-          }}
-        >
-          <div className="space-y-6">
-            <CashFlowKPICards projectId={selectedProjectId} />
-            <CashFlowTable projectId={selectedProjectId} />
-          </div>
-        </CollapsibleFinancialSection>
-
-        <CollapsibleFinancialSection
           value="clientes"
           title="Contas Correntes - Clientes"
           icon={Users}
@@ -521,78 +502,6 @@ export function OptimizedFinancasPage() {
           }
         >
           <CentrosCustoSummary projectId={selectedProjectId} />
-        </CollapsibleFinancialSection>
-
-        <CollapsibleFinancialSection
-          value="categories"
-          title="Categorias Orçamentárias Tradicionais"
-          icon={FileText}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Categorias Orçamentárias Tradicionais</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {isLoadingFinances ? (
-                <div className="p-6">
-                  <TableSkeleton />
-                </div>
-              ) : financas.length === 0 ? (
-                <div className="text-center p-8">
-                  <TrendingUp className="h-12 w-12 text-muted-foreground mb-4 mx-auto" />
-                  <h3 className="text-lg font-semibold mb-2">Sem Dados Financeiros</h3>
-                  <p className="text-muted-foreground">
-                    Não há dados financeiros cadastrados para este projeto.
-                  </p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[150px]">Categoria de Custo</TableHead>
-                        <TableHead className="min-w-[120px]">Valor Orçamentado</TableHead>
-                        <TableHead className="min-w-[120px]">Valor Gasto</TableHead>
-                        <TableHead className="min-w-[100px]">Desvio</TableHead>
-                        <TableHead className="min-w-[100px]">Performance</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {financas.map((financa) => {
-                        const desvio = financa.gasto - financa.orcamentado;
-                        const performance = financa.orcamentado > 0 ? (financa.gasto / financa.orcamentado) * 100 : 0;
-                        
-                        return (
-                          <TableRow key={financa.id}>
-                            <TableCell className="font-medium">{financa.categoria}</TableCell>
-                            <TableCell>{formatCurrency(financa.orcamentado)}</TableCell>
-                            <TableCell>{formatCurrency(financa.gasto)}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                {desvio > 0 ? (
-                                  <TrendingDown className="h-4 w-4 text-red-600" />
-                                ) : (
-                                  <TrendingUp className="h-4 w-4 text-green-600" />
-                                )}
-                                <span className={`font-medium ${desvio > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {formatCurrency(Math.abs(desvio))}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant={performance > 100 ? 'destructive' : performance > 80 ? 'default' : 'secondary'}>
-                                {performance.toFixed(1)}%
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </CollapsibleFinancialSection>
       </Accordion>
     </div>
