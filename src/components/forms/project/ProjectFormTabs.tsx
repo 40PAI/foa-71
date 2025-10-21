@@ -29,39 +29,15 @@ export function ProjectFormTabs({
 }: ProjectFormTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
+      <TabsList className="grid w-full grid-cols-4">
         <TabsTrigger value="geral">Geral</TabsTrigger>
-        <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
-        <TabsTrigger value="centros_custo">Centros Custo</TabsTrigger>
-        <TabsTrigger value="localizacao">Localização</TabsTrigger>
         <TabsTrigger value="etapas">Etapas</TabsTrigger>
+        <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+        <TabsTrigger value="localizacao">Localização</TabsTrigger>
       </TabsList>
 
       <TabsContent value="geral" className="space-y-4">
         <ProjectBasicInfo form={form} />
-      </TabsContent>
-
-      <TabsContent value="financeiro" className="space-y-4">
-        <ProjectFinancialInfo form={form} />
-      </TabsContent>
-
-      <TabsContent value="centros_custo" className="space-y-4">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-2">Centros de Custo do Projeto</h3>
-          <p className="text-sm text-muted-foreground">
-            Defina os centros de custo e aloque-os às etapas para melhor controle financeiro.
-          </p>
-        </div>
-        
-        <ProjectCentrosCustoForm
-          centrosCusto={centrosCusto}
-          onCentrosCustoChange={onCentrosCustoChange}
-          stages={stages}
-        />
-      </TabsContent>
-
-      <TabsContent value="localizacao" className="space-y-4">
-        <ProjectLocationInfo form={form} />
       </TabsContent>
 
       <TabsContent value="etapas" className="space-y-4">
@@ -77,6 +53,19 @@ export function ProjectFormTabs({
           stages={stages}
           onStagesChange={onStagesChange}
         />
+      </TabsContent>
+
+      <TabsContent value="financeiro" className="space-y-4">
+        <ProjectFinancialInfo 
+          form={form}
+          centrosCusto={centrosCusto}
+          onCentrosCustoChange={onCentrosCustoChange}
+          stages={stages}
+        />
+      </TabsContent>
+
+      <TabsContent value="localizacao" className="space-y-4">
+        <ProjectLocationInfo form={form} />
       </TabsContent>
     </Tabs>
   );

@@ -87,7 +87,7 @@ export function useOptimizedMutation<TData = unknown, TError = unknown, TVariabl
   return useMutation<TData, TError, TVariables, TContext>({
     ...mutationOptions,
     mutationFn: options.mutationFn,
-    onSuccess: (data, variables, context) => {
+    onSuccess: (data, variables, context, ...rest) => {
       // Invalidate specified queries
       invalidateKeys.forEach(queryKey => {
         const finalQueryKey = projectSpecific && selectedProjectId 
@@ -97,7 +97,7 @@ export function useOptimizedMutation<TData = unknown, TError = unknown, TVariabl
       });
       
       if (onSuccess) {
-        onSuccess(data, variables, context);
+        (onSuccess as any)(data, variables, context, ...rest);
       }
     },
   });

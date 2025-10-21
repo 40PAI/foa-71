@@ -162,7 +162,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
         variant: "destructive",
         duration: 5000,
       });
-      setActiveTab("centros_custo");
+      setActiveTab("financeiro");
       return false;
     }
 
@@ -375,7 +375,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   };
 
   const handleTabNavigation = (direction: 'next' | 'prev') => {
-    const tabs = ["geral", "financeiro", "centros_custo", "localizacao", "etapas"];
+    const tabs = ["geral", "etapas", "financeiro", "localizacao"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (direction === 'next' && currentIndex < tabs.length - 1) {
@@ -410,7 +410,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
               </Button>
             )}
             
-            {activeTab !== "etapas" && (
+            {activeTab !== "localizacao" && (
               <Button
                 type="button"
                 variant="outline"
