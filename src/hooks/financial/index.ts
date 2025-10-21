@@ -51,6 +51,12 @@ export {
   type TopDeviationTask
 } from "../useTaskFinancialAnalytics";
 
+// Task financial summary hooks
+export { useTaskFinancialSummary } from "../useTaskFinancialSummary";
+
+// Enhanced financial chart data
+export { useEnhancedFinancialChartData } from "../useEnhancedFinancialChartData";
+
 // Re-export types
 export type {
   Finance,

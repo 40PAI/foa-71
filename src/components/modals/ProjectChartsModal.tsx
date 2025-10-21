@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { BarChart3, Download } from "lucide-react";
 import { useProjectChartData } from "@/hooks/useProjectChartData";
+import { useEnhancedFinancialChartData } from "@/hooks/useEnhancedFinancialChartData";
 import { LoadingSpinner } from "../LoadingSpinner";
 import { SCurveChart } from "../charts/SCurveChart";
 import { GaugeChart } from "../charts/GaugeChart";
@@ -19,13 +20,20 @@ import { BurndownChart } from "../charts/BurndownChart";
 import { IncidentChart } from "../charts/IncidentChart";
 import { KPICard } from "../KPICard";
 import { formatCurrency } from "@/utils/formatters";
+import { CentrosCustoChartSection } from "@/components/financial/CentrosCustoChartSection";
+import { StageFinancialSection } from "@/components/financial/StageFinancialSection";
+import { RequisitionsFinancialSection } from "@/components/financial/RequisitionsFinancialSection";
+import { FornecedoresFinancialSection } from "@/components/financial/FornecedoresFinancialSection";
+import { TasksFinancialSection } from "@/components/financial/TasksFinancialSection";
+import { CollapsibleFinancialSection } from "@/components/financial/CollapsibleFinancialSection";
 import { 
   TrendingUp, 
   Clock, 
   ShieldCheck, 
   Package, 
   Users,
-  AlertTriangle
+  AlertTriangle,
+  DollarSign
 } from "lucide-react";
 
 interface ProjectChartsModalProps {
@@ -35,8 +43,9 @@ interface ProjectChartsModalProps {
 
 export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModalProps) {
   const { data: chartData, isLoading, error } = useProjectChartData(projectId);
+  const { data: financialData, isLoading: isLoadingFinancial } = useEnhancedFinancialChartData(projectId);
 
-  if (isLoading) return <LoadingSpinner />;
+  if (isLoading || isLoadingFinancial) return <LoadingSpinner />;
   if (error || !chartData) return null;
 
   const handleExport = () => {
@@ -113,27 +122,63 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
             </TabsContent>
 
             <TabsContent value="finance" className="space-y-6 mt-6">
-              <StackedBarChart 
-                data={chartData.chartData.finance}
-                title="Orçado vs Real por Categoria"
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Visão Geral Financeira */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <KPICard
-                  title="Desvio Orçamental"
-                  value={`${((chartData.project.gasto / chartData.project.orcamento - 1) * 100).toFixed(1)}%`}
-                  subtitle="Gasto vs Orçado"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert={chartData.project.gasto <= chartData.project.orcamento ? "green" : "red"}
+                  title="Orçamento Total"
+                  value={formatCurrency(chartData.project.orcamento)}
+                  icon={TrendingUp}
+                  variant="default"
+                />
+                <KPICard
+                  title="Gasto Total"
+                  value={formatCurrency(chartData.project.gasto)}
+                  icon={TrendingUp}
+                  variant={(chartData.project.gasto / chartData.project.orcamento) > 0.9 ? "warning" : "default"}
                 />
                 <KPICard
                   title="Saldo Disponível"
                   value={formatCurrency(chartData.project.orcamento - chartData.project.gasto)}
-                  subtitle="Orçamento restante"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert={chartData.project.orcamento > chartData.project.gasto ? "green" : "red"}
+                  icon={DollarSign}
+                  variant={(chartData.project.orcamento - chartData.project.gasto) < (chartData.project.orcamento * 0.2) ? "danger" : "default"}
+                />
+                <KPICard
+                  title="Desvio Orçamental"
+                  value={`${((chartData.project.gasto / chartData.project.orcamento - 1) * 100).toFixed(1)}%`}
+                  icon={TrendingUp}
+                  variant={(chartData.project.gasto / chartData.project.orcamento - 1) > 0.1 ? "danger" : "default"}
                 />
               </div>
+
+              <StackedBarChart
+                data={chartData.chartData.finance}
+                title="Orçado vs Real por Categoria"
+              />
+
+              {/* Seções Colapsáveis */}
+              {financialData && (
+                <>
+                  <CollapsibleFinancialSection title="Centros de Custo" value="centros" icon={<DollarSign className="h-4 w-4" />} defaultOpen={false}>
+                    <CentrosCustoChartSection data={financialData.centrosCusto} />
+                  </CollapsibleFinancialSection>
+
+                  <CollapsibleFinancialSection title="Etapas do Projeto" value="etapas" icon={<Package className="h-4 w-4" />} defaultOpen={false}>
+                    <StageFinancialSection data={financialData.etapas} />
+                  </CollapsibleFinancialSection>
+
+                  <CollapsibleFinancialSection title="Requisições" value="requisicoes" icon={<Package className="h-4 w-4" />} defaultOpen={false}>
+                    <RequisitionsFinancialSection data={financialData.requisicoes} />
+                  </CollapsibleFinancialSection>
+
+                  <CollapsibleFinancialSection title="Fornecedores" value="fornecedores" icon={<Users className="h-4 w-4" />} defaultOpen={false}>
+                    <FornecedoresFinancialSection data={financialData.fornecedores} />
+                  </CollapsibleFinancialSection>
+
+                  <CollapsibleFinancialSection title="Análise de Tarefas" value="tarefas" icon={<TrendingUp className="h-4 w-4" />} defaultOpen={false}>
+                    <TasksFinancialSection data={financialData.tarefas} />
+                  </CollapsibleFinancialSection>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="purchases" className="space-y-6 mt-6">
