@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LancamentoFornecedorModal } from "@/components/modals/LancamentoFornecedorModal";
 import { ContaFornecedorModal } from "@/components/modals/ContaFornecedorModal";
+import { AmortizacaoFornecedorModal } from "@/components/modals/AmortizacaoFornecedorModal";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
@@ -24,6 +25,7 @@ export default function ContasFornecedoresPage() {
   const [selectedConta, setSelectedConta] = useState<string | null>(null);
   const [lancamentoModalOpen, setLancamentoModalOpen] = useState(false);
   const [contaModalOpen, setContaModalOpen] = useState(false);
+  const [amortizacaoModalOpen, setAmortizacaoModalOpen] = useState(false);
 
   const { data: contas, isLoading } = useContasFornecedores(projectData?.id);
   const kpis = useKPIsContasFornecedores(projectData?.id);
@@ -92,10 +94,15 @@ export default function ContasFornecedoresPage() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Contas Correntes por Fornecedor</CardTitle>
-          <Button onClick={() => setContaModalOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Lançamento
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setContaModalOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Crédito
+            </Button>
+            <Button variant="outline" onClick={() => setAmortizacaoModalOpen(true)}>
+              Amortização
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -136,6 +143,12 @@ export default function ContasFornecedoresPage() {
       </Card>
 
       <ContaFornecedorModal open={contaModalOpen} onOpenChange={setContaModalOpen} />
+
+      <AmortizacaoFornecedorModal 
+        open={amortizacaoModalOpen} 
+        onOpenChange={setAmortizacaoModalOpen}
+        projectId={projectData?.id}
+      />
 
       {selectedConta && (
         <LancamentoFornecedorModal

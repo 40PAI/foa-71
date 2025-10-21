@@ -50,7 +50,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
     <BaseModal
       open={open}
       onOpenChange={onOpenChange}
-      title="Nova Conta Corrente"
+      title="Novo Crédito"
       size="lg"
     >
       <div className="space-y-4">
@@ -77,7 +77,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="saldo">Saldo Inicial</Label>
+          <Label htmlFor="saldo">Valor</Label>
           <CurrencyInput
             id="saldo"
             value={saldoInicial}
@@ -142,7 +142,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
             onClick={handleSubmit} 
             disabled={!fornecedorId || createConta.isPending}
           >
-            {createConta.isPending ? "Criando..." : "Criar Conta"}
+            {createConta.isPending ? "Criando..." : "Criar Crédito"}
           </Button>
         </div>
       </div>
