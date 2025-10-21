@@ -28,7 +28,7 @@ export function ProjectCentrosCustoForm({
       codigo: "",
       nome: "",
       tipo: "categoria",
-      etapa_numero: stages.length > 0 ? stages[0].numero_etapa : undefined,
+      etapa_numero: undefined, // Deixar sem alocação inicial
       departamento: "",
       orcamento_mensal: 0
     };
@@ -38,7 +38,7 @@ export function ProjectCentrosCustoForm({
     const newCentros = centrosCusto.filter((_, i) => i !== index);
     onCentrosCustoChange(newCentros);
   };
-  const updateCentroCusto = (index: number, field: keyof ProjectCentroCusto, value: string | number) => {
+  const updateCentroCusto = (index: number, field: keyof ProjectCentroCusto, value: string | number | undefined) => {
     const newCentros = [...centrosCusto];
     newCentros[index] = {
       ...newCentros[index],
@@ -53,7 +53,7 @@ export function ProjectCentrosCustoForm({
     updateCentroCusto(index, "codigo", novoCodigo);
   };
   const isCentroValido = (centro: ProjectCentroCusto) => {
-    return centro.codigo.trim() !== "" && centro.nome.trim() !== "" && centro.tipo && (stages.length === 0 || centro.etapa_numero !== undefined);
+    return centro.codigo.trim() !== "" && centro.nome.trim() !== "" && centro.tipo;
   };
   return <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -68,10 +68,9 @@ export function ProjectCentrosCustoForm({
         </Button>
       </div>
 
-      {stages.length === 0 && <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            ⚠️ É necessário definir pelo menos uma etapa antes de criar centros de custo. 
-            Vá para a aba "Etapas" e adicione as etapas do projeto.
+      {stages.length === 0 && <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
+            ℹ️ Você pode criar centros de custo gerais ou aguardar a definição de etapas para alocá-los especificamente.
           </p>
         </div>}
 
@@ -118,20 +117,30 @@ export function ProjectCentrosCustoForm({
             </div>
 
             <div>
-              <label className="text-sm font-medium">
-                Alocado à Etapa*
-                {stages.length === 0 && <span className="text-red-500 ml-1">(Defina etapas primeiro)</span>}
-              </label>
-              <Select value={centro.etapa_numero?.toString()} onValueChange={value => updateCentroCusto(index, "etapa_numero", parseInt(value))} disabled={stages.length === 0}>
-                <SelectTrigger className={stages.length > 0 && !centro.etapa_numero ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Selecione a etapa" />
+              <label className="text-sm font-medium">Alocado à Etapa</label>
+              <Select 
+                value={centro.etapa_numero === undefined ? "geral" : centro.etapa_numero.toString()} 
+                onValueChange={value => {
+                  if (value === "geral") {
+                    updateCentroCusto(index, "etapa_numero", undefined);
+                  } else {
+                    updateCentroCusto(index, "etapa_numero", parseInt(value));
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a etapa ou Geral" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="geral">Geral (Sem etapa específica)</SelectItem>
                   {stages.map(stage => <SelectItem key={stage.numero_etapa} value={stage.numero_etapa.toString()}>
                       Etapa {stage.numero_etapa} - {stage.nome_etapa || "Sem nome"}
                     </SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione "Geral" para custos não vinculados a uma etapa específica
+              </p>
             </div>
 
             <div>
