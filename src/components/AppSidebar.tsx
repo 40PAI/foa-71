@@ -72,12 +72,6 @@ const menuItems = [
     module: "financas",
   },
   {
-    title: "Gastos da Obra",
-    icon: Wallet,
-    path: "/gastos-obra",
-    module: "financas",
-  },
-  {
     title: "Relatórios FOA",
     icon: FileText,
     path: "/relatorios-foa",
