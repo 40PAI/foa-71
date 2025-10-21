@@ -2,18 +2,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowDownCircle, ArrowUpCircle, TrendingUp, Wallet } from "lucide-react";
 import { formatCurrency } from "@/utils/currency";
 import { GastoObraSummary } from "@/hooks/useGastosObra";
-
 interface GastosObraKPICardsProps {
   summary: GastoObraSummary;
   isLoading: boolean;
 }
-
-export function GastosObraKPICards({ summary, isLoading }: GastosObraKPICardsProps) {
+export function GastosObraKPICards({
+  summary,
+  isLoading
+}: GastosObraKPICardsProps) {
   const totalEntradas = summary.total_recebimento_foa + summary.total_fof_financiamento + summary.total_foa_auto;
   const saldoPositivo = summary.saldo_atual >= 0;
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+  return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Recebimento FOA</CardTitle>
@@ -65,6 +64,5 @@ export function GastosObraKPICards({ summary, isLoading }: GastosObraKPICardsPro
           <p className="text-xs text-muted-foreground mt-1">{summary.total_movimentos} movimentos</p>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 }
