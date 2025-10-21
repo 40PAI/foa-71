@@ -13,6 +13,7 @@ interface MovimentacoesFinanceirasCardProps {
   selectedMonth?: number;
   selectedYear?: number;
   filterType?: "all" | "month";
+  centroCustoId?: string;
 }
 
 export function MovimentacoesFinanceirasCard({
@@ -20,15 +21,17 @@ export function MovimentacoesFinanceirasCard({
   selectedMonth,
   selectedYear,
   filterType = "all",
+  centroCustoId,
 }: MovimentacoesFinanceirasCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGasto, setEditingGasto] = useState<GastoObra | undefined>();
 
-  const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId);
+  const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId, centroCustoId);
   const { data: summary, isLoading: summaryLoading } = useGastosObraSummary(
     projectId,
     filterType === "month" ? selectedMonth : undefined,
-    filterType === "month" ? selectedYear : undefined
+    filterType === "month" ? selectedYear : undefined,
+    centroCustoId
   );
 
   const filteredGastos =
