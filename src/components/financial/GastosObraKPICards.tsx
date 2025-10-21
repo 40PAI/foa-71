@@ -42,7 +42,7 @@ export function GastosObraKPICards({ summary, isLoading }: GastosObraKPICardsPro
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Total Gastos</CardTitle>
+          <CardTitle className="text-sm font-medium">Total Custo</CardTitle>
           <ArrowDownCircle className="h-4 w-4 text-red-600" />
         </CardHeader>
         <CardContent>
@@ -62,9 +62,7 @@ export function GastosObraKPICards({ summary, isLoading }: GastosObraKPICardsPro
           <div className={`text-2xl font-bold ${saldoPositivo ? "text-green-600" : "text-red-600"}`}>
             {isLoading ? "..." : formatCurrency(summary.saldo_atual)}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            {summary.total_movimentos} movimentos
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">{summary.total_movimentos} movimentos</p>
         </CardContent>
       </Card>
     </div>
