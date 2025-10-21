@@ -498,14 +498,6 @@ export function OptimizedFinancasPage() {
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection
-          value="contas-correntes"
-          title="Contas Correntes"
-          icon={Users}
-        >
-          <ContasCorrentesSection projectId={selectedProjectId} />
-        </CollapsibleFinancialSection>
-
-        <CollapsibleFinancialSection
           value="centros-custo"
           title="Centros de Custo"
           icon={Wallet}

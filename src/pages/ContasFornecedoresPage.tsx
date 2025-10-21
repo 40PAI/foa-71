@@ -17,6 +17,7 @@ import { LancamentoFornecedorModal } from "@/components/modals/LancamentoFornece
 import { ContaFornecedorModal } from "@/components/modals/ContaFornecedorModal";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
 
 export default function ContasFornecedoresPage() {
   const { projectData } = useProjectState();
@@ -89,6 +90,9 @@ export default function ContasFornecedoresPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Contas Correntes Section */}
+      <ContasCorrentesSection projectId={projectData?.id} />
 
       {/* Tabela de Contas */}
       <Card>
