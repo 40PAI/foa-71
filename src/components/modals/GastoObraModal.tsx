@@ -34,8 +34,10 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
                           gasto?.foa_auto ? "FOA_AUTO" : "REC_FOA") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
     valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
     observacoes: gasto?.observacoes || "",
+    categoria: gasto?.categoria || "",
     centro_custo_id: gasto?.centro_custo_id || "",
     responsavel_id: gasto?.responsavel_id || user?.id || "",
+    responsavel_nome: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,11 +61,17 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
       if (formData.observacoes?.trim()) {
         gastoData.observacoes = formData.observacoes;
       }
+      if (formData.categoria) {
+        gastoData.categoria = formData.categoria;
+      }
       if (formData.centro_custo_id) {
         gastoData.centro_custo_id = formData.centro_custo_id;
       }
       if (formData.responsavel_id) {
         gastoData.responsavel_id = formData.responsavel_id;
+      }
+      if (formData.responsavel_nome?.trim()) {
+        gastoData.responsavel_nome = formData.responsavel_nome;
       }
 
       if (gasto?.id) {
@@ -158,9 +166,33 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="categoria">Categoria</Label>
+          <Select
+            value={formData.categoria}
+            onValueChange={(value) => setFormData({ ...formData, categoria: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione uma categoria..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mao_de_obra">Mão de obra</SelectItem>
+              <SelectItem value="materiais_construcao">Materiais de construção</SelectItem>
+              <SelectItem value="equipamentos_ferramentas">Equipamentos e ferramentas</SelectItem>
+              <SelectItem value="transporte_combustivel">Transporte e combustível</SelectItem>
+              <SelectItem value="servicos_subcontratados">Serviços subcontratados</SelectItem>
+              <SelectItem value="licencas_taxas">Licenças e taxas</SelectItem>
+              <SelectItem value="imprevistos">Imprevistos</SelectItem>
+              <SelectItem value="seguranca_epi">Segurança e EPI</SelectItem>
+              <SelectItem value="manutencao_equipamentos">Manutenção de equipamentos</SelectItem>
+              <SelectItem value="despesas_admin_ti">Despesas administrativas e comunicação/TI</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="centro_custo_id">Centro de Custo</Label>
+            <Label htmlFor="centro_custo_id">Centro de Custo Polo</Label>
             <Select
               value={formData.centro_custo_id}
               onValueChange={(value) => setFormData({ ...formData, centro_custo_id: value })}
@@ -179,22 +211,30 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="responsavel_id">Responsável</Label>
-            <Select
-              value={formData.responsavel_id}
-              onValueChange={(value) => setFormData({ ...formData, responsavel_id: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {profiles?.map((profile) => (
-                  <SelectItem key={profile.id} value={profile.id}>
-                    {profile.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="responsavel">Responsável</Label>
+            <div className="space-y-2">
+              <Select
+                value={formData.responsavel_id}
+                onValueChange={(value) => setFormData({ ...formData, responsavel_id: value, responsavel_nome: "" })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione da lista..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {profiles?.map((profile) => (
+                    <SelectItem key={profile.id} value={profile.id}>
+                      {profile.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Input
+                id="responsavel_nome"
+                placeholder="Ou digite o nome manualmente..."
+                value={formData.responsavel_nome}
+                onChange={(e) => setFormData({ ...formData, responsavel_nome: e.target.value, responsavel_id: "" })}
+              />
+            </div>
           </div>
         </div>
 

@@ -11,6 +11,7 @@ export interface GastoObra {
   foa_auto: number;
   saida: number;
   observacoes?: string;
+  categoria?: string;
   comprovante_url?: string;
   projeto_id: number;
   centro_custo_id?: string;
@@ -82,9 +83,11 @@ export function useCreateGastoObra() {
       fonte_financiamento?: "REC_FOA" | "FOF_FIN" | "FOA_AUTO";
       valor: number;
       observacoes?: string;
+      categoria?: string;
       centro_custo_id?: string;
       comprovante_url?: string;
       responsavel_id?: string;
+      responsavel_nome?: string;
     }) => {
       // Preparar os dados para inserção
       const insertData: any = {
@@ -93,7 +96,7 @@ export function useCreateGastoObra() {
         descricao: gasto.descricao,
         tipo_movimento: gasto.tipo_movimento,
         valor: gasto.valor,
-        categoria: "Gastos da Obra",
+        categoria: gasto.categoria || "Gastos da Obra",
       };
 
       // Adicionar campos opcionais apenas se tiverem valor
@@ -111,6 +114,9 @@ export function useCreateGastoObra() {
       }
       if (gasto.responsavel_id) {
         insertData.responsavel_id = gasto.responsavel_id;
+      }
+      if (gasto.responsavel_nome) {
+        insertData.responsavel_nome = gasto.responsavel_nome;
       }
 
       const { data, error } = await supabase
@@ -143,16 +149,23 @@ export function useUpdateGastoObra() {
   
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<GastoObra> & { id: string }) => {
+      const updateData: any = {};
+      
+      if (updates.data_movimento) updateData.data_movimento = updates.data_movimento;
+      if (updates.descricao) updateData.descricao = updates.descricao;
+      if (updates.recebimento_foa || updates.fof_financiamento || updates.foa_auto || updates.saida) {
+        updateData.valor = updates.recebimento_foa || updates.fof_financiamento || updates.foa_auto || updates.saida;
+      }
+      if (updates.observacoes !== undefined) updateData.observacoes = updates.observacoes;
+      if (updates.categoria !== undefined) updateData.categoria = updates.categoria;
+      if (updates.centro_custo_id !== undefined) updateData.centro_custo_id = updates.centro_custo_id;
+      if (updates.comprovante_url !== undefined) updateData.comprovante_url = updates.comprovante_url;
+      if (updates.responsavel_id !== undefined) updateData.responsavel_id = updates.responsavel_id;
+      if (updates.responsavel_nome !== undefined) updateData.responsavel_nome = updates.responsavel_nome;
+
       const { data, error } = await supabase
         .from("movimentos_financeiros")
-        .update({
-          data_movimento: updates.data_movimento,
-          descricao: updates.descricao,
-          valor: updates.recebimento_foa || updates.fof_financiamento || updates.foa_auto || updates.saida,
-          observacoes: updates.observacoes,
-          centro_custo_id: updates.centro_custo_id,
-          comprovante_url: updates.comprovante_url,
-        })
+        .update(updateData)
         .eq("id", id)
         .select()
         .single();
