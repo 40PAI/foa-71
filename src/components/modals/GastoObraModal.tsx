@@ -284,7 +284,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
 
         <FormActions
           onCancel={() => onOpenChange(false)}
-          submitLabel={gasto ? "Atualizar" : "Registrar Gasto"}
+          submitLabel={gasto ? "Atualizar" : "Registrar Movimento"}
           isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
       </form>

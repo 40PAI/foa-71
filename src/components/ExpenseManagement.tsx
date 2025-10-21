@@ -245,7 +245,7 @@ export function ExpenseManagement({
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
-                Registrar Gasto
+                Registrar Movimento
               </Button>
             </DialogTrigger>
             <DialogContent>

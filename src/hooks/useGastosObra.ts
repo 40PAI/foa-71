@@ -182,11 +182,11 @@ export function useCreateGastoObra() {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
       queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
       queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
-      toast.success("Gasto registrado com sucesso");
+      toast.success("Movimento registrado com sucesso");
     },
     onError: (error) => {
-      console.error("Erro ao registrar gasto:", error);
-      toast.error("Erro ao registrar gasto da obra");
+      console.error("Erro ao registrar movimento:", error);
+      toast.error("Erro ao registrar movimento da obra");
     },
   });
 }
