@@ -127,26 +127,25 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                 <KPICard
                   title="Orçamento Total"
                   value={formatCurrency(chartData.project.orcamento)}
-                  icon={TrendingUp}
-                  variant="default"
+                  icon={<TrendingUp className="h-4 w-4" />}
                 />
                 <KPICard
                   title="Gasto Total"
                   value={formatCurrency(chartData.project.gasto)}
-                  icon={TrendingUp}
-                  variant={(chartData.project.gasto / chartData.project.orcamento) > 0.9 ? "warning" : "default"}
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  alert={(chartData.project.gasto / chartData.project.orcamento) > 0.9 ? "red" : "green"}
                 />
                 <KPICard
                   title="Saldo Disponível"
                   value={formatCurrency(chartData.project.orcamento - chartData.project.gasto)}
-                  icon={DollarSign}
-                  variant={(chartData.project.orcamento - chartData.project.gasto) < (chartData.project.orcamento * 0.2) ? "danger" : "default"}
+                  icon={<DollarSign className="h-4 w-4" />}
+                  alert={(chartData.project.orcamento - chartData.project.gasto) < (chartData.project.orcamento * 0.2) ? "red" : "green"}
                 />
                 <KPICard
                   title="Desvio Orçamental"
                   value={`${((chartData.project.gasto / chartData.project.orcamento - 1) * 100).toFixed(1)}%`}
-                  icon={TrendingUp}
-                  variant={(chartData.project.gasto / chartData.project.orcamento - 1) > 0.1 ? "danger" : "default"}
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  alert={(chartData.project.gasto / chartData.project.orcamento - 1) > 0.1 ? "red" : "green"}
                 />
               </div>
 
@@ -158,23 +157,23 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
               {/* Seções Colapsáveis */}
               {financialData && (
                 <>
-                  <CollapsibleFinancialSection title="Centros de Custo" value="centros" icon={<DollarSign className="h-4 w-4" />} defaultOpen={false}>
+                  <CollapsibleFinancialSection title="Centros de Custo" value="centros" icon={DollarSign} defaultOpen={false}>
                     <CentrosCustoChartSection data={financialData.centrosCusto} />
                   </CollapsibleFinancialSection>
 
-                  <CollapsibleFinancialSection title="Etapas do Projeto" value="etapas" icon={<Package className="h-4 w-4" />} defaultOpen={false}>
+                  <CollapsibleFinancialSection title="Etapas do Projeto" value="etapas" icon={Package} defaultOpen={false}>
                     <StageFinancialSection data={financialData.etapas} />
                   </CollapsibleFinancialSection>
 
-                  <CollapsibleFinancialSection title="Requisições" value="requisicoes" icon={<Package className="h-4 w-4" />} defaultOpen={false}>
+                  <CollapsibleFinancialSection title="Requisições" value="requisicoes" icon={Package} defaultOpen={false}>
                     <RequisitionsFinancialSection data={financialData.requisicoes} />
                   </CollapsibleFinancialSection>
 
-                  <CollapsibleFinancialSection title="Fornecedores" value="fornecedores" icon={<Users className="h-4 w-4" />} defaultOpen={false}>
+                  <CollapsibleFinancialSection title="Fornecedores" value="fornecedores" icon={Users} defaultOpen={false}>
                     <FornecedoresFinancialSection data={financialData.fornecedores} />
                   </CollapsibleFinancialSection>
 
-                  <CollapsibleFinancialSection title="Análise de Tarefas" value="tarefas" icon={<TrendingUp className="h-4 w-4" />} defaultOpen={false}>
+                  <CollapsibleFinancialSection title="Análise de Tarefas" value="tarefas" icon={TrendingUp} defaultOpen={false}>
                     <TasksFinancialSection data={financialData.tarefas} />
                   </CollapsibleFinancialSection>
                 </>
