@@ -33,6 +33,7 @@ import { CashFlowTable } from "@/components/financial/CashFlowTable";
 import { useCashFlowSummary } from "@/hooks/useCashFlow";
 import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
 import { CentrosCustoSummary } from "@/components/financial/CentrosCustoSummary";
+import { useClientes } from "@/hooks/useClientes";
 import { FundingBreakdownSection } from "@/components/financial/FundingBreakdownSection";
 import { ReembolsosFOASection } from "@/components/financial/ReembolsosFOASection";
 import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
@@ -76,6 +77,7 @@ export function OptimizedFinancasPage() {
   const { data: allExpenses = [] } = useDetailedExpenses(selectedProjectId);
   const { data: cashflowSummary } = useCashFlowSummary(selectedProjectId);
   const { data: saldos = [] } = useSaldosCentrosCusto(selectedProjectId);
+  const { data: clientes = [] } = useClientes(selectedProjectId);
   const [expandedDashboardOpen, setExpandedDashboardOpen] = useState(false);
 
   // Calculate totals by category for cards
@@ -495,6 +497,18 @@ export function OptimizedFinancasPage() {
             <CashFlowKPICards projectId={selectedProjectId} />
             <CashFlowTable projectId={selectedProjectId} />
           </div>
+        </CollapsibleFinancialSection>
+
+        <CollapsibleFinancialSection
+          value="clientes"
+          title="Contas Correntes - Clientes"
+          icon={Users}
+          badge={{ 
+            text: `${clientes.length} clientes`, 
+            variant: "outline" 
+          }}
+        >
+          <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection

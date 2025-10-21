@@ -91,8 +91,8 @@ export default function ContasFornecedoresPage() {
         </Card>
       </div>
 
-      {/* Contas Correntes Section */}
-      <ContasCorrentesSection projectId={projectData?.id} />
+      {/* Contas Correntes Section - Only Fornecedores */}
+      <ContasCorrentesSection projectId={projectData?.id} mode="fornecedores" />
 
       {/* Tabela de Contas */}
       <Card>

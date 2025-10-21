@@ -13,9 +13,10 @@ import type { Cliente } from "@/types/contasCorrentes";
 
 interface ContasCorrentesSectionProps {
   projectId?: number;
+  mode?: 'both' | 'clientes' | 'fornecedores';
 }
 
-export function ContasCorrentesSection({ projectId }: ContasCorrentesSectionProps) {
+export function ContasCorrentesSection({ projectId, mode = 'both' }: ContasCorrentesSectionProps) {
   const [clienteModalOpen, setClienteModalOpen] = useState(false);
   const [clienteToEdit, setClienteToEdit] = useState<Cliente | undefined>();
   const [viewClienteModalOpen, setViewClienteModalOpen] = useState(false);
@@ -27,6 +28,81 @@ export function ContasCorrentesSection({ projectId }: ContasCorrentesSectionProp
   const [viewFornecedorModalOpen, setViewFornecedorModalOpen] = useState(false);
   const [fornecedorToView, setFornecedorToView] = useState<any>();
 
+  // Render only clientes if mode is 'clientes'
+  if (mode === 'clientes') {
+    return (
+      <>
+        <ClientesKPICards projectId={projectId} />
+        <ClientesTable
+          projectId={projectId}
+          onAdd={() => {
+            setClienteToEdit(undefined);
+            setClienteModalOpen(true);
+          }}
+          onEdit={(cliente) => {
+            setClienteToEdit(cliente);
+            setClienteModalOpen(true);
+          }}
+          onView={(cliente) => {
+            setClienteToView(cliente);
+            setViewClienteModalOpen(true);
+          }}
+        />
+
+        {/* Modals */}
+        <ClienteModal
+          open={clienteModalOpen}
+          onOpenChange={setClienteModalOpen}
+          cliente={clienteToEdit}
+          projectId={projectId}
+        />
+        <ViewClienteModal
+          open={viewClienteModalOpen}
+          onOpenChange={setViewClienteModalOpen}
+          cliente={clienteToView}
+        />
+      </>
+    );
+  }
+
+  // Render only fornecedores if mode is 'fornecedores'
+  if (mode === 'fornecedores') {
+    return (
+      <>
+        <FornecedoresKPICards projectId={projectId} />
+        <FornecedoresTable
+          projectId={projectId}
+          onAdd={() => {
+            setFornecedorToEdit(undefined);
+            setFornecedorModalOpen(true);
+          }}
+          onEdit={(fornecedor) => {
+            setFornecedorToEdit(fornecedor);
+            setFornecedorModalOpen(true);
+          }}
+          onView={(fornecedor) => {
+            setFornecedorToView(fornecedor);
+            setViewFornecedorModalOpen(true);
+          }}
+        />
+
+        {/* Fornecedores Modals */}
+        <FornecedorModal
+          open={fornecedorModalOpen}
+          onOpenChange={setFornecedorModalOpen}
+          fornecedor={fornecedorToEdit}
+        />
+        
+        <ViewFornecedorModal
+          open={viewFornecedorModalOpen}
+          onOpenChange={setViewFornecedorModalOpen}
+          fornecedor={fornecedorToView}
+        />
+      </>
+    );
+  }
+
+  // Default: Render both with tabs
   return (
     <>
       <Tabs defaultValue="clientes" className="space-y-4">
