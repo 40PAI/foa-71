@@ -7,6 +7,7 @@ export interface CentroCusto {
   nome: string;
   tipo: TipoCentroCusto;
   projeto_id?: number;
+  etapa_id?: number; // Vinculação com etapa do projeto
   departamento?: string;
   ativo: boolean;
   responsavel_id?: string;

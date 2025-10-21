@@ -4,10 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { ProjectFormTabs } from "./project/ProjectFormTabs";
+import { type ProjectCentroCusto } from "./project/ProjectCentrosCustoForm";
 import { FormActions } from "@/components/shared/FormActions";
 import { useCreateProject, useUpdateProject } from "@/hooks/useProjects";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateProjectStages, useUpdateProjectStages, useProjectStages } from "@/hooks/useProjectStages";
+import { useCentrosCusto, useCreateCentroCusto } from "@/hooks/useCentrosCusto";
 import { logger } from "@/lib/logger";
 import type { Tables } from "@/integrations/supabase/types";
 import { projectSchema, type ProjectFormDataType, type ProjectStage } from "./project/types";
@@ -19,6 +21,7 @@ interface ProjectFormProps {
 
 export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   const [stages, setStages] = useState<ProjectStage[]>([]);
+  const [centrosCusto, setCentrosCusto] = useState<ProjectCentroCusto[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("geral");
   
@@ -27,7 +30,9 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   const updateMutation = useUpdateProject();
   const createStagesMutation = useCreateProjectStages();
   const updateStagesMutation = useUpdateProjectStages();
+  const createCentroCustoMutation = useCreateCentroCusto();
   const { data: existingStages } = useProjectStages(project?.id);
+  const { data: existingCentrosCusto } = useCentrosCusto(project?.id);
 
   const form = useForm<ProjectFormDataType>({
     resolver: zodResolver(projectSchema),
@@ -90,6 +95,25 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
     }
   }, [existingStages, form]);
 
+  // Load existing centros de custo
+  useEffect(() => {
+    if (existingCentrosCusto && existingCentrosCusto.length > 0 && existingStages) {
+      const formattedCentros: ProjectCentroCusto[] = existingCentrosCusto.map((centro) => {
+        // Encontrar etapa correspondente
+        const etapa = existingStages.find(s => s.id === centro.etapa_id);
+        return {
+          codigo: centro.codigo,
+          nome: centro.nome,
+          tipo: centro.tipo,
+          etapa_numero: etapa?.numero_etapa,
+          departamento: centro.departamento || "",
+          orcamento_mensal: centro.orcamento_mensal || 0,
+        };
+      });
+      setCentrosCusto(formattedCentros);
+    }
+  }, [existingCentrosCusto, existingStages]);
+
   const validateStages = (stages: ProjectStage[]) => {
     if (stages.length === 0) {
       toast({
@@ -122,6 +146,28 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
     return true;
   };
 
+  const validateCentrosCusto = (centros: ProjectCentroCusto[]) => {
+    const centrosComErro: number[] = [];
+    centros.forEach((centro, index) => {
+      if (!centro.codigo.trim() || !centro.nome.trim() || !centro.tipo) {
+        centrosComErro.push(index + 1);
+      }
+    });
+
+    if (centrosComErro.length > 0) {
+      toast({
+        title: "❌ Centros de Custo Incompletos",
+        description: `Os seguintes centros precisam de código, nome e tipo: ${centrosComErro.join(", ")}`,
+        variant: "destructive",
+        duration: 5000,
+      });
+      setActiveTab("centros_custo");
+      return false;
+    }
+
+    return true;
+  };
+
   const onSubmit = async (data: ProjectFormDataType) => {
     setIsSubmitting(true);
     try {
@@ -134,6 +180,12 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
       
       if (!validateStages(stages)) {
         console.log("❌ Validação de etapas falhou");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (centrosCusto.length > 0 && !validateCentrosCusto(centrosCusto)) {
+        console.log("❌ Validação de centros de custo falhou");
         setIsSubmitting(false);
         return;
       }
@@ -211,14 +263,35 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           tempo_real_dias: stage.tempo_real_dias || 0,
         }));
 
-        await createStagesMutation.mutateAsync({
+        const createdStages = await createStagesMutation.mutateAsync({
           projectId: savedProject.id,
           stages: stagesData,
         });
 
+        // Criar centros de custo se houver
+        if (centrosCusto.length > 0) {
+          for (const centro of centrosCusto) {
+            // Encontrar o ID da etapa correspondente
+            const etapaCorrespondente = createdStages.find(
+              (s: any) => s.numero_etapa === centro.etapa_numero
+            );
+
+            await createCentroCustoMutation.mutateAsync({
+              codigo: centro.codigo,
+              nome: centro.nome,
+              tipo: centro.tipo,
+              projeto_id: savedProject.id,
+              etapa_id: etapaCorrespondente?.id,
+              departamento: centro.departamento || null,
+              orcamento_mensal: centro.orcamento_mensal,
+              ativo: true,
+            });
+          }
+        }
+
         toast({
           title: "Sucesso",
-          description: "Projeto e etapas criados com sucesso",
+          description: `Projeto, ${stages.length} etapa(s) e ${centrosCusto.length} centro(s) de custo criados com sucesso`,
         });
       }
 
@@ -237,7 +310,7 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
   };
 
   const handleTabNavigation = (direction: 'next' | 'prev') => {
-    const tabs = ["geral", "financeiro", "localizacao", "etapas"];
+    const tabs = ["geral", "financeiro", "centros_custo", "localizacao", "etapas"];
     const currentIndex = tabs.indexOf(activeTab);
     
     if (direction === 'next' && currentIndex < tabs.length - 1) {
@@ -254,6 +327,8 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           form={form}
           stages={stages}
           onStagesChange={setStages}
+          centrosCusto={centrosCusto}
+          onCentrosCustoChange={setCentrosCusto}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />

@@ -111,6 +111,7 @@ export type Database = {
           codigo: string
           created_at: string
           departamento: string | null
+          etapa_id: number | null
           id: string
           nome: string
           orcamento_mensal: number | null
@@ -124,6 +125,7 @@ export type Database = {
           codigo: string
           created_at?: string
           departamento?: string | null
+          etapa_id?: number | null
           id?: string
           nome: string
           orcamento_mensal?: number | null
@@ -137,6 +139,7 @@ export type Database = {
           codigo?: string
           created_at?: string
           departamento?: string | null
+          etapa_id?: number | null
           id?: string
           nome?: string
           orcamento_mensal?: number | null
@@ -146,6 +149,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "centros_custo_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "etapas_projeto"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "centros_custo_projeto_id_fkey"
             columns: ["projeto_id"]

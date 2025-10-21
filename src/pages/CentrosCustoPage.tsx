@@ -76,6 +76,9 @@ export default function CentrosCustoPage() {
           <div>
             <h1 className="text-3xl font-bold">Centros de Custo</h1>
             <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              💡 Os Centros de Custo são criados durante a criação/edição do projeto
+            </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
@@ -85,10 +88,6 @@ export default function CentrosCustoPage() {
             <Button variant="outline" size="sm" onClick={handleExportExcel}>
               <Download className="h-4 w-4 mr-2" />
               Exportar Excel
-            </Button>
-            <Button onClick={() => setModalOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Centro de Custo
             </Button>
           </div>
         </div>

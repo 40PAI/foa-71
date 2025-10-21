@@ -5,12 +5,15 @@ import { ProjectBasicInfo } from "./ProjectBasicInfo";
 import { ProjectFinancialInfo } from "./ProjectFinancialInfo";
 import { ProjectLocationInfo } from "./ProjectLocationInfo";
 import { ProjectStagesForm } from "../ProjectStagesForm";
+import { ProjectCentrosCustoForm, type ProjectCentroCusto } from "./ProjectCentrosCustoForm";
 import type { ProjectFormDataType, ProjectStage } from "./types";
 
 interface ProjectFormTabsProps {
   form: UseFormReturn<ProjectFormDataType>;
   stages: ProjectStage[];
   onStagesChange: (stages: ProjectStage[]) => void;
+  centrosCusto: ProjectCentroCusto[];
+  onCentrosCustoChange: (centrosCusto: ProjectCentroCusto[]) => void;
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
@@ -18,15 +21,18 @@ interface ProjectFormTabsProps {
 export function ProjectFormTabs({ 
   form, 
   stages, 
-  onStagesChange, 
+  onStagesChange,
+  centrosCusto,
+  onCentrosCustoChange,
   activeTab, 
   onTabChange 
 }: ProjectFormTabsProps) {
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="geral">Geral</TabsTrigger>
         <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+        <TabsTrigger value="centros_custo">Centros Custo</TabsTrigger>
         <TabsTrigger value="localizacao">Localização</TabsTrigger>
         <TabsTrigger value="etapas">Etapas</TabsTrigger>
       </TabsList>
@@ -37,6 +43,21 @@ export function ProjectFormTabs({
 
       <TabsContent value="financeiro" className="space-y-4">
         <ProjectFinancialInfo form={form} />
+      </TabsContent>
+
+      <TabsContent value="centros_custo" className="space-y-4">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold mb-2">Centros de Custo do Projeto</h3>
+          <p className="text-sm text-muted-foreground">
+            Defina os centros de custo e aloque-os às etapas para melhor controle financeiro.
+          </p>
+        </div>
+        
+        <ProjectCentrosCustoForm
+          centrosCusto={centrosCusto}
+          onCentrosCustoChange={onCentrosCustoChange}
+          stages={stages}
+        />
       </TabsContent>
 
       <TabsContent value="localizacao" className="space-y-4">
