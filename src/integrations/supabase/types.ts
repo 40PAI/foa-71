@@ -414,7 +414,10 @@ export type Database = {
       }
       contas_correntes_fornecedores: {
         Row: {
+          categoria: string | null
           created_at: string | null
+          data_vencimento: string | null
+          descricao: string | null
           fornecedor_id: string | null
           id: string
           projeto_id: number | null
@@ -422,7 +425,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          categoria?: string | null
           created_at?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
           fornecedor_id?: string | null
           id?: string
           projeto_id?: number | null
@@ -430,7 +436,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          categoria?: string | null
           created_at?: string | null
+          data_vencimento?: string | null
+          descricao?: string | null
           fornecedor_id?: string | null
           id?: string
           projeto_id?: number | null
