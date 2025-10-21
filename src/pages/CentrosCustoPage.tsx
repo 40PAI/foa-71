@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
+import { useSaldosCentrosCusto, useCentrosCusto } from "@/hooks/useCentrosCusto";
 import { CentroCustoModal } from "@/components/modals/CentroCustoModal";
 import { ImportFOAModal } from "@/components/modals/ImportFOAModal";
 import { GraficoLinhaMovimentos } from "@/components/financial/GraficoLinhaMovimentos";
@@ -23,6 +23,7 @@ export default function CentrosCustoPage() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [filterTipo, setFilterTipo] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCentroCustoId, setSelectedCentroCustoId] = useState<string>("all");
 
   const handleExportExcel = async () => {
     if (!selectedProject) return;
@@ -36,7 +37,10 @@ export default function CentrosCustoPage() {
   };
 
   const { data: saldos, isLoading: loadingSaldos } = useSaldosCentrosCusto(selectedProject?.id);
-  const { data: movimentos } = useMovimentosFinanceiros(selectedProject?.id);
+  const { data: centrosCusto } = useCentrosCusto(selectedProject?.id);
+  const { data: movimentos } = useMovimentosFinanceiros(selectedProject?.id, {
+    centroCustoId: selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined
+  });
 
   if (!selectedProject) {
     return (
@@ -46,33 +50,69 @@ export default function CentrosCustoPage() {
     );
   }
 
-  // Calcular KPIs
-  const totalOrcamento = saldos?.reduce((acc, s) => acc + s.orcamento_mensal, 0) || 0;
-  const totalGasto = saldos?.reduce((acc, s) => acc + s.total_saidas, 0) || 0;
-  const totalSaldo = saldos?.reduce((acc, s) => acc + s.saldo, 0) || 0;
-  const centrosEmAlerta = saldos?.filter((s) => s.percentual_utilizado >= 80).length || 0;
+
+  // Filtrar saldos por centro de custo selecionado
+  const filteredSaldos = selectedCentroCustoId === "all" 
+    ? saldos 
+    : saldos?.filter(s => s.centro_custo_id === selectedCentroCustoId);
+
+  // Calcular KPIs baseados nos saldos filtrados
+  const totalOrcamento = filteredSaldos?.reduce((acc, s) => acc + s.orcamento_mensal, 0) || 0;
+  const totalGasto = filteredSaldos?.reduce((acc, s) => acc + s.total_saidas, 0) || 0;
+  const totalSaldo = filteredSaldos?.reduce((acc, s) => acc + s.saldo, 0) || 0;
+  const centrosEmAlerta = filteredSaldos?.filter(s => s.percentual_utilizado >= 80).length || 0;
+  
+  // Obter info do centro selecionado
+  const selectedCentro = selectedCentroCustoId !== "all" 
+    ? centrosCusto?.find(c => c.id === selectedCentroCustoId)
+    : null;
+
 
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Centros de Custo</h1>
-          <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Centros de Custo</h1>
+            <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              💡 Os Centros de Custo são criados durante a criação/edição do projeto
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              Importar Excel FOA
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportExcel}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar Excel
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
-            <Upload className="h-4 w-4 mr-2" />
-            Importar Excel FOA
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleExportExcel}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar Excel
-          </Button>
-          <Button onClick={() => setModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Centro de Custo
-          </Button>
+        
+        {/* Seletor de Centro de Custo */}
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium">Filtrar por Centro:</label>
+          <Select value={selectedCentroCustoId} onValueChange={setSelectedCentroCustoId}>
+            <SelectTrigger className="w-[350px]">
+              <SelectValue placeholder="Selecione um centro de custo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os Centros de Custo</SelectItem>
+              {centrosCusto?.map(centro => (
+                <SelectItem key={centro.id} value={centro.id}>
+                  {centro.codigo} - {centro.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {selectedCentro && (
+            <div className="text-sm text-muted-foreground">
+              Tipo: {selectedCentro.tipo}
+            </div>
+          )}
         </div>
       </div>
 
@@ -80,7 +120,9 @@ export default function CentrosCustoPage() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Orçamento Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Orçamento Total
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrencyInput(totalOrcamento)}</div>
@@ -89,7 +131,9 @@ export default function CentrosCustoPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Gasto</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Gasto
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrencyInput(totalGasto)}</div>
@@ -101,7 +145,9 @@ export default function CentrosCustoPage() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Disponível</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Saldo Disponível
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrencyInput(totalSaldo)}</div>
@@ -117,7 +163,9 @@ export default function CentrosCustoPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{centrosEmAlerta}</div>
-            <p className="text-xs text-muted-foreground mt-1">≥80% do orçamento</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              ≥80% do orçamento
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -130,12 +178,24 @@ export default function CentrosCustoPage() {
         </div>
       )}
 
+
       {/* Movimentações Financeiras */}
-      <MovimentacoesFinanceirasCard projectId={selectedProject.id} />
+      <MovimentacoesFinanceirasCard 
+        projectId={selectedProject.id}
+        centroCustoId={selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined}
+      />
 
-      <CentroCustoModal open={modalOpen} onOpenChange={setModalOpen} projectId={selectedProject.id} />
-
-      <ImportFOAModal open={importModalOpen} onOpenChange={setImportModalOpen} projectId={selectedProject.id} />
+      <CentroCustoModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        projectId={selectedProject.id}
+      />
+      
+      <ImportFOAModal
+        open={importModalOpen}
+        onOpenChange={setImportModalOpen}
+        projectId={selectedProject.id}
+      />
     </div>
   );
 }
