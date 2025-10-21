@@ -117,7 +117,7 @@ export function ProjectBasicInfo({ form }: ProjectBasicInfoProps) {
           name="orcamento"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Orçamento Total (Kz) *</FormLabel>
+              <FormLabel>Orçamento Total do Projeto (Kz) *</FormLabel>
               <FormControl>
                 <CurrencyInput
                   placeholder="0,00"
