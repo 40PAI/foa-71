@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BaseModal } from "@/components/shared/BaseModal";
 import { FormActions } from "@/components/shared/FormActions";
 import { Label } from "@/components/ui/label";
@@ -16,9 +16,10 @@ interface GastoObraModalProps {
   onOpenChange: (open: boolean) => void;
   projectId: number;
   gasto?: GastoObra;
+  defaultCentroCustoId?: string; // Centro de custo pré-selecionado
 }
 
-export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoObraModalProps) {
+export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCentroCustoId }: GastoObraModalProps) {
   const { user } = useAuth();
   const { data: centrosCusto } = useCentrosCusto(projectId);
   const { data: profiles } = useProfiles();
@@ -35,10 +36,30 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
     valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
     observacoes: gasto?.observacoes || "",
     categoria: gasto?.categoria || "",
-    centro_custo_id: gasto?.centro_custo_id || "",
+    centro_custo_id: gasto?.centro_custo_id || defaultCentroCustoId || "",
     responsavel_id: gasto?.responsavel_id || user?.id || "",
     responsavel_nome: "",
   });
+
+  // Resetar formulário quando o modal abre/fecha ou quando muda o centro de custo default
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        data_movimento: gasto?.data_movimento || new Date().toISOString().split("T")[0],
+        descricao: gasto?.descricao || "",
+        tipo_movimento: (gasto?.saida ? "saida" : "entrada") as "entrada" | "saida",
+        fonte_financiamento: (gasto?.recebimento_foa ? "REC_FOA" : 
+                              gasto?.fof_financiamento ? "FOF_FIN" : 
+                              gasto?.foa_auto ? "FOA_AUTO" : "REC_FOA") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
+        valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
+        observacoes: gasto?.observacoes || "",
+        categoria: gasto?.categoria || "",
+        centro_custo_id: gasto?.centro_custo_id || defaultCentroCustoId || "",
+        responsavel_id: gasto?.responsavel_id || user?.id || "",
+        responsavel_nome: "",
+      });
+    }
+  }, [open, gasto, defaultCentroCustoId, user?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,7 +221,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto }: GastoOb
               <SelectTrigger>
                 <SelectValue placeholder="Selecione..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-background z-50">
                 {centrosCusto?.map((cc) => (
                   <SelectItem key={cc.id} value={cc.id}>
                     {cc.codigo} - {cc.nome}

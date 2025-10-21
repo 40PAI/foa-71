@@ -109,6 +109,7 @@ export function MovimentacoesFinanceirasCard({
         onOpenChange={setModalOpen}
         projectId={projectId}
         gasto={editingGasto}
+        defaultCentroCustoId={centroCustoId}
       />
     </div>
   );
