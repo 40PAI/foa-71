@@ -100,7 +100,10 @@ export function useCreateGastoObra() {
       };
 
       // Adicionar campos opcionais apenas se tiverem valor
-      if (gasto.fonte_financiamento) {
+      // Para entradas sem fonte especificada, usar REC_FOA como padrão
+      if (gasto.tipo_movimento === "entrada") {
+        insertData.fonte_financiamento = gasto.fonte_financiamento || "REC_FOA";
+      } else if (gasto.fonte_financiamento) {
         insertData.fonte_financiamento = gasto.fonte_financiamento;
       }
       if (gasto.observacoes) {
@@ -135,6 +138,7 @@ export function useCreateGastoObra() {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
       queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
+      queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Gasto registrado com sucesso");
     },
     onError: (error) => {
@@ -176,6 +180,8 @@ export function useUpdateGastoObra() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
+      queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Gasto atualizado com sucesso");
     },
     onError: (error) => {
@@ -200,6 +206,8 @@ export function useDeleteGastoObra() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
+      queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Gasto excluído com sucesso");
     },
     onError: (error) => {

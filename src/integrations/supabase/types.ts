@@ -2839,6 +2839,7 @@ export type Database = {
     Views: {
       gastos_obra_view: {
         Row: {
+          categoria: string | null
           centro_custo_id: string | null
           centro_custo_nome: string | null
           comprovante_url: string | null
