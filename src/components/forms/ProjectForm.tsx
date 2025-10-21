@@ -10,6 +10,7 @@ import { useCreateProject, useUpdateProject } from "@/hooks/useProjects";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateProjectStages, useUpdateProjectStages, useProjectStages } from "@/hooks/useProjectStages";
 import { useCentrosCusto, useCreateCentroCusto } from "@/hooks/useCentrosCusto";
+import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import type { Tables } from "@/integrations/supabase/types";
 import { projectSchema, type ProjectFormDataType, type ProjectStage } from "./project/types";
@@ -234,14 +235,78 @@ export function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           tempo_real_dias: stage.tempo_real_dias || 0,
         }));
 
-        await updateStagesMutation.mutateAsync({
+        const updatedStages = await updateStagesMutation.mutateAsync({
           projectId: project.id,
           stages: stagesData,
         });
 
+        // Atualizar centros de custo se houver
+        if (centrosCusto.length > 0) {
+          // Buscar centros existentes
+          const { data: existingCentros } = await supabase
+            .from("centros_custo")
+            .select("*")
+            .eq("projeto_id", project.id)
+            .eq("ativo", true);
+
+          // Atualizar ou criar centros de custo
+          for (const centro of centrosCusto) {
+            // Encontrar o ID da etapa correspondente (usar etapas atualizadas)
+            const etapaCorrespondente = updatedStages?.find(
+              (s: any) => s.numero_etapa === centro.etapa_numero
+            );
+
+            // Verificar se centro já existe (por código)
+            const centroExistente = existingCentros?.find(
+              (ec: any) => ec.codigo === centro.codigo
+            );
+
+            if (centroExistente) {
+              // Atualizar centro existente
+              await supabase
+                .from("centros_custo")
+                .update({
+                  nome: centro.nome,
+                  tipo: centro.tipo,
+                  etapa_id: etapaCorrespondente?.id,
+                  departamento: centro.departamento || null,
+                  orcamento_mensal: centro.orcamento_mensal,
+                })
+                .eq("id", centroExistente.id);
+            } else {
+              // Criar novo centro
+              await createCentroCustoMutation.mutateAsync({
+                codigo: centro.codigo,
+                nome: centro.nome,
+                tipo: centro.tipo,
+                projeto_id: project.id,
+                etapa_id: etapaCorrespondente?.id,
+                departamento: centro.departamento || null,
+                orcamento_mensal: centro.orcamento_mensal,
+                ativo: true,
+              });
+            }
+          }
+
+          // Desativar centros que foram removidos
+          const codigosAtuais = centrosCusto.map(c => c.codigo);
+          const centrosParaDesativar = existingCentros?.filter(
+            (ec: any) => !codigosAtuais.includes(ec.codigo)
+          );
+
+          if (centrosParaDesativar && centrosParaDesativar.length > 0) {
+            for (const centro of centrosParaDesativar) {
+              await supabase
+                .from("centros_custo")
+                .update({ ativo: false })
+                .eq("id", centro.id);
+            }
+          }
+        }
+
         toast({
           title: "Sucesso",
-          description: "Projeto e etapas atualizados com sucesso",
+          description: `Projeto, ${stages.length} etapa(s) e ${centrosCusto.length} centro(s) de custo atualizados com sucesso`,
         });
       } else {
         logger.mutation("CreateProject", projectData);

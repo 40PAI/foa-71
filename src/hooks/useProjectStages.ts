@@ -114,30 +114,84 @@ export function useUpdateProjectStages() {
         throw new Error("ProjectId e stages são obrigatórios");
       }
       
-      // Primeiro, deletar etapas existentes para este projeto
-      const { error: deleteError } = await supabaseAny
+      // Buscar etapas existentes
+      const { data: existingStages, error: fetchError } = await supabaseAny
         .from("etapas_projeto")
-        .delete()
+        .select("*")
         .eq("projeto_id", projectId);
       
-      if (deleteError) {
-        console.error("Erro ao deletar etapas existentes:", deleteError);
-        throw deleteError;
+      if (fetchError) {
+        console.error("Erro ao buscar etapas existentes:", fetchError);
+        throw fetchError;
+      }
+
+      const updatedStages: ProjectStageDB[] = [];
+
+      // Atualizar ou criar cada etapa
+      for (const stage of stages) {
+        const existingStage = existingStages?.find(
+          (es: ProjectStageDB) => es.numero_etapa === stage.numero_etapa
+        );
+
+        if (existingStage) {
+          // Atualizar etapa existente
+          const { data, error } = await supabaseAny
+            .from("etapas_projeto")
+            .update({
+              nome_etapa: stage.nome_etapa,
+              tipo_etapa: stage.tipo_etapa,
+              responsavel_etapa: stage.responsavel_etapa,
+              data_inicio_etapa: stage.data_inicio_etapa,
+              data_fim_prevista_etapa: stage.data_fim_prevista_etapa,
+              status_etapa: stage.status_etapa,
+              observacoes: stage.observacoes,
+              orcamento_etapa: stage.orcamento_etapa,
+              gasto_etapa: stage.gasto_etapa,
+              tempo_previsto_dias: stage.tempo_previsto_dias,
+              tempo_real_dias: stage.tempo_real_dias,
+            })
+            .eq("id", existingStage.id)
+            .select()
+            .single();
+
+          if (error) {
+            console.error("Erro ao atualizar etapa:", error);
+            throw error;
+          }
+          updatedStages.push(data);
+        } else {
+          // Criar nova etapa
+          const { data, error } = await supabaseAny
+            .from("etapas_projeto")
+            .insert({ ...stage, projeto_id: projectId })
+            .select()
+            .single();
+
+          if (error) {
+            console.error("Erro ao criar etapa:", error);
+            throw error;
+          }
+          updatedStages.push(data);
+        }
+      }
+
+      // Desativar etapas que foram removidas (soft delete)
+      const stageNumbers = stages.map(s => s.numero_etapa);
+      const stagesToDelete = existingStages?.filter(
+        (es: ProjectStageDB) => !stageNumbers.includes(es.numero_etapa)
+      );
+
+      if (stagesToDelete && stagesToDelete.length > 0) {
+        for (const stageToDelete of stagesToDelete) {
+          await supabaseAny
+            .from("etapas_projeto")
+            .delete()
+            .eq("id", stageToDelete.id);
+        }
       }
       
-      // Então, inserir as novas etapas
-      const { data, error } = await supabaseAny
-        .from("etapas_projeto")
-        .insert(stages.map(stage => ({ ...stage, projeto_id: projectId })))
-        .select();
-      
-      if (error) {
-        console.error("Erro ao atualizar etapas:", error);
-        throw error;
-      }
-      
-      console.log("Etapas atualizadas com sucesso:", data);
-      return (data || []) as ProjectStageDB[];
+      console.log("Etapas atualizadas com sucesso:", updatedStages);
+      return updatedStages as ProjectStageDB[];
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["project-stages", variables.projectId] });
