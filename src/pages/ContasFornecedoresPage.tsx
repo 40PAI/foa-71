@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProjectState } from "@/hooks/useContextHooks";
-import { useContasFornecedores, useSaldoContaFornecedor, useKPIsContasFornecedores, useLancamentosFornecedor } from "@/hooks/useContasFornecedores";
+import {
+  useContasFornecedores,
+  useSaldoContaFornecedor,
+  useKPIsContasFornecedores,
+  useLancamentosFornecedor,
+} from "@/hooks/useContasFornecedores";
 import { formatCurrency } from "@/utils/currency";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +23,7 @@ export default function ContasFornecedoresPage() {
   const [selectedConta, setSelectedConta] = useState<string | null>(null);
   const [lancamentoModalOpen, setLancamentoModalOpen] = useState(false);
   const [contaModalOpen, setContaModalOpen] = useState(false);
-  
+
   const { data: contas, isLoading } = useContasFornecedores(projectData?.id);
   const kpis = useKPIsContasFornecedores(projectData?.id);
 
@@ -39,7 +44,7 @@ export default function ContasFornecedoresPage() {
         </div>
         <Button onClick={() => setContaModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
-          Nova Conta Corrente
+          Nova Lançamento
         </Button>
       </div>
 
@@ -60,9 +65,7 @@ export default function ContasFornecedoresPage() {
             <CardTitle className="text-sm font-medium">Crédito Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(kpis.totalCredito)}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(kpis.totalCredito)}</div>
           </CardContent>
         </Card>
 
@@ -71,9 +74,7 @@ export default function ContasFornecedoresPage() {
             <CardTitle className="text-sm font-medium">Débito Total</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(kpis.totalDebito)}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{formatCurrency(kpis.totalDebito)}</div>
           </CardContent>
         </Card>
 
@@ -82,7 +83,7 @@ export default function ContasFornecedoresPage() {
             <CardTitle className="text-sm font-medium">Saldo Líquido</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${kpis.saldoLiquido >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`text-2xl font-bold ${kpis.saldoLiquido >= 0 ? "text-green-600" : "text-red-600"}`}>
               {formatCurrency(kpis.saldoLiquido)}
             </div>
           </CardContent>
@@ -132,10 +133,7 @@ export default function ContasFornecedoresPage() {
         </CardContent>
       </Card>
 
-      <ContaFornecedorModal
-        open={contaModalOpen}
-        onOpenChange={setContaModalOpen}
-      />
+      <ContaFornecedorModal open={contaModalOpen} onOpenChange={setContaModalOpen} />
 
       {selectedConta && (
         <LancamentoFornecedorModal
@@ -153,7 +151,7 @@ function ContaRow({ conta }: { conta: any }) {
   const { data: lancamentos } = useLancamentosFornecedor(expanded ? conta.id : undefined);
 
   const saldoAtual = conta.saldo?.saldo_atual || 0;
-  const status = saldoAtual > 0 ? 'credito' : saldoAtual < 0 ? 'debito' : 'zerado';
+  const status = saldoAtual > 0 ? "credito" : saldoAtual < 0 ? "debito" : "zerado";
 
   return (
     <>
@@ -167,13 +165,13 @@ function ContaRow({ conta }: { conta: any }) {
         <TableCell className="text-right text-green-600">{formatCurrency(conta.saldo?.total_credito || 0)}</TableCell>
         <TableCell className="text-right text-red-600">{formatCurrency(conta.saldo?.total_debito || 0)}</TableCell>
         <TableCell className="text-right font-bold">
-          <span className={status === 'credito' ? 'text-green-600' : status === 'debito' ? 'text-red-600' : ''}>
+          <span className={status === "credito" ? "text-green-600" : status === "debito" ? "text-red-600" : ""}>
             {formatCurrency(saldoAtual)}
           </span>
         </TableCell>
         <TableCell className="text-center">
-          <Badge variant={status === 'credito' ? 'default' : status === 'debito' ? 'destructive' : 'secondary'}>
-            {status === 'credito' ? 'A Favor' : status === 'debito' ? 'Em Dívida' : 'Zerado'}
+          <Badge variant={status === "credito" ? "default" : status === "debito" ? "destructive" : "secondary"}>
+            {status === "credito" ? "A Favor" : status === "debito" ? "Em Dívida" : "Zerado"}
           </Badge>
         </TableCell>
         <TableCell>
@@ -183,7 +181,7 @@ function ContaRow({ conta }: { conta: any }) {
           </Button>
         </TableCell>
       </TableRow>
-      
+
       {expanded && lancamentos && lancamentos.length > 0 && (
         <TableRow>
           <TableCell colSpan={9} className="bg-muted/50 p-4">
@@ -203,15 +201,23 @@ function ContaRow({ conta }: { conta: any }) {
                 <TableBody>
                   {lancamentos.map((lanc: any) => (
                     <TableRow key={lanc.id}>
-                      <TableCell>{new Date(lanc.data_lancamento).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell>{new Date(lanc.data_lancamento).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>{lanc.descricao}</TableCell>
                       <TableCell>
                         {lanc.centros_custo ? (
-                          <Badge variant="outline">{lanc.centros_custo.codigo} - {lanc.centros_custo.nome}</Badge>
-                        ) : '-'}
+                          <Badge variant="outline">
+                            {lanc.centros_custo.codigo} - {lanc.centros_custo.nome}
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
                       </TableCell>
-                      <TableCell className="text-right text-green-600">{lanc.credito ? formatCurrency(lanc.credito) : '-'}</TableCell>
-                      <TableCell className="text-right text-red-600">{lanc.debito ? formatCurrency(lanc.debito) : '-'}</TableCell>
+                      <TableCell className="text-right text-green-600">
+                        {lanc.credito ? formatCurrency(lanc.credito) : "-"}
+                      </TableCell>
+                      <TableCell className="text-right text-red-600">
+                        {lanc.debito ? formatCurrency(lanc.debito) : "-"}
+                      </TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(lanc.saldo_corrente || 0)}</TableCell>
                     </TableRow>
                   ))}
