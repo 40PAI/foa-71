@@ -42,7 +42,7 @@ export function useContasFornecedores(projectId?: number) {
             nif,
             categoria_principal
           ),
-          lancamentos:lancamentos_fornecedor(credito, debito)
+          lancamentos:lancamentos_fornecedor(credito, debito, data_lancamento)
         `)
         .order("created_at", { ascending: false });
 
@@ -60,6 +60,11 @@ export function useContasFornecedores(projectId?: number) {
         const totalDebito = lancamentos.reduce((sum: number, l: any) => sum + (l.debito || 0), 0);
         const saldoAtual = (conta.saldo_inicial || 0) + totalCredito - totalDebito;
 
+        // Encontrar a data do último lançamento
+        const ultimaDataLancamento = lancamentos.length > 0
+          ? lancamentos.reduce((latest: string, l: any) => (l.data_lancamento > latest ? l.data_lancamento : latest), lancamentos[0].data_lancamento)
+          : conta.created_at;
+
         return {
           ...conta,
           saldo: {
@@ -68,6 +73,7 @@ export function useContasFornecedores(projectId?: number) {
             total_debito: totalDebito,
             saldo_atual: saldoAtual,
           },
+          ultima_data_lancamento: ultimaDataLancamento, // Adicionar a data do último lançamento
         };
       });
 

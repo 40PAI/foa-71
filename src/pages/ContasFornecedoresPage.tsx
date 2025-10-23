@@ -20,6 +20,7 @@ import { AmortizacaoFornecedorModal } from "@/components/modals/AmortizacaoForne
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
+import { format } from "date-fns";
 
 export default function ContasFornecedoresPage() {
   const { projectData } = useProjectState();
@@ -140,6 +141,7 @@ export default function ContasFornecedoresPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Data</TableHead> {/* Nova coluna para a data */}
                   <TableHead>Fornecedor</TableHead>
                   <TableHead>NIF</TableHead>
                   <TableHead>Categoria</TableHead>
@@ -198,18 +200,24 @@ function ContaRow({ conta }: { conta: any }) {
   const saldoAtual = conta.saldo?.saldo_atual || 0;
   const status = saldoAtual > 0 ? "credito" : saldoAtual < 0 ? "debito" : "zerado";
 
+  // Obter a data do último lançamento
+  const ultimaDataLancamento = lancamentos && lancamentos.length > 0 
+    ? format(new Date(lancamentos[0].data_lancamento), "dd/MM/yyyy") 
+    : format(new Date(conta.created_at), "dd/MM/yyyy");
+
   return (
     <>
       <TableRow>
+        <TableCell className="font-medium">{ultimaDataLancamento}</TableCell> {/* Nova célula para a data */}
         <TableCell className="font-medium">{conta.fornecedores?.nome || "N/A"}</TableCell>
         <TableCell>{conta.fornecedores?.nif || "-"}</TableCell>
         <TableCell>
           <Badge variant="outline">{conta.categoria || conta.fornecedores?.categoria_principal || "N/A"}</Badge>
         </TableCell>
-        <TableCell className="text-right text-green-600">{formatCurrency(conta.saldo?.total_credito || 0)}</TableCell>
-        <TableCell className="text-right text-red-600">{formatCurrency(conta.saldo?.total_debito || 0)}</TableCell>
+        <TableCell className="text-right text-destructive">{formatCurrency(conta.saldo?.total_credito || 0)}</TableCell> {/* Cor vermelha */}
+        <TableCell className="text-right text-success">{formatCurrency(conta.saldo?.total_debito || 0)}</TableCell> {/* Cor verde */}
         <TableCell className="text-right font-bold">
-          <span className={status === "credito" ? "text-green-600" : status === "debito" ? "text-red-600" : ""}>
+          <span className="text-destructive"> {/* Cor vermelha para saldo atual */}
             {formatCurrency(saldoAtual)}
           </span>
         </TableCell>
@@ -228,7 +236,7 @@ function ContaRow({ conta }: { conta: any }) {
 
       {expanded && lancamentos && lancamentos.length > 0 && (
         <TableRow>
-          <TableCell colSpan={8} className="bg-muted/50 p-4">
+          <TableCell colSpan={9} className="bg-muted/50 p-4"> {/* Colspan ajustado para 9 */}
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Material Recebido / Lançamentos:</h4>
               <Table>
@@ -256,10 +264,10 @@ function ContaRow({ conta }: { conta: any }) {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell className="text-right text-green-600">
+                      <TableCell className="text-right text-destructive"> {/* Cor vermelha */}
                         {lanc.credito ? formatCurrency(lanc.credito) : "-"}
                       </TableCell>
-                      <TableCell className="text-right text-red-600">
+                      <TableCell className="text-right text-success"> {/* Cor verde */}
                         {lanc.debito ? formatCurrency(lanc.debito) : "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(lanc.saldo_corrente || 0)}</TableCell>

@@ -124,3 +124,17 @@ export interface FornecedoresKPIs {
   taxa_pagamento: number;
   prazo_medio_pagamento: number;
 }
+
+// Adicionando o campo `ultima_data_lancamento` à interface ContaFornecedor
+export interface ContaFornecedor {
+  id: string;
+  fornecedor_id: string;
+  projeto_id: number;
+  saldo_inicial: number;
+  descricao?: string;
+  data_vencimento?: string;
+  categoria?: string;
+  created_at: string;
+  updated_at: string;
+  ultima_data_lancamento?: string; // Nova propriedade
+}
