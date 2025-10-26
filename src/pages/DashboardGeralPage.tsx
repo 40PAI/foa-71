@@ -43,12 +43,15 @@ function DashboardGeralContent() {
 
   if (error) {
     return (
-      <div className="p-4">
+      <div className="p-4 space-y-4">
         <Alert variant="destructive">
           <AlertDescription>
-            Erro ao carregar dashboard. Por favor, tente novamente.
+            <strong>Erro ao carregar dashboard:</strong> {error instanceof Error ? error.message : 'Erro desconhecido'}
           </AlertDescription>
         </Alert>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Tentar novamente
+        </Button>
       </div>
     );
   }

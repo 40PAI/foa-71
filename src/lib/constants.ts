@@ -92,7 +92,7 @@ export const PROJECT_STATUSES = [
 // Task statuses
 export const TASK_STATUSES = [
   'Pendente',
-  'Em Progresso',
+  'Em Andamento',
   'Concluído',
   'Cancelado',
   'Atrasado',

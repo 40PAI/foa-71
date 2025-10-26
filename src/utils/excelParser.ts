@@ -272,7 +272,13 @@ export class ExcelParser {
   }
 
   private validateTaskStatus(value: any, aba: string, campo: string, linha?: number): any {
-    const validStatuses = ['Pendente', 'Em Progresso', 'Concluído', 'Cancelado', 'Atrasado'];
+    const validStatuses = ['Pendente', 'Em Andamento', 'Concluído', 'Cancelado', 'Atrasado'];
+    
+    // Mapear 'Em Progresso' legado para 'Em Andamento'
+    if (value === 'Em Progresso') {
+      value = 'Em Andamento';
+    }
+    
     if (!validStatuses.includes(value)) {
       this.errors.push({
         aba,

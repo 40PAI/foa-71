@@ -74,7 +74,7 @@ export function TemplateDownloadButton() {
       ['3. TAREFAS'],
       ['- Número da Etapa deve corresponder a uma etapa existente'],
       ['- Tipo válidos: Residencial, Comercial, Industrial, Infraestrutura, Reforma'],
-      ['- Status válidos: Pendente, Em Progresso, Concluído, Cancelado, Atrasado'],
+      ['- Status válidos: Pendente, Em Andamento, Concluído, Cancelado, Atrasado'],
       ['- Percentual de Conclusão deve estar entre 0 e 100'],
       ['- Custos devem ser valores numéricos positivos'],
       ['- Semana Programada é opcional'],

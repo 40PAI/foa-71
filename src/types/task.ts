@@ -1,6 +1,6 @@
 // Task and LEAN management domain types
 
-export type TaskStatus = "Pendente" | "Em Progresso" | "Concluído" | "Cancelado" | "Atrasado";
+export type TaskStatus = "Pendente" | "Em Andamento" | "Concluído" | "Cancelado" | "Atrasado";
 export type TaskType = "Residencial" | "Comercial" | "Industrial" | "Infraestrutura" | "Reforma";
 
 export interface Task {
