@@ -10,7 +10,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
-  Settings,
   HardHat,
   Banknote,
   Wallet,
@@ -33,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import foaLogo from "@/assets/foa-logo.png";
 const roleLabels = {
   diretor_tecnico: "Diretor Técnico",
   encarregado_obra: "Encarregado de Obra",
@@ -152,13 +152,19 @@ export function AppSidebar() {
     >
       <SidebarHeader className="p-2 sm:p-3 lg:p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500 shrink-0" />
-            {!isCollapsed && (
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-bold truncate">FOA</span>
-                <span className="text-xs sm:text-sm font-semibold truncate">SmartSite</span>
-              </div>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {!isCollapsed ? (
+              <img 
+                src={foaLogo} 
+                alt="FOA Inovação e Negócios" 
+                className="h-8 sm:h-10 lg:h-12 w-auto object-contain"
+              />
+            ) : (
+              <img 
+                src={foaLogo} 
+                alt="FOA" 
+                className="h-6 w-6 object-contain"
+              />
             )}
           </div>
           <Button
