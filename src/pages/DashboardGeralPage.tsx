@@ -13,8 +13,17 @@ import { DashboardFinancasSection } from "@/components/dashboard/DashboardFinanc
 import { DashboardTarefasSection } from "@/components/dashboard/DashboardTarefasSection";
 import { DashboardRequisicoesSection } from "@/components/dashboard/DashboardRequisicoesSection";
 import { DashboardProjetosSection } from "@/components/dashboard/DashboardProjetosSection";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 export function DashboardGeralPage() {
+  return (
+    <ErrorBoundary>
+      <DashboardGeralContent />
+    </ErrorBoundary>
+  );
+}
+
+function DashboardGeralContent() {
   const { profile } = useAuth();
   const permissions = useUserPermissions();
   const { data: dashboardData, isLoading, error } = useDashboardGeral();
