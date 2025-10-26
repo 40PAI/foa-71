@@ -1,5 +1,6 @@
 
 import { Routes, Route } from "react-router-dom";
+import { DashboardGeralPage } from "@/pages/DashboardGeralPage";
 import { ProjetosPage } from "@/pages/ProjetosPage";
 import { FinancasPage } from "@/pages/FinancasPage";
 import CentrosCustoPage from "@/pages/CentrosCustoPage";
@@ -23,7 +24,8 @@ export function MainContent() {
     <main className="flex-1 min-w-0 w-full overflow-x-hidden">
       <div className="h-full overflow-y-auto">
         <Routes>
-          <Route path="/" element={<ProjetosPage />} />
+          <Route path="/" element={<DashboardGeralPage />} />
+          <Route path="/projetos" element={<ProjetosPage />} />
           <Route path="/financas" element={<FinancasPage />} />
           <Route path="/centros-custo" element={<CentrosCustoPage />} />
           <Route path="/contas-fornecedores" element={<ContasFornecedoresPage />} />

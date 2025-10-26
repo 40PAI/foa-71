@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -10,6 +10,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
+  Home,
   HardHat,
   Banknote,
   Wallet,
@@ -42,9 +43,15 @@ const roleLabels = {
 };
 const menuItems = [
   {
+    title: "Dashboard Geral",
+    icon: Home,
+    path: "/",
+    module: "dashboard",
+  },
+  {
     title: "Projetos/Obras",
     icon: HardHat,
-    path: "/",
+    path: "/projetos",
     module: "projetos",
   },
   {
@@ -152,21 +159,21 @@ export function AppSidebar() {
     >
       <SidebarHeader className="p-2 sm:p-3 lg:p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Link to="/" className="flex items-center gap-2 min-w-0 flex-1">
             {!isCollapsed ? (
               <img 
                 src={foaLogo} 
                 alt="FOA Inovação e Negócios" 
-                className="h-8 sm:h-10 lg:h-12 w-auto object-contain"
+                className="h-8 sm:h-10 lg:h-12 w-auto object-contain cursor-pointer hover:opacity-80 transition-opacity"
               />
             ) : (
               <img 
                 src={foaLogo} 
                 alt="FOA" 
-                className="h-6 w-6 object-contain"
+                className="h-6 w-6 object-contain cursor-pointer hover:opacity-80 transition-opacity"
               />
             )}
-          </div>
+          </Link>
           <Button
             variant="ghost"
             size="sm"

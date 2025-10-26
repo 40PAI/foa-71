@@ -3119,18 +3119,9 @@ export type Database = {
         Args: { project_id: number }
         Returns: number
       }
-      calculate_project_ppc: {
-        Args: { project_id: number }
-        Returns: number
-      }
-      calculate_project_weeks: {
-        Args: { project_id: number }
-        Returns: number
-      }
-      calculate_stage_progress: {
-        Args: { stage_id: number }
-        Returns: number
-      }
+      calculate_project_ppc: { Args: { project_id: number }; Returns: number }
+      calculate_project_weeks: { Args: { project_id: number }; Returns: number }
+      calculate_stage_progress: { Args: { stage_id: number }; Returns: number }
       calculate_temporal_progress: {
         Args: { method?: string; project_id: number }
         Returns: number
@@ -3153,14 +3144,8 @@ export type Database = {
         Args: { project_id: number; week_end: string; week_start: string }
         Returns: number
       }
-      check_budget_thresholds: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      delete_project_safely: {
-        Args: { project_id: number }
-        Returns: Json
-      }
+      check_budget_thresholds: { Args: never; Returns: undefined }
+      delete_project_safely: { Args: { project_id: number }; Returns: Json }
       detect_financial_discrepancies: {
         Args: { project_id: number }
         Returns: {
@@ -3200,6 +3185,10 @@ export type Database = {
       get_current_project_week: {
         Args: { project_id: number }
         Returns: number
+      }
+      get_dashboard_geral_data: {
+        Args: { user_id_param: string }
+        Returns: Json
       }
       get_detailed_expense_breakdown: {
         Args: { project_id: number }
@@ -3264,7 +3253,7 @@ export type Database = {
         }[]
       }
       get_management_dashboard: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           alerts: Json
           consolidated_kpis: Json
@@ -3360,10 +3349,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_director: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_director: { Args: never; Returns: boolean }
       map_categoria_principal_to_financas: {
         Args: {
           categoria: Database["public"]["Enums"]["categoria_principal_enum"]
@@ -3392,10 +3378,7 @@ export type Database = {
         Args: { p_centro_custo_id: string }
         Returns: number
       }
-      process_consumption_guide: {
-        Args: { p_guia_id: string }
-        Returns: Json
-      }
+      process_consumption_guide: { Args: { p_guia_id: string }; Returns: Json }
       register_weekly_ppc_entries: {
         Args: { project_id: number }
         Returns: undefined
