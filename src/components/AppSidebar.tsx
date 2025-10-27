@@ -84,21 +84,9 @@ const menuItems = [
     path: "/tarefas",
     module: "tarefas",
   },
-  {
-    title: "Gráficos",
-    icon: BarChart3,
-    path: "/graficos",
-    module: "graficos",
-  },
 ];
 
 const financasItems = [
-  {
-    title: "Finanças",
-    icon: Banknote,
-    path: "/financas",
-    module: "financas",
-  },
   {
     title: "Centros de Custo",
     icon: Wallet,
@@ -135,8 +123,15 @@ export function AppSidebar() {
   const filteredFinancasItems = financasItems.filter((item) => canAccessModule(item.module));
   const showContasFornecedores = canAccessModule(contasFornecedoresItem.module);
   
+  // Split items for proper ordering
+  const dashboardItem = filteredItems.find(item => item.path === "/");
+  const projetosItem = filteredItems.find(item => item.path === "/projetos");
+  const remainingItems = filteredItems.filter(
+    item => item.path !== "/" && item.path !== "/projetos"
+  );
+  
   // Check if any financas route is active
-  const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path);
+  const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path) || currentPath === "/financas";
   const handleNavClick = () => {
     setOpenMobile(false);
   };
@@ -193,24 +188,45 @@ export function AppSidebar() {
 
       <SidebarContent className="px-1 sm:px-2">
         <SidebarMenu>
-          {filteredItems.map((item) => (
-            <SidebarMenuItem key={item.path}>
+          {/* Dashboard Geral */}
+          {dashboardItem && (
+            <SidebarMenuItem key={dashboardItem.path}>
               <SidebarMenuButton
                 asChild
-                isActive={currentPath === item.path}
+                isActive={currentPath === dashboardItem.path}
                 className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
               >
                 <NavLink
-                  to={item.path}
+                  to={dashboardItem.path}
                   className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
                   onClick={handleNavClick}
                 >
-                  <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span className="truncate">{item.title}</span>
+                  <dashboardItem.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="truncate">{dashboardItem.title}</span>
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          ))}
+          )}
+
+          {/* Projetos/Obras */}
+          {projetosItem && (
+            <SidebarMenuItem key={projetosItem.path}>
+              <SidebarMenuButton
+                asChild
+                isActive={currentPath === projetosItem.path}
+                className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+              >
+                <NavLink
+                  to={projetosItem.path}
+                  className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
+                  onClick={handleNavClick}
+                >
+                  <projetosItem.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="truncate">{projetosItem.title}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
 
           {filteredFinancasItems.length > 0 && (
             <Collapsible open={financasOpen} onOpenChange={setFinancasOpen}>
@@ -259,6 +275,7 @@ export function AppSidebar() {
             </Collapsible>
           )}
 
+          {/* Contas Fornecedores */}
           {showContasFornecedores && (
             <SidebarMenuItem>
               <SidebarMenuButton
@@ -277,6 +294,26 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
+
+          {/* Remaining items (Armazém, RH & Ponto, Segurança & Higiene, Tarefas) */}
+          {remainingItems.map((item) => (
+            <SidebarMenuItem key={item.path}>
+              <SidebarMenuButton
+                asChild
+                isActive={currentPath === item.path}
+                className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+              >
+                <NavLink
+                  to={item.path}
+                  className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
+                  onClick={handleNavClick}
+                >
+                  <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
 
           {isDirector() && (
             <SidebarMenuItem>
