@@ -5,7 +5,6 @@ import { ProjetosPage } from "@/pages/ProjetosPage";
 import { FinancasPage } from "@/pages/FinancasPage";
 import CentrosCustoPage from "@/pages/CentrosCustoPage";
 import ContasFornecedoresPage from "@/pages/ContasFornecedoresPage";
-import DREPage from "@/pages/DREPage";
 import GastosObraPage from "@/pages/GastosObraPage";
 import RelatoriosFOAPage from "@/pages/RelatoriosFOAPage";
 import { ComprasPage } from "@/pages/ComprasPage";
@@ -29,7 +28,6 @@ export function MainContent() {
           <Route path="/financas" element={<FinancasPage />} />
           <Route path="/centros-custo" element={<CentrosCustoPage />} />
           <Route path="/contas-fornecedores" element={<ContasFornecedoresPage />} />
-          <Route path="/dre" element={<DREPage />} />
           <Route path="/gastos-obra" element={<GastosObraPage />} />
           <Route path="/relatorios-foa" element={<RelatoriosFOAPage />} />
           <Route path="/compras" element={<ComprasPage />} />

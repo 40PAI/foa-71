@@ -13,6 +13,7 @@ import { DashboardFinancasSection } from "@/components/dashboard/DashboardFinanc
 import { DashboardTarefasSection } from "@/components/dashboard/DashboardTarefasSection";
 import { DashboardRequisicoesSection } from "@/components/dashboard/DashboardRequisicoesSection";
 import { DashboardProjetosSection } from "@/components/dashboard/DashboardProjetosSection";
+import { DashboardDRESection } from "@/components/dashboard/DashboardDRESection";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 export function DashboardGeralPage() {
@@ -31,6 +32,7 @@ function DashboardGeralContent() {
   const [financasOpen, setFinancasOpen] = useState(true);
   const [tarefasOpen, setTarefasOpen] = useState(false);
   const [requisicoesOpen, setRequisicoesOpen] = useState(false);
+  const [dreOpen, setDreOpen] = useState(false);
   const [projetosOpen, setProjetosOpen] = useState(false);
 
   if (isLoading) {
@@ -159,6 +161,25 @@ function DashboardGeralContent() {
           </div>
           <CollapsibleContent className="mt-4">
             <DashboardRequisicoesSection requisicoesResumo={requisicoes_resumo} />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {/* Seção de DRE */}
+      {permissions.canViewFinances && (
+        <Collapsible open={dreOpen} onOpenChange={setDreOpen}>
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="p-0 hover:bg-transparent">
+                <span className="text-lg font-semibold flex items-center gap-2">
+                  📊 DRE - Demonstração de Resultados
+                  {dreOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="mt-4">
+            <DashboardDRESection />
           </CollapsibleContent>
         </Collapsible>
       )}
