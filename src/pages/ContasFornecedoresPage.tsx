@@ -46,19 +46,15 @@ export default function ContasFornecedoresPage() {
            categoria.includes(searchTerm);
   });
 
-  if (!projectData) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-muted-foreground">Selecione um projeto para visualizar as contas correntes</p>
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Contas Correntes - Fornecedores</h1>
-        <p className="text-muted-foreground">Projeto: {projectData?.nome}</p>
+        {projectData ? (
+          <p className="text-muted-foreground">Projeto: {projectData.nome}</p>
+        ) : (
+          <p className="text-muted-foreground">Visualizando todas as contas</p>
+        )}
       </div>
 
       {/* KPIs */}
