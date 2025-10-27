@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Download, Calendar } from "lucide-react";
+import { FileText, Download } from "lucide-react";
 import { useProjectContext } from "@/contexts/ProjectContext";
 import { useDREPorCentro } from "@/hooks/useDREPorCentro";
 import { useReembolsosFOA } from "@/hooks/useReembolsosFOA";
@@ -12,7 +12,7 @@ import { generateFOAExcel } from "@/utils/excelExporter";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
-export default function RelatoriosFOAPage() {
+export function DashboardRelatoriosFOASection() {
   const { selectedProjectId, projectData } = useProjectContext();
   const selectedProject = projectData?.project;
   
@@ -27,9 +27,11 @@ export default function RelatoriosFOAPage() {
 
   if (!selectedProject) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Selecione um projeto para gerar relatórios</p>
-      </div>
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          Selecione um projeto para gerar relatórios FOA
+        </CardContent>
+      </Card>
     );
   }
 
@@ -46,7 +48,6 @@ export default function RelatoriosFOAPage() {
           if (resumo) generateResumoFOAPDF(selectedProject, resumo);
           break;
         case 'completo':
-          // Gerar todos
           if (linhasDRE) generateDREPDF(selectedProject, mes, ano, linhasDRE);
           if (reembolsos) generateReembolsosPDF(selectedProject, reembolsos);
           if (resumo) generateResumoFOAPDF(selectedProject, resumo);
@@ -70,18 +71,13 @@ export default function RelatoriosFOAPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Relatórios FOA</h1>
-        <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2">
+    <div className="space-y-4">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Configurações */}
         <Card>
           <CardHeader>
             <CardTitle>Configurações do Relatório</CardTitle>
-            <CardDescription>Selecione o tipo e período</CardDescription>
+            <CardDescription>Projeto: {selectedProject.nome}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

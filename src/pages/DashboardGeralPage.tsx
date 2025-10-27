@@ -14,6 +14,7 @@ import { DashboardTarefasSection } from "@/components/dashboard/DashboardTarefas
 import { DashboardRequisicoesSection } from "@/components/dashboard/DashboardRequisicoesSection";
 import { DashboardProjetosSection } from "@/components/dashboard/DashboardProjetosSection";
 import { DashboardDRESection } from "@/components/dashboard/DashboardDRESection";
+import { DashboardRelatoriosFOASection } from "@/components/dashboard/DashboardRelatoriosFOASection";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 export function DashboardGeralPage() {
@@ -33,6 +34,7 @@ function DashboardGeralContent() {
   const [tarefasOpen, setTarefasOpen] = useState(false);
   const [requisicoesOpen, setRequisicoesOpen] = useState(false);
   const [dreOpen, setDreOpen] = useState(false);
+  const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [projetosOpen, setProjetosOpen] = useState(false);
 
   if (isLoading) {
@@ -180,6 +182,25 @@ function DashboardGeralContent() {
           </div>
           <CollapsibleContent className="mt-4">
             <DashboardDRESection />
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
+      {/* Seção de Relatórios FOA */}
+      {permissions.canViewFinances && (
+        <Collapsible open={relatoriosOpen} onOpenChange={setRelatoriosOpen}>
+          <div className="flex items-center justify-between">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="p-0 hover:bg-transparent">
+                <span className="text-lg font-semibold flex items-center gap-2">
+                  📄 Relatórios FOA
+                  {relatoriosOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </span>
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="mt-4">
+            <DashboardRelatoriosFOASection />
           </CollapsibleContent>
         </Collapsible>
       )}

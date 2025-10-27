@@ -72,12 +72,6 @@ const menuItems = [
     module: "financas",
   },
   {
-    title: "Relatórios FOA",
-    icon: FileText,
-    path: "/relatorios-foa",
-    module: "financas",
-  },
-  {
     title: "Compras",
     icon: ShoppingCart,
     path: "/compras",
