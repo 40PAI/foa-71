@@ -3,7 +3,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
 import { DataTable } from "@/components/common/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ProjectDetailsModal } from "@/components/modals/ProjectDetailsModal";
@@ -14,6 +14,8 @@ import { UpdateMetricsButton } from "@/components/UpdateMetricsButton";
 import { formatCurrency, formatPercentage } from "@/utils/formatters";
 import { calculateProjectTimeline } from "@/lib/helpers";
 import { TABLE_CONFIG } from "@/utils/constants";
+import { useUpdateProject } from "@/hooks/useProjects";
+import { useToast } from "@/hooks/use-toast";
 import type { ExtendedProject } from "@/types/project";
 
 interface ProjectsTableProps {
@@ -24,6 +26,51 @@ interface ProjectsTableProps {
 }
 
 export function ProjectsTable({ projects, kpis, onDelete, isDeleting }: ProjectsTableProps) {
+  const { toast } = useToast();
+  const updateProject = useUpdateProject();
+
+  const handleCompleteProject = async (projectId: number, projectName: string) => {
+    try {
+      await updateProject.mutateAsync({
+        id: projectId,
+        status: "Concluído" as any,
+      });
+      
+      toast({
+        title: "Obra concluída",
+        description: `A obra "${projectName}" foi marcada como concluída.`,
+      });
+    } catch (error) {
+      console.error("Erro ao concluir obra:", error);
+      toast({
+        title: "Erro ao concluir obra",
+        description: "Ocorreu um erro ao tentar concluir a obra. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCancelProject = async (projectId: number, projectName: string) => {
+    try {
+      await updateProject.mutateAsync({
+        id: projectId,
+        status: "Cancelado" as any,
+      });
+      
+      toast({
+        title: "Obra cancelada",
+        description: `A obra "${projectName}" foi marcada como cancelada.`,
+      });
+    } catch (error) {
+      console.error("Erro ao cancelar obra:", error);
+      toast({
+        title: "Erro ao cancelar obra",
+        description: "Ocorreu um erro ao tentar cancelar a obra. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const renderProjectRow = (projeto: ExtendedProject, index: number) => {
     const kpi = kpis?.find(k => k.projeto_id === projeto.id);
     const diasRestantes = Math.ceil(
@@ -128,6 +175,26 @@ export function ProjectsTable({ projects, kpis, onDelete, isDeleting }: Projects
               project={projeto as any}
               trigger="edit"
             />
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleCompleteProject(projeto.id!, projeto.nome)}
+              title="Marcar como concluída"
+              disabled={updateProject.isPending || projeto.status === "Concluído"}
+              className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-950"
+            >
+              <CheckCircle className="h-4 w-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => handleCancelProject(projeto.id!, projeto.nome)}
+              title="Cancelar obra"
+              disabled={updateProject.isPending || projeto.status === "Cancelado"}
+              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950"
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
             <Button 
               variant="ghost" 
               size="sm" 
