@@ -10,6 +10,11 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Home,
   HardHat,
   Banknote,
@@ -26,7 +31,9 @@ import {
   Menu,
   X,
   FileText,
+  ChevronDown,
 } from "lucide-react";
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,30 +59,6 @@ const menuItems = [
     icon: HardHat,
     path: "/projetos",
     module: "projetos",
-  },
-  {
-    title: "Finanças",
-    icon: Banknote,
-    path: "/financas",
-    module: "financas",
-  },
-  {
-    title: "Centros de Custo",
-    icon: Wallet,
-    path: "/centros-custo",
-    module: "financas",
-  },
-  {
-    title: "Contas Fornecedores",
-    icon: FileText,
-    path: "/contas-fornecedores",
-    module: "financas",
-  },
-  {
-    title: "Compras",
-    icon: ShoppingCart,
-    path: "/compras",
-    module: "compras",
   },
   {
     title: "Armazém",
@@ -108,6 +91,33 @@ const menuItems = [
     module: "graficos",
   },
 ];
+
+const financasItems = [
+  {
+    title: "Finanças",
+    icon: Banknote,
+    path: "/financas",
+    module: "financas",
+  },
+  {
+    title: "Centros de Custo",
+    icon: Wallet,
+    path: "/centros-custo",
+    module: "financas",
+  },
+  {
+    title: "Contas Fornecedores",
+    icon: FileText,
+    path: "/contas-fornecedores",
+    module: "financas",
+  },
+  {
+    title: "Compras",
+    icon: ShoppingCart,
+    path: "/compras",
+    module: "compras",
+  },
+];
 export function AppSidebar() {
   const { state, setOpenMobile, open: sidebarOpen, toggleSidebar } = useSidebar();
   const { profile, canAccessModule, isDirector, signOut } = useAuth();
@@ -116,9 +126,15 @@ export function AppSidebar() {
   const { toast } = useToast();
   const currentPath = location.pathname;
   const isCollapsed = state === "collapsed";
+  
+  const [financasOpen, setFinancasOpen] = useState(true);
 
   // Filter items based on user permissions
   const filteredItems = menuItems.filter((item) => canAccessModule(item.module));
+  const filteredFinancasItems = financasItems.filter((item) => canAccessModule(item.module));
+  
+  // Check if any financas route is active
+  const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path);
   const handleNavClick = () => {
     setOpenMobile(false);
   };
@@ -193,6 +209,53 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+
+          {filteredFinancasItems.length > 0 && (
+            <Collapsible open={financasOpen} onOpenChange={setFinancasOpen}>
+              <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                  <SidebarMenuButton
+                    className={`w-full justify-start min-h-[40px] sm:min-h-[48px] px-2 sm:px-3 ${
+                      isFinancasActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
+                    }`}
+                  >
+                    <Banknote className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    {!isCollapsed && <span className="flex-1 truncate">Finanças</span>}
+                    {!isCollapsed && (
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${
+                          financasOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    )}
+                  </SidebarMenuButton>
+                </CollapsibleTrigger>
+              </SidebarMenuItem>
+
+              <CollapsibleContent>
+                {filteredFinancasItems.map((item) => (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={currentPath === item.path}
+                      className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3 pl-8"
+                    >
+                      <NavLink
+                        to={item.path}
+                        className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
+                        onClick={handleNavClick}
+                      >
+                        <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
 
           {isDirector() && (
             <SidebarMenuItem>
