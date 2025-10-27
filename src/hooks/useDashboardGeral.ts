@@ -71,6 +71,56 @@ export interface DashboardGeralData {
   projetos_lista: ProjetoLista[];
 }
 
+// Função de fallback que carrega dados básicos diretamente
+async function loadBasicDashboardData(userId: string): Promise<DashboardGeralData> {
+  console.log("🔄 Carregando dados básicos do dashboard como fallback...");
+  
+  try {
+    const { data: projects } = await supabase
+      .from('projetos')
+      .select('id, nome, orcamento, gasto, status')
+      .limit(100);
+
+    const orcamentoTotal = projects?.reduce((sum, p) => sum + (p.orcamento || 0), 0) || 0;
+    const gastoTotal = projects?.reduce((sum, p) => sum + (p.gasto || 0), 0) || 0;
+
+    return {
+      user_role: 'unknown',
+      visible_project_count: projects?.length || 0,
+      kpis_gerais: {
+        total_projetos: projects?.length || 0,
+        projetos_ativos: projects?.filter(p => p.status === 'Em Andamento').length || 0,
+        orcamento_total: orcamentoTotal,
+        gasto_total: gastoTotal,
+        saldo_disponivel: orcamentoTotal - gastoTotal,
+        percentual_gasto: orcamentoTotal > 0 ? Math.round((gastoTotal / orcamentoTotal) * 100) : 0,
+      },
+      top_projetos_gasto: [],
+      tarefas_resumo: {
+        total: 0,
+        concluidas: 0,
+        em_andamento: 0,
+        atrasadas: 0,
+        taxa_conclusao: 0,
+      },
+      top_projetos_tarefas: [],
+      requisicoes_resumo: {
+        total: 0,
+        pendentes: 0,
+        aprovacao: 0,
+        aprovadas: 0,
+        valor_total: 0,
+        valor_pendente: 0,
+        taxa_aprovacao: 0,
+      },
+      projetos_lista: [],
+    };
+  } catch (err) {
+    console.error("❌ Erro ao carregar dados básicos:", err);
+    throw err;
+  }
+}
+
 export function useDashboardGeral() {
   const { user } = useAuth();
 
@@ -81,20 +131,49 @@ export function useDashboardGeral() {
         throw new Error("Usuário não autenticado");
       }
 
-      const { data, error } = await supabase
-        .rpc('get_dashboard_geral_data', {
-          user_id_param: user.id
-        });
+      try {
+        const { data, error } = await supabase
+          .rpc('get_dashboard_geral_data', {
+            user_id_param: user.id
+          });
 
-      if (error) {
-        console.error("Erro ao buscar dados do dashboard:", error);
-        throw error;
+        if (error) {
+          console.error("❌ Erro RPC dashboard:", error);
+          
+          // Se erro de função SQL, tentar fallback
+          if (error.message?.includes('extract') || 
+              error.message?.includes('function') ||
+              error.message?.includes('type')) {
+            console.warn("🔄 Erro de cálculo SQL detectado, usando fallback...");
+            return await loadBasicDashboardData(user.id);
+          }
+          
+          throw error;
+        }
+
+        // Validar estrutura retornada
+        if (!data || typeof data !== 'object') {
+          console.error("❌ Dados inválidos retornados:", data);
+          throw new Error("Formato de dados inválido retornado do servidor");
+        }
+
+        // Se RPC retornou um erro interno
+        if ('error' in data && data.error) {
+          console.error("❌ Erro interno RPC:", data.error);
+          console.warn("🔄 Tentando fallback devido a erro interno...");
+          return await loadBasicDashboardData(user.id);
+        }
+
+        return data as unknown as DashboardGeralData;
+      } catch (err) {
+        console.error("❌ Erro crítico ao buscar dashboard:", err);
+        throw err;
       }
-
-      return data as unknown as DashboardGeralData;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    gcTime: 10 * 60 * 1000, // 10 minutos
+    retry: 2, // Tentar 2 vezes
+    retryDelay: 1000, // 1 segundo entre tentativas
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 }

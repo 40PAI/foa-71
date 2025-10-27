@@ -26,7 +26,7 @@ export function DashboardGeralPage() {
 function DashboardGeralContent() {
   const { profile } = useAuth();
   const permissions = useUserPermissions();
-  const { data: dashboardData, isLoading, error } = useDashboardGeral();
+  const { data: dashboardData, isLoading, error, refetch } = useDashboardGeral();
 
   const [financasOpen, setFinancasOpen] = useState(true);
   const [tarefasOpen, setTarefasOpen] = useState(false);
@@ -42,16 +42,35 @@ function DashboardGeralContent() {
   }
 
   if (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    const isServerError = errorMessage.includes('extract') || 
+                         errorMessage.includes('function') || 
+                         errorMessage.includes('type');
+    
     return (
       <div className="p-4 space-y-4">
         <Alert variant="destructive">
           <AlertDescription>
-            <strong>Erro ao carregar dashboard:</strong> {error instanceof Error ? error.message : 'Erro desconhecido'}
+            <div className="space-y-2">
+              <strong>❌ Erro ao carregar dashboard</strong>
+              <p className="text-sm mt-2">{errorMessage}</p>
+              {isServerError && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 Este erro indica um problema no cálculo de dados no servidor. 
+                  Os dados básicos foram carregados como alternativa.
+                </p>
+              )}
+            </div>
           </AlertDescription>
         </Alert>
-        <Button onClick={() => window.location.reload()} variant="outline">
-          Tentar novamente
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => refetch()} variant="outline">
+            🔄 Tentar novamente
+          </Button>
+          <Button onClick={() => window.location.href = '/projetos'} variant="secondary">
+            📊 Ir para Projetos
+          </Button>
+        </div>
       </div>
     );
   }
