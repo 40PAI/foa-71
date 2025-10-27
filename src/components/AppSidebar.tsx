@@ -88,12 +88,6 @@ const menuItems = [
 
 const financasItems = [
   {
-    title: "Finanças",
-    icon: Banknote,
-    path: "/financas",
-    module: "financas",
-  },
-  {
     title: "Centros de Custo",
     icon: Wallet,
     path: "/centros-custo",
@@ -237,13 +231,18 @@ export function AppSidebar() {
           {filteredFinancasItems.length > 0 && (
             <Collapsible open={financasOpen} onOpenChange={setFinancasOpen}>
               <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    className={`w-full justify-start min-h-[40px] sm:min-h-[48px] px-2 sm:px-3 ${
-                      isFinancasActive
-                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                        : "text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent"
-                    }`}
+                <SidebarMenuButton
+                  asChild
+                  isActive={currentPath === "/financas"}
+                  className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+                  onClick={(e) => {
+                    setFinancasOpen(!financasOpen);
+                  }}
+                >
+                  <NavLink
+                    to="/financas"
+                    className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm w-full"
+                    onClick={handleNavClick}
                   >
                     <Banknote className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                     {!isCollapsed && <span className="flex-1 truncate">Finanças</span>}
@@ -254,8 +253,8 @@ export function AppSidebar() {
                         }`}
                       />
                     )}
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
+                  </NavLink>
+                </SidebarMenuButton>
               </SidebarMenuItem>
 
               <CollapsibleContent>
