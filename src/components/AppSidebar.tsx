@@ -26,7 +26,6 @@ import {
   Menu,
   X,
   FileText,
-  Building2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -70,12 +69,6 @@ const menuItems = [
     title: "Contas Fornecedores",
     icon: FileText,
     path: "/contas-fornecedores",
-    module: "financas",
-  },
-  {
-    title: "DRE",
-    icon: Building2,
-    path: "/dre",
     module: "financas",
   },
   {
