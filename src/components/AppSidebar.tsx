@@ -88,6 +88,12 @@ const menuItems = [
 
 const financasItems = [
   {
+    title: "Finanças",
+    icon: Banknote,
+    path: "/financas",
+    module: "financas",
+  },
+  {
     title: "Centros de Custo",
     icon: Wallet,
     path: "/centros-custo",
