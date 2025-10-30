@@ -17,7 +17,7 @@ import { RequisitionDetailsModal } from "@/components/modals/RequisitionDetailsM
 import { useToast } from "@/hooks/use-toast";
 
 export function ComprasPage() {
-  const { selectedProjectId } = useProjectContext();
+  const { selectedProjectId, projectData } = useProjectContext();
   const { data: allRequisitions = [], isLoading: loadingRequisitions } = useRequisitions();
   const { data: kpis = [], isLoading: loadingKpis } = useDashboardKpis();
   const deleteRequisitionMutation = useDeleteRequisition();
@@ -63,6 +63,10 @@ export function ComprasPage() {
       </div>
     );
   }
+
+  // Obter limite de aprovação do projeto selecionado
+  const limiteAprovacao = projectData?.project?.limite_aprovacao || 3000000;
+  const limiteFinanceiro = limiteAprovacao * 3.33; // ~10M se limite base for 3M
 
   const totalRequisicoes = requisitions.length;
   const pendentesAprovacao = requisitions.filter(r => 
@@ -257,19 +261,19 @@ export function ComprasPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="font-semibold">{formatCurrency(req.valor || 0)}</div>
-                        {(req.valor || 0) > 10000000 && (
-                          <Badge variant="destructive" className="text-xs mt-1">
-                            Aprovação Direção
-                          </Badge>
-                        )}
-                        {(req.valor || 0) > 3000000 && (req.valor || 0) <= 10000000 && (
-                          <Badge variant="outline" className="text-xs mt-1">
-                            Aprovação Financeiro
-                          </Badge>
-                        )}
-                      </TableCell>
+                       <TableCell>
+                         <div className="font-semibold">{formatCurrency(req.valor || 0)}</div>
+                         {(req.valor || 0) > limiteFinanceiro && (
+                           <Badge variant="destructive" className="text-xs mt-1">
+                             Aprovação Direção
+                           </Badge>
+                         )}
+                         {(req.valor || 0) > limiteAprovacao && (req.valor || 0) <= limiteFinanceiro && (
+                           <Badge variant="outline" className="text-xs mt-1">
+                             Aprovação Financeiro
+                           </Badge>
+                         )}
+                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${getUrgencyColor(req.urgencia_prioridade || 'Média')}`} />
@@ -327,15 +331,17 @@ export function ComprasPage() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div className="p-3 border rounded-lg">
-              <div className="font-semibold text-green-700">≤ 3.000.000 Kz</div>
+              <div className="font-semibold text-green-700">≤ {formatCurrency(limiteAprovacao)}</div>
               <div className="text-muted-foreground">Aprovação automática</div>
             </div>
             <div className="p-3 border rounded-lg">
-              <div className="font-semibold text-yellow-700">3.000.001 - 10.000.000 Kz</div>
+              <div className="font-semibold text-yellow-700">
+                {formatCurrency(limiteAprovacao + 1)} - {formatCurrency(limiteFinanceiro)}
+              </div>
               <div className="text-muted-foreground">Aprovação financeiro</div>
             </div>
             <div className="p-3 border rounded-lg">
-              <div className="font-semibold text-red-700">{'>'}10.000.000 Kz</div>
+              <div className="font-semibold text-red-700">{'>'} {formatCurrency(limiteFinanceiro)}</div>
               <div className="text-muted-foreground">Aprovação direção</div>
             </div>
           </div>
