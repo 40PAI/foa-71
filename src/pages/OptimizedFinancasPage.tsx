@@ -266,10 +266,6 @@ export function OptimizedFinancasPage() {
 
       {/* Collapsible Sections with Accordion */}
       <Accordion type="multiple" className="w-full space-y-3">
-        <CollapsibleFinancialSection value="charts" title="Análise Visual e Gráficos" icon={BarChart3}>
-          <FinancialChartsSection projectId={selectedProjectId} />
-        </CollapsibleFinancialSection>
-
         <CollapsibleFinancialSection value="expenses" title="Gestão de Gastos por Categoria" icon={TrendingDown} badge={{
         text: `${allExpenses.length} gastos`,
         variant: "outline"
