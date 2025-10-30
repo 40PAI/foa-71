@@ -23,6 +23,13 @@ export function RefactoredProjetosPage() {
   const [projectToDelete, setProjectToDelete] = useState<{ id: number; nome: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<"todos" | ProjectStatus>("todos");
 
+  // Filtrar projetos baseado no status selecionado - MUST be before early returns
+  const filteredProjects = useMemo(() => {
+    if (!projects) return [];
+    if (statusFilter === "todos") return projects;
+    return projects.filter(p => p.status === statusFilter);
+  }, [projects, statusFilter]);
+
   const openDeleteDialog = (id: number, nome: string) => {
     setProjectToDelete({ id, nome });
     setDeleteDialogOpen(true);
@@ -65,12 +72,6 @@ export function RefactoredProjetosPage() {
   if (!projects) {
     return <div>Erro ao carregar projetos</div>;
   }
-
-  // Filtrar projetos baseado no status selecionado
-  const filteredProjects = useMemo(() => {
-    if (statusFilter === "todos") return projects;
-    return projects.filter(p => p.status === statusFilter);
-  }, [projects, statusFilter]);
 
   return (
     <div className="w-full space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-3 py-2 sm:py-4 lg:py-6">
