@@ -24,7 +24,6 @@ import { formatCurrency } from "@/utils/formatters";
 import { CentrosCustoChartSection } from "@/components/financial/CentrosCustoChartSection";
 import { StageFinancialSection } from "@/components/financial/StageFinancialSection";
 import { RequisitionsFinancialSection } from "@/components/financial/RequisitionsFinancialSection";
-import { FornecedoresFinancialSection } from "@/components/financial/FornecedoresFinancialSection";
 import { TasksFinancialSection } from "@/components/financial/TasksFinancialSection";
 import { CollapsibleFinancialSection } from "@/components/financial/CollapsibleFinancialSection";
 import { 
@@ -169,10 +168,6 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
 
                   <CollapsibleFinancialSection title="Requisições" value="requisicoes" icon={Package} defaultOpen={false}>
                     <RequisitionsFinancialSection data={financialData.requisicoes} />
-                  </CollapsibleFinancialSection>
-
-                  <CollapsibleFinancialSection title="Fornecedores" value="fornecedores" icon={Users} defaultOpen={false}>
-                    <FornecedoresFinancialSection data={financialData.fornecedores} />
                   </CollapsibleFinancialSection>
 
                   <CollapsibleFinancialSection title="Análise de Tarefas" value="tarefas" icon={TrendingUp} defaultOpen={false}>
