@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ProjectsKPISection } from "@/components/projects/ProjectsKPISection";
 import { ProjectsTable } from "@/components/projects/ProjectsTable";
@@ -10,6 +10,8 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useProjects, useDeleteProject } from "@/hooks/useProjects";
 import { useDashboardKpis } from "@/hooks/useDashboardKpis";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ProjectStatus } from "@/types/project";
 
 export function RefactoredProjetosPage() {
   const { toast } = useToast();
@@ -19,6 +21,7 @@ export function RefactoredProjetosPage() {
   
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<{ id: number; nome: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"todos" | ProjectStatus>("todos");
 
   const openDeleteDialog = (id: number, nome: string) => {
     setProjectToDelete({ id, nome });
@@ -63,6 +66,12 @@ export function RefactoredProjetosPage() {
     return <div>Erro ao carregar projetos</div>;
   }
 
+  // Filtrar projetos baseado no status selecionado
+  const filteredProjects = useMemo(() => {
+    if (statusFilter === "todos") return projects;
+    return projects.filter(p => p.status === statusFilter);
+  }, [projects, statusFilter]);
+
   return (
     <div className="w-full space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-3 py-2 sm:py-4 lg:py-6">
       <PageHeader
@@ -78,8 +87,29 @@ export function RefactoredProjetosPage() {
 
       <ProjectsKPISection projects={projects} />
       
+      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="todos">Todos ({projects.length})</TabsTrigger>
+          <TabsTrigger value="Em Andamento">
+            Em Andamento ({projects.filter(p => p.status === "Em Andamento").length})
+          </TabsTrigger>
+          <TabsTrigger value="Atrasado">
+            Atrasados ({projects.filter(p => p.status === "Atrasado").length})
+          </TabsTrigger>
+          <TabsTrigger value="Pausado">
+            Pausados ({projects.filter(p => p.status === "Pausado").length})
+          </TabsTrigger>
+          <TabsTrigger value="Concluído">
+            Concluídos ({projects.filter(p => p.status === "Concluído").length})
+          </TabsTrigger>
+          <TabsTrigger value="Cancelado">
+            Cancelados ({projects.filter(p => p.status === "Cancelado").length})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+      
       <ProjectsTable 
-        projects={projects}
+        projects={filteredProjects}
         kpis={kpis}
         onDelete={openDeleteDialog}
         isDeleting={deleteProjectMutation.isPending}

@@ -11,17 +11,24 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const getStatusVariant = (status: string) => {
     const normalizedStatus = status.toLowerCase().replace(/\s+/g, '-');
     
+    // Verde - Estados positivos/completos
     if (['aprovado', 'concluído', 'presente', 'em-uso'].includes(normalizedStatus)) {
       return 'default'; // green
     }
-    if (['pendente', 'atraso', 'baixa', 'disponível'].includes(normalizedStatus)) {
-      return 'secondary'; // yellow/gray
-    }
-    if (['rejeitado', 'ausente', 'alta', 'atrasado', 'manutenção'].includes(normalizedStatus)) {
+    
+    // Vermelho - Estados críticos/negativos
+    if (['rejeitado', 'ausente', 'alta', 'atrasado', 'manutenção', 'cancelado'].includes(normalizedStatus)) {
       return 'destructive'; // red
     }
-    if (['em-andamento'].includes(normalizedStatus)) {
+    
+    // Azul - Em andamento
+    if (['em-andamento', 'pausado'].includes(normalizedStatus)) {
       return 'outline'; // blue
+    }
+    
+    // Amarelo/Cinza - Estados neutros/pendentes
+    if (['pendente', 'atraso', 'baixa', 'disponível', 'planeado'].includes(normalizedStatus)) {
+      return 'secondary'; // yellow/gray
     }
     
     return 'secondary';

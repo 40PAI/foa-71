@@ -10,32 +10,38 @@ interface ProjectsKPISectionProps {
 
 export function ProjectsKPISection({ projects }: ProjectsKPISectionProps) {
   const kpiData = useMemo(() => {
-    const totalProjetos = projects.length;
-    const projetosAtrasados = projects.filter(p => p.status === 'Atrasado').length;
-    const mediaAvanco = totalProjetos > 0 
-      ? projects.reduce((acc, p) => acc + (p.avanco_fisico || 0), 0) / totalProjetos 
+    // Filtrar apenas projetos ativos (excluir concluídos e cancelados)
+    const projetosAtivos = projects.filter(p => 
+      p.status !== 'Concluído' && p.status !== 'Cancelado'
+    );
+    const projetosConcluidos = projects.filter(p => p.status === 'Concluído').length;
+    const projetosCancelados = projects.filter(p => p.status === 'Cancelado').length;
+    const projetosAtrasados = projetosAtivos.filter(p => p.status === 'Atrasado').length;
+    
+    const mediaAvanco = projetosAtivos.length > 0 
+      ? projetosAtivos.reduce((acc, p) => acc + (p.avanco_fisico || 0), 0) / projetosAtivos.length
       : 0;
     const orcamentoTotal = projects.reduce((acc, p) => acc + p.orcamento, 0);
 
     return [
       {
-        title: "Total de Projetos",
-        value: totalProjetos,
-        subtitle: "Projetos ativos",
+        title: "Projetos Ativos",
+        value: projetosAtivos.length,
+        subtitle: `${projetosConcluidos} concluídos, ${projetosCancelados} cancelados`,
         icon: <Calendar className="h-4 w-4" />,
-        alert: "green"
+        alert: projetosAtivos.length > 0 ? "green" : "yellow"
       },
       {
         title: "Projetos Atrasados", 
         value: projetosAtrasados,
-        subtitle: `${totalProjetos > 0 ? ((projetosAtrasados / totalProjetos) * 100).toFixed(0) : 0}% do total`,
+        subtitle: `${projetosAtivos.length > 0 ? ((projetosAtrasados / projetosAtivos.length) * 100).toFixed(0) : 0}% dos ativos`,
         icon: <Clock className="h-4 w-4" />,
         alert: projetosAtrasados > 0 ? "red" : "green"
       },
       {
         title: "Avanço Médio",
         value: `${mediaAvanco.toFixed(0)}%`,
-        subtitle: "Avanço físico geral", 
+        subtitle: "Avanço físico dos ativos", 
         icon: <TrendingUp className="h-4 w-4" />,
         alert: mediaAvanco >= 80 ? "green" : mediaAvanco >= 60 ? "yellow" : "red"
       },
