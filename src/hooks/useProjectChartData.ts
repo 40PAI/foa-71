@@ -6,6 +6,7 @@ import { useEmployeesByProject } from "./useEmployeesByProject";
 import { usePatrimonyByProject } from "./usePatrimony";
 import { useTasks } from "./useTasks";
 import { useProjectMetrics } from "./useProjectMetrics";
+import { useMaterialArmazemByProject } from "./useMaterialsArmazem";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useProjectChartData(projectId: number) {
@@ -15,6 +16,7 @@ export function useProjectChartData(projectId: number) {
   const { data: patrimony } = usePatrimonyByProject(projectId);
   const { data: allTasks } = useTasks(projectId);
   const { data: metrics } = useProjectMetrics(projectId);
+  const { data: warehouseMaterials } = useMaterialArmazemByProject(projectId);
 
   return useQuery({
     queryKey: ["project-chart-data", projectId],
@@ -130,6 +132,31 @@ export function useProjectChartData(projectId: number) {
         status: task.status
       }));
 
+      // Processar dados de materiais de armazém do projeto
+      const materialsDisponivel = warehouseMaterials?.filter(m => m.status_item === "Disponível").length || 0;
+      const materialsEmUso = warehouseMaterials?.filter(m => m.status_item === "Em uso").length || 0;
+      const materialsReservado = warehouseMaterials?.filter(m => m.status_item === "Reservado").length || 0;
+      const materialsTotal = warehouseMaterials?.length || 0;
+
+      // Agrupar materiais por categoria
+      const materialsByCategory = warehouseMaterials?.reduce((acc, material) => {
+        const categoria = material.categoria_principal || "Sem Categoria";
+        const existing = acc.find(item => item.categoria === categoria);
+        
+        if (existing) {
+          existing.quantidade += 1;
+          existing.quantidadeStock += material.quantidade_stock;
+        } else {
+          acc.push({
+            categoria,
+            quantidade: 1,
+            quantidadeStock: material.quantidade_stock
+          });
+        }
+        
+        return acc;
+      }, [] as any[]) || [];
+
       return {
         project: projectDetails.project,
         summary: projectDetails.summary,
@@ -152,7 +179,15 @@ export function useProjectChartData(projectId: number) {
           patrimony: patrimony || [],
           employees: employees || [],
           tasks,
-          requisitions: requisitions.data || []
+          requisitions: requisitions.data || [],
+          warehouseMaterials: {
+            total: materialsTotal,
+            disponivel: materialsDisponivel,
+            emUso: materialsEmUso,
+            reservado: materialsReservado,
+            byCategory: materialsByCategory,
+            materials: warehouseMaterials || []
+          }
         }
       };
     },

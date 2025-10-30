@@ -210,34 +210,57 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
             <TabsContent value="warehouse" className="space-y-6 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <KPICard
-                  title="Equipamentos Disponíveis"
-                  value={chartData.chartData.patrimony.filter(p => p.status === "Disponível").length}
+                  title="Materiais Alocados"
+                  value={chartData.chartData.warehouseMaterials?.total || 0}
+                  subtitle="Total no projeto"
+                  icon={<Package className="h-4 w-4" />}
+                  alert="green"
+                />
+                <KPICard
+                  title="Materiais Disponíveis"
+                  value={chartData.chartData.warehouseMaterials?.disponivel || 0}
                   subtitle="Prontos para uso"
                   icon={<Package className="h-4 w-4" />}
                   alert="green"
                 />
                 <KPICard
-                  title="Em Uso"
-                  value={chartData.chartData.patrimony.filter(p => p.status === "Em Uso").length}
-                  subtitle="Ativos no projeto"
+                  title="Em Uso no Projeto"
+                  value={chartData.chartData.warehouseMaterials?.emUso || 0}
+                  subtitle="Atualmente utilizados"
                   icon={<Package className="h-4 w-4" />}
-                  alert="green"
-                />
-                <KPICard
-                  title="Em Manutenção"
-                  value={chartData.chartData.patrimony.filter(p => p.status === "Manutenção").length}
-                  subtitle="Indisponíveis"
-                  icon={<AlertTriangle className="h-4 w-4" />}
                   alert="yellow"
                 />
                 <KPICard
-                  title="Taxa de Utilização"
-                  value={`${chartData.kpis.utilizationRate.toFixed(1)}%`}
-                  subtitle="Eficiência da frota"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert={chartData.kpis.utilizationRate >= 75 ? "green" : "yellow"}
+                  title="Reservados"
+                  value={chartData.chartData.warehouseMaterials?.reservado || 0}
+                  subtitle="Aguardando uso"
+                  icon={<Clock className="h-4 w-4" />}
+                  alert="yellow"
                 />
               </div>
+
+              {/* Distribuição por Categoria */}
+              {chartData.chartData.warehouseMaterials?.byCategory && chartData.chartData.warehouseMaterials.byCategory.length > 0 && (
+                <div className="bg-card rounded-lg border p-6">
+                  <h3 className="text-lg font-semibold mb-4">Distribuição de Materiais por Categoria</h3>
+                  <div className="space-y-3">
+                    {chartData.chartData.warehouseMaterials.byCategory.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{item.categoria}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {item.quantidade} {item.quantidade === 1 ? 'item' : 'itens'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold">{item.quantidadeStock.toFixed(2)}</p>
+                          <p className="text-xs text-muted-foreground">em stock</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="hr" className="space-y-6 mt-6">
