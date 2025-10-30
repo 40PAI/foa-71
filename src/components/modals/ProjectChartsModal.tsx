@@ -74,14 +74,13 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
         
         <ScrollArea className="max-h-[80vh]">
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Visão Geral</TabsTrigger>
               <TabsTrigger value="finance">Finanças</TabsTrigger>
               <TabsTrigger value="purchases">Compras</TabsTrigger>
               <TabsTrigger value="warehouse">Armazém</TabsTrigger>
               <TabsTrigger value="hr">RH</TabsTrigger>
               <TabsTrigger value="safety">Segurança</TabsTrigger>
-              <TabsTrigger value="lean">Lean</TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6 mt-6">
@@ -317,40 +316,6 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
               </div>
             </TabsContent>
 
-            <TabsContent value="lean" className="space-y-6 mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <KPICard
-                  title="Residencial"
-                  value={chartData.chartData.tasks.filter(t => t.tipo === "Residencial").length}
-                  subtitle="Projetos residenciais"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert="green"
-                />
-                <KPICard
-                  title="Comercial"
-                  value={chartData.chartData.tasks.filter(t => t.tipo === "Comercial").length}
-                  subtitle="Projetos comerciais"
-                  icon={<Package className="h-4 w-4" />}
-                  alert="green"
-                />
-                <KPICard
-                  title="Industrial"
-                  value={chartData.chartData.tasks.filter(t => t.tipo === "Industrial").length}
-                  subtitle="Projetos industriais"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert="green"
-                />
-                <KPICard
-                  title="Taxa de Conclusão"
-                  value={`${((chartData.chartData.tasks.filter(t => t.status === "Concluído").length / Math.max(chartData.chartData.tasks.length, 1)) * 100).toFixed(1)}%`}
-                  subtitle="Tarefas concluídas"
-                  icon={<TrendingUp className="h-4 w-4" />}
-                  alert="green"
-                />
-              </div>
-
-              <BurndownChart data={chartData.chartData.burndown} />
-            </TabsContent>
           </Tabs>
         </ScrollArea>
       </DialogContent>
