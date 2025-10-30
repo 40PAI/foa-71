@@ -377,13 +377,6 @@ export function OptimizedFinancasPage() {
       }}>
           <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
         </CollapsibleFinancialSection>
-
-        <CollapsibleFinancialSection value="centros-custo" title="Centros de Custo" icon={Wallet} badge={saldos?.filter(s => s.percentual_utilizado >= 80).length > 0 ? {
-        text: `${saldos.filter(s => s.percentual_utilizado >= 80).length} em alerta`,
-        variant: "secondary"
-      } : undefined}>
-          <CentrosCustoSummary projectId={selectedProjectId} />
-        </CollapsibleFinancialSection>
       </Accordion>
     </div>;
 }
