@@ -34,7 +34,9 @@ import {
   Package, 
   Users,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  CheckCircle,
+  ShoppingCart
 } from "lucide-react";
 
 interface ProjectChartsModalProps {
@@ -181,29 +183,106 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
             </TabsContent>
 
             <TabsContent value="purchases" className="space-y-6 mt-6">
+              {/* KPIs Principais */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <KPICard
-                  title="Requisições Pendentes"
-                  value={chartData.chartData.requisitions.filter(r => r.status_fluxo === "Pendente").length}
-                  subtitle="Aguardando aprovação"
-                  icon={<Clock className="h-4 w-4" />}
-                  alert="yellow"
-                />
-                <KPICard
-                  title="Em Cotação"
-                  value={chartData.chartData.requisitions.filter(r => r.status_fluxo === "Cotações").length}
-                  subtitle="Aguardando orçamentos"
-                  icon={<Package className="h-4 w-4" />}
-                  alert="yellow"
-                />
-                <KPICard
-                  title="Recepcionadas"
-                  value={chartData.chartData.requisitions.filter(r => r.status_fluxo === "Recepcionado").length}
-                  subtitle="Materiais recebidos"
+                  title="Total de Requisições"
+                  value={chartData.kpis.purchases.total}
+                  subtitle="Nesta obra"
                   icon={<Package className="h-4 w-4" />}
                   alert="green"
                 />
+                <KPICard
+                  title="Requisições Aprovadas"
+                  value={chartData.kpis.purchases.aprovadas}
+                  subtitle="OC geradas ou recepcionadas"
+                  icon={<CheckCircle className="h-4 w-4" />}
+                  alert="green"
+                />
+                <KPICard
+                  title="Taxa de Aprovação"
+                  value={`${chartData.kpis.purchases.taxaAprovacao.toFixed(1)}%`}
+                  subtitle="Do total de requisições"
+                  icon={<TrendingUp className="h-4 w-4" />}
+                  alert={chartData.kpis.purchases.taxaAprovacao >= 80 ? "green" : chartData.kpis.purchases.taxaAprovacao >= 60 ? "yellow" : "red"}
+                />
               </div>
+
+              {/* KPIs Secundários */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <KPICard
+                  title="Valor Total das Requisições"
+                  value={formatCurrency(chartData.kpis.purchases.valorTotal)}
+                  subtitle="Todas as requisições"
+                  icon={<DollarSign className="h-4 w-4" />}
+                  alert="green"
+                />
+                <KPICard
+                  title="Pendentes de Aprovação"
+                  value={chartData.kpis.purchases.pendentes}
+                  subtitle="Aguardando decisão"
+                  icon={<Clock className="h-4 w-4" />}
+                  alert={chartData.kpis.purchases.pendentes > 5 ? "yellow" : "green"}
+                />
+                <KPICard
+                  title="Em Processo de Compra"
+                  value={chartData.kpis.purchases.emProcesso}
+                  subtitle="Cotações e aprovações"
+                  icon={<ShoppingCart className="h-4 w-4" />}
+                  alert="yellow"
+                />
+              </div>
+
+              {/* Distribuição por Status */}
+              <div className="bg-card rounded-lg border p-6">
+                <h3 className="text-lg font-semibold mb-4">Distribuição por Status</h3>
+                <div className="space-y-3">
+                  {Object.entries(
+                    chartData.chartData.requisitions.reduce((acc, req) => {
+                      acc[req.status_fluxo] = (acc[req.status_fluxo] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{status}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {((count / chartData.chartData.requisitions.length) * 100).toFixed(1)}% do total
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold">{count}</p>
+                        <p className="text-xs text-muted-foreground">requisições</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Últimas Requisições */}
+              {chartData.chartData.requisitions.length > 0 && (
+                <div className="bg-card rounded-lg border p-6">
+                  <h3 className="text-lg font-semibold mb-4">Últimas Requisições</h3>
+                  <div className="space-y-2">
+                    {chartData.chartData.requisitions.slice(0, 10).map((req) => (
+                      <div key={req.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                        <div className="flex-1">
+                          <p className="font-medium">{req.nome_comercial_produto || 'Sem descrição'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(req.data_requisicao).toLocaleDateString('pt-PT')} • {req.requisitante}
+                          </p>
+                        </div>
+                        <div className="text-right flex items-center gap-4">
+                          <div>
+                            <p className="font-semibold">{formatCurrency(req.valor || 0)}</p>
+                            <p className="text-xs text-muted-foreground">{req.status_fluxo}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="warehouse" className="space-y-6 mt-6">

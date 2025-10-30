@@ -75,6 +75,30 @@ export function useProjectChartData(projectId: number) {
         return total > 0 ? (inUse / total) * 100 : 0;
       };
 
+      // Calcular métricas de compras
+      const calculatePurchaseMetrics = () => {
+        const reqs = requisitions.data || [];
+        const total = reqs.length;
+        const aprovadas = reqs.filter(r => 
+          ['OC Gerada', 'Recepcionado', 'Liquidado'].includes(r.status_fluxo)
+        ).length;
+        const pendentes = reqs.filter(r => r.status_fluxo === 'Pendente').length;
+        const emProcesso = reqs.filter(r => 
+          ['Cotações', 'Aprovação Qualidade', 'Aprovação Direção'].includes(r.status_fluxo)
+        ).length;
+        const valorTotal = reqs.reduce((acc, r) => acc + (r.valor || 0), 0);
+        const taxaAprovacao = total > 0 ? (aprovadas / total) * 100 : 0;
+
+        return {
+          total,
+          aprovadas,
+          pendentes,
+          emProcesso,
+          valorTotal,
+          taxaAprovacao
+        };
+      };
+
       // Dados para S-Curve usando métricas automáticas
       const sCurveData = [
         { 
@@ -170,6 +194,7 @@ export function useProjectChartData(projectId: number) {
           ppc: calculatePPC(),
           leadTime: calculateLeadTime(),
           utilizationRate: calculateUtilizationRate(),
+          purchases: calculatePurchaseMetrics(),
         },
         chartData: {
           sCurve: sCurveData,
