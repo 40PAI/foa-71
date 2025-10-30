@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProjects } from "@/hooks/useProjects";
+import { generateDREPDF } from "@/utils/pdfGenerator";
 
 export function DashboardDRESection() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -41,7 +42,18 @@ export function DashboardDRESection() {
   };
 
   const handleExportar = () => {
-    toast.info("Funcionalidade de exportação será implementada em breve");
+    if (!selectedProject || !dreLinhas || dreLinhas.length === 0) {
+      toast.error("Selecione um projeto com dados DRE para exportar");
+      return;
+    }
+
+    try {
+      generateDREPDF(selectedProject, mes, ano, dreLinhas);
+      toast.success("PDF gerado com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao gerar PDF");
+      console.error(error);
+    }
   };
 
   const totais = dreLinhas?.reduce(
