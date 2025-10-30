@@ -99,14 +99,13 @@ const financasItems = [
     path: "/compras",
     module: "compras",
   },
+  {
+    title: "Contas Fornecedores",
+    icon: FileText,
+    path: "/contas-fornecedores",
+    module: "financas",
+  },
 ];
-
-const contasFornecedoresItem = {
-  title: "Contas Fornecedores",
-  icon: FileText,
-  path: "/contas-fornecedores",
-  module: "financas",
-};
 export function AppSidebar() {
   const { state, setOpenMobile, open: sidebarOpen, toggleSidebar } = useSidebar();
   const { profile, canAccessModule, isDirector, signOut } = useAuth();
@@ -121,7 +120,6 @@ export function AppSidebar() {
   // Filter items based on user permissions
   const filteredItems = menuItems.filter((item) => canAccessModule(item.module));
   const filteredFinancasItems = financasItems.filter((item) => canAccessModule(item.module));
-  const showContasFornecedores = canAccessModule(contasFornecedoresItem.module);
   
   // Split items for proper ordering
   const dashboardItem = filteredItems.find(item => item.path === "/");
@@ -131,7 +129,9 @@ export function AppSidebar() {
   );
   
   // Check if any financas route is active
-  const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path) || currentPath === "/financas";
+  const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path) || 
+    currentPath === "/financas" || 
+    currentPath === "/contas-fornecedores";
   const handleNavClick = () => {
     setOpenMobile(false);
   };
@@ -278,26 +278,6 @@ export function AppSidebar() {
                 ))}
               </CollapsibleContent>
             </Collapsible>
-          )}
-
-          {/* Contas Fornecedores */}
-          {showContasFornecedores && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                asChild
-                isActive={currentPath === contasFornecedoresItem.path}
-                className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
-              >
-                <NavLink
-                  to={contasFornecedoresItem.path}
-                  className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
-                  onClick={handleNavClick}
-                >
-                  <contasFornecedoresItem.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span className="truncate">{contasFornecedoresItem.title}</span>
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           )}
 
           {/* Remaining items (Armazém, RH & Ponto, Segurança & Higiene, Tarefas) */}
