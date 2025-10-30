@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useProjectState } from "@/hooks/useContextHooks";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,36 +8,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Skeleton } from "@/components/ui/skeleton";
 import { FileDown, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { ProjectSelector } from "@/components/ProjectSelector";
+import { useProjects } from "@/hooks/useProjects";
 
 export function DashboardDRESection() {
-  const { selectedProjectId, projectData } = useProjectState();
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const { data: projects } = useProjects();
+  const selectedProject = projects?.find(p => p.id.toString() === selectedProjectId);
+  
   const currentDate = new Date();
   const [mes, setMes] = useState(currentDate.getMonth() + 1);
   const [ano, setAno] = useState(currentDate.getFullYear());
 
   const { data: dreLinhas, isLoading } = useDREPorCentro(
-    selectedProjectId || 0,
+    selectedProject?.id || 0,
     mes,
     ano
   );
   
   const salvarDRE = useSalvarDRE();
 
-  if (!selectedProjectId) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          Selecione um projeto para visualizar o DRE
-        </CardContent>
-      </Card>
-    );
-  }
-
   const handleSalvar = () => {
-    if (!dreLinhas) return;
+    if (!dreLinhas || !selectedProject) return;
     
     salvarDRE.mutate({
-      projectId: selectedProjectId,
+      projectId: selectedProject.id,
       mes,
       ano,
       linhas: dreLinhas,
@@ -73,22 +68,42 @@ export function DashboardDRESection() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <CardTitle>DRE - Demonstração de Resultados</CardTitle>
-              <CardDescription>Projeto: {projectData?.project?.nome}</CardDescription>
+              <CardDescription>
+                {selectedProject ? `Projeto: ${selectedProject.nome}` : "Selecione um projeto"}
+              </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleExportar} variant="outline" size="sm">
+              <Button 
+                onClick={handleExportar} 
+                variant="outline" 
+                size="sm"
+                disabled={!selectedProject}
+              >
                 <FileDown className="mr-2 h-4 w-4" />
                 Exportar PDF
               </Button>
-              <Button onClick={handleSalvar} disabled={!dreLinhas || salvarDRE.isPending} size="sm">
+              <Button 
+                onClick={handleSalvar} 
+                disabled={!dreLinhas || salvarDRE.isPending || !selectedProject} 
+                size="sm"
+              >
                 <Save className="mr-2 h-4 w-4" />
                 Salvar DRE
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 mb-4">
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Projeto</Label>
+            <ProjectSelector 
+              value={selectedProjectId}
+              onValueChange={setSelectedProjectId}
+              placeholder="Selecionar projeto..."
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Período:</span>
             <Select value={mes.toString()} onValueChange={(v) => setMes(parseInt(v))}>
               <SelectTrigger className="w-32">

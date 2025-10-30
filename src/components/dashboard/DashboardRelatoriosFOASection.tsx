@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Download } from "lucide-react";
-import { useProjectContext } from "@/contexts/ProjectContext";
 import { useDREPorCentro } from "@/hooks/useDREPorCentro";
 import { useReembolsosFOA } from "@/hooks/useReembolsosFOA";
 import { useResumoFOAGeral } from "@/hooks/useResumoFOA";
@@ -11,10 +10,13 @@ import { generateDREPDF, generateReembolsosPDF, generateResumoFOAPDF } from "@/u
 import { generateFOAExcel } from "@/utils/excelExporter";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
+import { ProjectSelector } from "@/components/ProjectSelector";
+import { useProjects } from "@/hooks/useProjects";
 
 export function DashboardRelatoriosFOASection() {
-  const { selectedProjectId, projectData } = useProjectContext();
-  const selectedProject = projectData?.project;
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+  const { data: projects } = useProjects();
+  const selectedProject = projects?.find(p => p.id.toString() === selectedProjectId);
   
   const currentDate = new Date();
   const [mes, setMes] = useState(currentDate.getMonth() + 1);
@@ -24,16 +26,6 @@ export function DashboardRelatoriosFOASection() {
   const { data: linhasDRE } = useDREPorCentro(selectedProject?.id || 0, mes, ano);
   const { data: reembolsos } = useReembolsosFOA(selectedProject?.id);
   const { data: resumo } = useResumoFOAGeral();
-
-  if (!selectedProject) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center text-muted-foreground">
-          Selecione um projeto para gerar relatórios FOA
-        </CardContent>
-      </Card>
-    );
-  }
 
   const handleGeneratePDF = () => {
     try {
@@ -77,9 +69,18 @@ export function DashboardRelatoriosFOASection() {
         <Card>
           <CardHeader>
             <CardTitle>Configurações do Relatório</CardTitle>
-            <CardDescription>Projeto: {selectedProject.nome}</CardDescription>
+            <CardDescription>Selecione o projeto e o tipo de relatório</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div>
+              <Label>Projeto</Label>
+              <ProjectSelector 
+                value={selectedProjectId}
+                onValueChange={setSelectedProjectId}
+                placeholder="Selecionar projeto..."
+              />
+            </div>
+
             <div>
               <Label>Tipo de Relatório</Label>
               <Select value={tipoRelatorio} onValueChange={(v: any) => setTipoRelatorio(v)}>
@@ -142,11 +143,22 @@ export function DashboardRelatoriosFOASection() {
             <CardDescription>Escolha o formato de exportação</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button onClick={handleGeneratePDF} className="w-full" size="lg">
+            <Button 
+              onClick={handleGeneratePDF} 
+              className="w-full" 
+              size="lg"
+              disabled={!selectedProject}
+            >
               <FileText className="mr-2 h-5 w-5" />
               Gerar PDF
             </Button>
-            <Button onClick={handleGenerateExcel} variant="outline" className="w-full" size="lg">
+            <Button 
+              onClick={handleGenerateExcel} 
+              variant="outline" 
+              className="w-full" 
+              size="lg"
+              disabled={!selectedProject}
+            >
               <Download className="mr-2 h-5 w-5" />
               Exportar Excel Completo FOA
             </Button>
