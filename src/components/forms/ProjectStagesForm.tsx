@@ -174,8 +174,14 @@ export function ProjectStagesForm({
 
               <div>
                 <label className="text-sm font-medium">Gasto Real da Etapa</label>
-                <CurrencyInput value={stage.gasto_etapa} onValueChange={value => updateStage(index, "gasto_etapa", value)} placeholder="0,00" />
-                <p className="text-xs text-muted-foreground mt-1">Valor realmente gasto</p>
+                <CurrencyInput 
+                  value={stage.gasto_etapa} 
+                  onValueChange={value => updateStage(index, "gasto_etapa", value)} 
+                  placeholder="0,00"
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Valor realmente gasto (calculado automaticamente)</p>
               </div>
             </div>
           </div>
@@ -192,8 +198,16 @@ export function ProjectStagesForm({
 
               <div>
                 <label className="text-sm font-medium">Tempo Real (dias)</label>
-                <Input type="number" min="0" value={stage.tempo_real_dias} onChange={e => updateStage(index, "tempo_real_dias", parseInt(e.target.value) || 0)} placeholder="0" />
-                <p className="text-xs text-muted-foreground mt-1">Duração real em dias</p>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={stage.tempo_real_dias} 
+                  onChange={e => updateStage(index, "tempo_real_dias", parseInt(e.target.value) || 0)} 
+                  placeholder="0"
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Duração real em dias (calculado automaticamente)</p>
               </div>
             </div>
           </div>
