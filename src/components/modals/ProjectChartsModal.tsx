@@ -86,20 +86,13 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
 
             <TabsContent value="overview" className="space-y-6 mt-6">
               {/* KPIs Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <KPICard
                   title="PPC (Programação Cumprida)"
                   value={`${chartData.kpis.ppc.toFixed(1)}%`}
                   subtitle="Meta: ≥ 85%"
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert={chartData.kpis.ppc >= 85 ? "green" : chartData.kpis.ppc >= 70 ? "yellow" : "red"}
-                />
-                <KPICard
-                  title="Lead-time Médio"
-                  value={`${chartData.kpis.leadTime.toFixed(1)} dias`}
-                  subtitle="Compras"
-                  icon={<Clock className="h-4 w-4" />}
-                  alert={chartData.kpis.leadTime <= 7 ? "green" : chartData.kpis.leadTime <= 14 ? "yellow" : "red"}
                 />
                 <KPICard
                   title="Taxa de Utilização"
