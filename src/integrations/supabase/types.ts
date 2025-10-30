@@ -3418,7 +3418,12 @@ export type Database = {
         | "Custos Indiretos"
         | "Segurança e Higiene no Trabalho"
       fonte_foa_enum: "REC_FOA" | "FOF_FIN" | "FOA_AUTO"
-      projeto_status: "Em Andamento" | "Atrasado" | "Concluído" | "Pausado"
+      projeto_status:
+        | "Em Andamento"
+        | "Atrasado"
+        | "Concluído"
+        | "Pausado"
+        | "Cancelado"
       severidade: "Baixa" | "Média" | "Alta"
       status_etapa_enum: "Não Iniciada" | "Em Curso" | "Concluída" | "Atrasada"
       status_ficha: "Pendente" | "Aprovado" | "Rejeitado"
@@ -3637,7 +3642,13 @@ export const Constants = {
         "Segurança e Higiene no Trabalho",
       ],
       fonte_foa_enum: ["REC_FOA", "FOF_FIN", "FOA_AUTO"],
-      projeto_status: ["Em Andamento", "Atrasado", "Concluído", "Pausado"],
+      projeto_status: [
+        "Em Andamento",
+        "Atrasado",
+        "Concluído",
+        "Pausado",
+        "Cancelado",
+      ],
       severidade: ["Baixa", "Média", "Alta"],
       status_etapa_enum: ["Não Iniciada", "Em Curso", "Concluída", "Atrasada"],
       status_ficha: ["Pendente", "Aprovado", "Rejeitado"],

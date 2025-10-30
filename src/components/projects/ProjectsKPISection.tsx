@@ -10,12 +10,12 @@ interface ProjectsKPISectionProps {
 
 export function ProjectsKPISection({ projects }: ProjectsKPISectionProps) {
   const kpiData = useMemo(() => {
-    // Filtrar apenas projetos ativos (excluir concluídos e pausados)
+    // Filtrar apenas projetos ativos (excluir concluídos e cancelados)
     const projetosAtivos = projects.filter(p => 
-      p.status !== 'Concluído' && p.status !== 'Pausado'
+      p.status !== 'Concluído' && p.status !== 'Cancelado'
     );
     const projetosConcluidos = projects.filter(p => p.status === 'Concluído').length;
-    const projetosPausados = projects.filter(p => p.status === 'Pausado').length;
+    const projetosCancelados = projects.filter(p => p.status === 'Cancelado').length;
     const projetosAtrasados = projetosAtivos.filter(p => p.status === 'Atrasado').length;
     
     const mediaAvanco = projetosAtivos.length > 0 
@@ -27,7 +27,7 @@ export function ProjectsKPISection({ projects }: ProjectsKPISectionProps) {
       {
         title: "Projetos Ativos",
         value: projetosAtivos.length,
-        subtitle: `${projetosConcluidos} concluídos, ${projetosPausados} pausados`,
+        subtitle: `${projetosConcluidos} concluídos, ${projetosCancelados} cancelados`,
         icon: <Calendar className="h-4 w-4" />,
         alert: projetosAtivos.length > 0 ? "green" : "yellow"
       },

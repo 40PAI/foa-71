@@ -21,7 +21,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
       return 'destructive'; // red
     }
     
-    // Azul - Em andamento
+    // Azul - Em andamento e pausado
     if (['em-andamento', 'pausado'].includes(normalizedStatus)) {
       return 'outline'; // blue
     }
