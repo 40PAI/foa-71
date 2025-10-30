@@ -3,7 +3,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Edit, Trash2, CheckCircle, Loader2 } from "lucide-react";
 import { DataTable } from "@/components/common/DataTable";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ProjectDetailsModal } from "@/components/modals/ProjectDetailsModal";
@@ -45,27 +45,6 @@ export function ProjectsTable({ projects, kpis, onDelete, isDeleting }: Projects
       toast({
         title: "Erro ao concluir obra",
         description: "Ocorreu um erro ao tentar concluir a obra. Tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelProject = async (projectId: number, projectName: string) => {
-    try {
-      await updateProject.mutateAsync({
-        id: projectId,
-        status: "Cancelado" as any,
-      });
-      
-      toast({
-        title: "Obra cancelada",
-        description: `A obra "${projectName}" foi marcada como cancelada.`,
-      });
-    } catch (error) {
-      console.error("Erro ao cancelar obra:", error);
-      toast({
-        title: "Erro ao cancelar obra",
-        description: "Ocorreu um erro ao tentar cancelar a obra. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -189,21 +168,7 @@ export function ProjectsTable({ projects, kpis, onDelete, isDeleting }: Projects
                 <CheckCircle className="h-4 w-4" />
               )}
             </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => handleCancelProject(projeto.id!, projeto.nome)}
-              title="Cancelar obra"
-              disabled={updateProject.isPending || projeto.status === "Cancelado"}
-              className="text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-950"
-            >
-              {updateProject.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <XCircle className="h-4 w-4" />
-              )}
-            </Button>
-            <Button 
+            <Button
               variant="ghost" 
               size="sm" 
               onClick={() => onDelete(projeto.id!, projeto.nome)}

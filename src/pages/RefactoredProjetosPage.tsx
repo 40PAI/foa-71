@@ -88,7 +88,7 @@ export function RefactoredProjetosPage() {
       <ProjectsKPISection projects={projects} />
       
       <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="todos">Todos ({projects.length})</TabsTrigger>
           <TabsTrigger value="Em Andamento">
             Em Andamento ({projects.filter(p => p.status === "Em Andamento").length})
@@ -101,9 +101,6 @@ export function RefactoredProjetosPage() {
           </TabsTrigger>
           <TabsTrigger value="Concluído">
             Concluídos ({projects.filter(p => p.status === "Concluído").length})
-          </TabsTrigger>
-          <TabsTrigger value="Cancelado">
-            Cancelados ({projects.filter(p => p.status === "Cancelado").length})
           </TabsTrigger>
         </TabsList>
       </Tabs>
