@@ -15,20 +15,23 @@ import { generateFOAExcel } from "@/utils/excelExporter";
 import { useMovimentosFinanceiros } from "@/hooks/useMovimentosFinanceiros";
 import { toast } from "sonner";
 import { MovimentacoesFinanceirasCard } from "@/components/financial/MovimentacoesFinanceirasCard";
+import { ProjectSelector } from "@/components/ProjectSelector";
+import { ProjectGuard } from "@/components/common/ProjectGuard";
 
 export default function CentrosCustoPage() {
-  const { selectedProjectId, projectData } = useProjectContext();
-  const selectedProject = projectData?.project;
+  const [localProjectId, setLocalProjectId] = useState<string>("");
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [filterTipo, setFilterTipo] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCentroCustoId, setSelectedCentroCustoId] = useState<string>("all");
 
+  const projectId = localProjectId ? parseInt(localProjectId) : null;
+
   const handleExportExcel = async () => {
-    if (!selectedProject) return;
+    if (!projectId) return;
     try {
-      await generateFOAExcel(selectedProject.id);
+      await generateFOAExcel(projectId);
       toast.success("Excel FOA exportado com sucesso!");
     } catch (error) {
       toast.error("Erro ao exportar Excel");
@@ -36,19 +39,11 @@ export default function CentrosCustoPage() {
     }
   };
 
-  const { data: saldos, isLoading: loadingSaldos } = useSaldosCentrosCusto(selectedProject?.id);
-  const { data: centrosCusto } = useCentrosCusto(selectedProject?.id);
-  const { data: movimentos } = useMovimentosFinanceiros(selectedProject?.id, {
+  const { data: saldos, isLoading: loadingSaldos } = useSaldosCentrosCusto(projectId || undefined);
+  const { data: centrosCusto } = useCentrosCusto(projectId || undefined);
+  const { data: movimentos } = useMovimentosFinanceiros(projectId || undefined, {
     centroCustoId: selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined
   });
-
-  if (!selectedProject) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">Selecione um projeto para visualizar os centros de custo</p>
-      </div>
-    );
-  }
 
 
   // Filtrar saldos por centro de custo selecionado
@@ -70,132 +65,151 @@ export default function CentrosCustoPage() {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
+      {/* Header com Seletor de Projeto */}
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Centros de Custo</h1>
-            <p className="text-muted-foreground">Projeto: {selectedProject.nome}</p>
             <p className="text-sm text-muted-foreground mt-1">
               💡 Os Centros de Custo são criados durante a criação/edição do projeto
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
-              Importar Excel FOA
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleExportExcel}>
-              <Download className="h-4 w-4 mr-2" />
-              Exportar Excel
-            </Button>
-          </div>
-        </div>
-        
-        {/* Seletor de Centro de Custo */}
-        <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">Filtrar por Centro:</label>
-          <Select value={selectedCentroCustoId} onValueChange={setSelectedCentroCustoId}>
-            <SelectTrigger className="w-[350px]">
-              <SelectValue placeholder="Selecione um centro de custo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os Centros de Custo</SelectItem>
-              {centrosCusto?.map(centro => (
-                <SelectItem key={centro.id} value={centro.id}>
-                  {centro.codigo} - {centro.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedCentro && (
-            <div className="text-sm text-muted-foreground">
-              Tipo: {selectedCentro.tipo}
+          {projectId && (
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
+                <Upload className="h-4 w-4 mr-2" />
+                Importar Excel FOA
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportExcel}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar Excel
+              </Button>
             </div>
           )}
         </div>
-      </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Orçamento Total
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrencyInput(totalOrcamento)}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Gasto
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrencyInput(totalGasto)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {totalOrcamento > 0 ? Math.round((totalGasto / totalOrcamento) * 100) : 0}% do orçamento
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Saldo Disponível
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrencyInput(totalSaldo)}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Centros em Alerta
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{centrosEmAlerta}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              ≥80% do orçamento
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráficos */}
-      {movimentos && movimentos.length > 0 && (
-        <div className="grid gap-6 md:grid-cols-2">
-          <GraficoLinhaMovimentos movimentos={movimentos} />
-          <GraficoBarrasCategorias movimentos={movimentos} />
+        {/* Seletor de Projeto */}
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium">Projeto:</label>
+          <ProjectSelector 
+            value={localProjectId}
+            onValueChange={setLocalProjectId}
+            placeholder="Selecione um projeto..."
+            className="w-[400px]"
+          />
         </div>
+
+        <ProjectGuard projectId={projectId}>
+          {/* Seletor de Centro de Custo */}
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">Filtrar por Centro:</label>
+            <Select value={selectedCentroCustoId} onValueChange={setSelectedCentroCustoId}>
+              <SelectTrigger className="w-[350px]">
+                <SelectValue placeholder="Selecione um centro de custo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os Centros de Custo</SelectItem>
+                {centrosCusto?.map(centro => (
+                  <SelectItem key={centro.id} value={centro.id}>
+                    {centro.codigo} - {centro.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {selectedCentro && (
+              <div className="text-sm text-muted-foreground">
+                Tipo: {selectedCentro.tipo}
+              </div>
+            )}
+          </div>
+        </ProjectGuard>
+      </div>
+
+      <ProjectGuard projectId={projectId}>
+        {/* KPIs */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Orçamento Total
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrencyInput(totalOrcamento)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Gasto
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrencyInput(totalGasto)}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {totalOrcamento > 0 ? Math.round((totalGasto / totalOrcamento) * 100) : 0}% do orçamento
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Saldo Disponível
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{formatCurrencyInput(totalSaldo)}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                Centros em Alerta
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{centrosEmAlerta}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                ≥80% do orçamento
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Gráficos */}
+        {movimentos && movimentos.length > 0 && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <GraficoLinhaMovimentos movimentos={movimentos} />
+            <GraficoBarrasCategorias movimentos={movimentos} />
+          </div>
+        )}
+
+        {/* Movimentações Financeiras */}
+        <MovimentacoesFinanceirasCard 
+          projectId={projectId}
+          centroCustoId={selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined}
+        />
+      </ProjectGuard>
+
+      {projectId && (
+        <>
+          <CentroCustoModal
+            open={modalOpen}
+            onOpenChange={setModalOpen}
+            projectId={projectId}
+          />
+          
+          <ImportFOAModal
+            open={importModalOpen}
+            onOpenChange={setImportModalOpen}
+            projectId={projectId}
+          />
+        </>
       )}
-
-
-      {/* Movimentações Financeiras */}
-      <MovimentacoesFinanceirasCard 
-        projectId={selectedProject.id}
-        centroCustoId={selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined}
-      />
-
-      <CentroCustoModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        projectId={selectedProject.id}
-      />
-      
-      <ImportFOAModal
-        open={importModalOpen}
-        onOpenChange={setImportModalOpen}
-        projectId={selectedProject.id}
-      />
     </div>
   );
 }
