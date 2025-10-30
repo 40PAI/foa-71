@@ -17,7 +17,7 @@ export function Header() {
   const isCollapsed = state === "collapsed";
   
   // Show project selector only on pages that need project context
-  const pagesWithProjectSelector = ['/financas', '/compras', '/seguranca', '/tarefas', '/graficos'];
+  const pagesWithProjectSelector = ['/financas', '/compras', '/seguranca', '/tarefas', '/graficos', '/centros-custo'];
   const showProjectSelector = pagesWithProjectSelector.some(page => location.pathname.includes(page));
 
   return (
