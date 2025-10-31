@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSaldosCentrosCusto, useCentrosCusto } from "@/hooks/useCentrosCusto";
 import { CentroCustoModal } from "@/components/modals/CentroCustoModal";
-import { ImportFOAModal } from "@/components/modals/ImportFOAModal";
+import { MovimentosImportModal } from "@/components/modals/MovimentosImportModal";
 import { GraficoLinhaMovimentos } from "@/components/financial/GraficoLinhaMovimentos";
 import { GraficoBarrasCategorias } from "@/components/financial/GraficoBarrasCategorias";
 import { useProjectContext } from "@/contexts/ProjectContext";
@@ -72,7 +72,7 @@ export default function CentrosCustoPage() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
-                Importar Excel FOA
+                Importar Movimentos
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <Download className="h-4 w-4 mr-2" />
@@ -179,7 +179,7 @@ export default function CentrosCustoPage() {
           projectId={selectedProjectId}
         />
         
-        <ImportFOAModal
+        <MovimentosImportModal
           open={importModalOpen}
           onOpenChange={setImportModalOpen}
           projectId={selectedProjectId}
