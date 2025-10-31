@@ -75,9 +75,13 @@ export function MovimentosImportModal({ open, onOpenChange, projectId }: Movimen
     const success = await importMovimentos(previewData, projectId);
     
     if (success) {
-      // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['movimentos-financeiros'] });
-      queryClient.invalidateQueries({ queryKey: ['saldos-centros-custo'] });
+      // Invalidate all relevant queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['movimentos-financeiros'] }),
+        queryClient.invalidateQueries({ queryKey: ['gastos-obra'] }),
+        queryClient.invalidateQueries({ queryKey: ['gastos-obra-summary'] }),
+        queryClient.invalidateQueries({ queryKey: ['saldos-centros-custo'] }),
+      ]);
       
       // Close modal after 2 seconds
       setTimeout(() => {

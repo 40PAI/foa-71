@@ -183,6 +183,10 @@ export function useMovimentosImport() {
       };
 
       setImportResult(result);
+      
+      // Aguardar um pouco antes de mostrar sucesso para garantir que o banco processou
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       setProgress({
         step: 'success',
         percentage: 100,
