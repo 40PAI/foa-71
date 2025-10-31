@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileUp, Download, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileUp, CheckCircle2, AlertCircle } from "lucide-react";
 import { useWarehouseImport } from "@/hooks/useWarehouseImport";
+import { WarehouseTemplateDownloadButton } from "@/components/warehouse/WarehouseTemplateDownloadButton";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -50,11 +51,6 @@ export function WarehouseImportModal() {
     reset();
   };
 
-  const handleDownloadTemplate = () => {
-    toast.info('Template será baixado em breve');
-    // TODO: Implementar download de template real
-  };
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       setOpen(isOpen);
@@ -80,10 +76,7 @@ export function WarehouseImportModal() {
                 Baixe o template Excel para facilitar o preenchimento
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-              <Download className="h-4 w-4 mr-2" />
-              Baixar Template
-            </Button>
+            <WarehouseTemplateDownloadButton />
           </div>
 
           {/* File Upload */}
