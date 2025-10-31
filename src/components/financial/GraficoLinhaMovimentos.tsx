@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } from "recharts";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 
@@ -47,51 +47,88 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
     }).format(value);
   };
 
+  const formatCompactCurrency = (value: number) => {
+    const absValue = Math.abs(value);
+    const sign = value < 0 ? "-" : "+";
+    
+    if (absValue >= 1000000) {
+      return `${sign}${(absValue / 1000000).toFixed(1)}M`;
+    } else if (absValue >= 1000) {
+      return `${sign}${(absValue / 1000).toFixed(0)}K`;
+    }
+    return `${sign}${absValue.toFixed(0)}`;
+  };
+
+  const CustomSaldoLabel = (props: any) => {
+    const { x, y, width, value } = props;
+    const saldoColor = value >= 0 ? "hsl(var(--chart-3))" : "hsl(var(--chart-2))";
+    
+    return (
+      <text
+        x={x + width / 2}
+        y={y - 10}
+        fill={saldoColor}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight="600"
+      >
+        {formatCompactCurrency(value)}
+      </text>
+    );
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Evolução Temporal - Entradas, Saídas e Saldo</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <LineChart data={dados} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="data" />
-            <YAxis tickFormatter={(value) => formatCurrency(value)} />
+        <ResponsiveContainer width="100%" height={400}>
+          <BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <XAxis 
+              dataKey="data" 
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
+            <YAxis 
+              tickFormatter={(value) => formatCompactCurrency(value)}
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
             <Tooltip
               formatter={(value: number) => formatCurrency(value)}
               labelStyle={{ color: "hsl(var(--foreground))" }}
               contentStyle={{
                 backgroundColor: "hsl(var(--background))",
                 border: "1px solid hsl(var(--border))",
+                borderRadius: "8px",
               }}
             />
-            <Legend />
-            <Line
-              type="monotone"
+            <Legend 
+              wrapperStyle={{ paddingTop: "10px" }}
+              iconType="rect"
+            />
+            <Bar
               dataKey="entradas"
-              stroke="hsl(var(--chart-3))"
-              strokeWidth={2}
+              fill="hsl(var(--chart-3))"
               name="Entradas"
-              dot={{ r: 4 }}
+              radius={[4, 4, 0, 0]}
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="saidas"
-              stroke="hsl(var(--chart-2))"
-              strokeWidth={2}
+              fill="hsl(var(--chart-2))"
               name="Saídas"
-              dot={{ r: 4 }}
+              radius={[4, 4, 0, 0]}
             />
-            <Line
-              type="monotone"
+            <Bar
               dataKey="saldo"
-              stroke="hsl(var(--chart-1))"
-              strokeWidth={3}
+              fill="transparent"
               name="Saldo"
-              dot={{ r: 5 }}
-            />
-          </LineChart>
+            >
+              <LabelList content={CustomSaldoLabel} />
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
