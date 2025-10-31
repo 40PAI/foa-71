@@ -34,14 +34,16 @@ export function WarehouseImportModal() {
 
   const handleImport = async () => {
     if (previewData) {
-      await importMaterials(previewData);
-      if (importResult?.success) {
-        queryClient.invalidateQueries({ queryKey: ['materials-armazem'] });
-        toast.success(`${importResult.materiaisCount} materiais importados com sucesso!`);
+      const result = await importMaterials(previewData);
+      if (result?.success) {
+        await queryClient.invalidateQueries({ queryKey: ['materials-armazem'] });
+        toast.success(`${result.materiaisCount ?? 0} materiais importados com sucesso!`);
         setTimeout(() => {
           setOpen(false);
           handleClose();
         }, 2000);
+      } else if (result?.errors?.length) {
+        toast.error(result.errors.join('; '));
       }
     }
   };

@@ -39,7 +39,7 @@ export function useWarehouseImport() {
     }
   };
 
-  const importMaterials = async (data: ExcelWarehouseData) => {
+  const importMaterials = async (data: ExcelWarehouseData): Promise<WarehouseImportResult> => {
     setProgress({ step: 'importing', progress: 80, message: 'Importando materiais...' });
 
     const service = new WarehouseImportService();
@@ -52,6 +52,8 @@ export function useWarehouseImport() {
     } else {
       setProgress({ step: 'error', progress: 0, message: 'Erro na importação' });
     }
+
+    return result;
   };
 
   const reset = () => {
