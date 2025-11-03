@@ -9,6 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Clock, Edit, Eye, UserPlus } from "lucide-react";
+import { useMemo } from "react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/common/TablePagination";
 
 interface Employee {
   id: number;
@@ -39,6 +42,17 @@ export function EmployeeTableView({
   getCategoryColor,
   getTypeColor,
 }: EmployeeTableViewProps) {
+  // Pagination
+  const pagination = usePagination({
+    totalItems: employees.length,
+    initialItemsPerPage: 50,
+    persistKey: 'employees',
+  });
+
+  const paginatedEmployees = useMemo(() => {
+    return employees.slice(pagination.startIndex, pagination.endIndex);
+  }, [employees, pagination.startIndex, pagination.endIndex]);
+
   if (employees?.length === 0) {
     return (
       <div className="py-8 text-center text-muted-foreground">
@@ -48,22 +62,23 @@ export function EmployeeTableView({
   }
 
   return (
-    <div className="scrollable-table-container" style={{ maxHeight: '500px' }}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Cargo</TableHead>
-            <TableHead>Nº Funcional</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Custo/Hora</TableHead>
-            <TableHead>Horário</TableHead>
-            <TableHead className="w-[120px]">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {employees?.map((employee) => (
+    <>
+      <div className="scrollable-table-container" style={{ maxHeight: '500px' }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Cargo</TableHead>
+              <TableHead>Nº Funcional</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Custo/Hora</TableHead>
+              <TableHead>Horário</TableHead>
+              <TableHead className="w-[120px]">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedEmployees.map((employee) => (
             <TableRow key={employee.id} className="hover:bg-muted/50">
               <TableCell className="font-medium">{employee.nome}</TableCell>
               <TableCell>{employee.cargo}</TableCell>
@@ -122,9 +137,21 @@ export function EmployeeTableView({
                 </div>
               </TableCell>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <TablePagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={employees.length}
+        itemsPerPage={pagination.itemsPerPage}
+        startIndex={pagination.startIndex}
+        endIndex={pagination.endIndex}
+        onPageChange={pagination.goToPage}
+        onItemsPerPageChange={pagination.setItemsPerPage}
+      />
+    </>
   );
 }

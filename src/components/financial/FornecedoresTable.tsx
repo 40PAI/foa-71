@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, Plus, Search, Eye, Star } from "lucide-react";
 import { useFornecedores, useDeleteFornecedor } from "@/hooks/useFornecedores";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/common/TablePagination";
 import type { Fornecedor } from "@/types/contasCorrentes";
 
 interface FornecedoresTableProps {
@@ -20,11 +22,29 @@ export function FornecedoresTable({ projectId, onEdit, onView, onAdd }: Forneced
   const { data: fornecedores = [], isLoading } = useFornecedores(projectId);
   const deleteMutation = useDeleteFornecedor();
 
-  const filteredFornecedores = fornecedores.filter((fornecedor) =>
-    fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fornecedor.nif?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fornecedor.tipo_fornecedor?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFornecedores = useMemo(() => {
+    return fornecedores.filter((fornecedor) =>
+      fornecedor.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fornecedor.nif?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fornecedor.tipo_fornecedor?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [fornecedores, searchTerm]);
+
+  // Pagination
+  const pagination = usePagination({
+    totalItems: filteredFornecedores.length,
+    initialItemsPerPage: 50,
+    persistKey: 'fornecedores',
+  });
+
+  const paginatedFornecedores = useMemo(() => {
+    return filteredFornecedores.slice(pagination.startIndex, pagination.endIndex);
+  }, [filteredFornecedores, pagination.startIndex, pagination.endIndex]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    pagination.resetToFirstPage();
+  }, [searchTerm]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -85,14 +105,14 @@ export function FornecedoresTable({ projectId, onEdit, onView, onAdd }: Forneced
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredFornecedores.length === 0 ? (
+            {paginatedFornecedores.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
                   Nenhum fornecedor encontrado
                 </TableCell>
               </TableRow>
             ) : (
-              filteredFornecedores.map((fornecedor) => (
+              paginatedFornecedores.map((fornecedor) => (
                 <TableRow key={fornecedor.id}>
                   <TableCell className="font-medium">{fornecedor.nome}</TableCell>
                   <TableCell>{fornecedor.nif || "-"}</TableCell>
@@ -135,6 +155,17 @@ export function FornecedoresTable({ projectId, onEdit, onView, onAdd }: Forneced
           </TableBody>
         </Table>
       </div>
+
+      <TablePagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={filteredFornecedores.length}
+        itemsPerPage={pagination.itemsPerPage}
+        startIndex={pagination.startIndex}
+        endIndex={pagination.endIndex}
+        onPageChange={pagination.goToPage}
+        onItemsPerPageChange={pagination.setItemsPerPage}
+      />
     </div>
   );
 }

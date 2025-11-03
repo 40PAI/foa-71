@@ -1,5 +1,6 @@
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/common/TablePagination";
 import { MainContent } from "@/components/MainContent";
 import { MaterialArmazemModal } from "@/components/modals/MaterialArmazemModal";
 import { MaterialMovementModal } from "@/components/modals/MaterialMovementModal";
@@ -49,6 +50,33 @@ export function ArmazemPage() {
       return matchesSearch && matchesStatus && matchesCategory && matchesSubcategory;
     });
   }, [materials, searchTerm, filterStatus, filterCategory, filterSubcategory]);
+
+  // Pagination for materials
+  const materialsPagination = usePagination({
+    totalItems: filteredMaterials.length,
+    initialItemsPerPage: 100,
+    persistKey: 'armazem-materials',
+  });
+
+  const paginatedMaterials = useMemo(() => {
+    return filteredMaterials.slice(materialsPagination.startIndex, materialsPagination.endIndex);
+  }, [filteredMaterials, materialsPagination.startIndex, materialsPagination.endIndex]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    materialsPagination.resetToFirstPage();
+  }, [searchTerm, filterStatus, filterCategory, filterSubcategory]);
+
+  // Pagination for movements
+  const movementsPagination = usePagination({
+    totalItems: movements?.length || 0,
+    initialItemsPerPage: 100,
+    persistKey: 'armazem-movements',
+  });
+
+  const paginatedMovements = useMemo(() => {
+    return movements?.slice(movementsPagination.startIndex, movementsPagination.endIndex) || [];
+  }, [movements, movementsPagination.startIndex, movementsPagination.endIndex]);
 
   // Render materials in grid view
   const renderGridView = () => (
@@ -101,44 +129,56 @@ export function ArmazemPage() {
 
   // Render materials in table view
   const renderTableView = () => (
-    <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Código</TableHead>
-            <TableHead>Quantidade</TableHead>
-            <TableHead>Unidade</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Categoria</TableHead>
-            <TableHead>Subcategoria</TableHead>
-            <TableHead>Localização</TableHead>
-            <TableHead>Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredMaterials.map((material) => (
-            <TableRow key={material.id}>
-              <TableCell className="font-medium">{material.nome_material}</TableCell>
-              <TableCell>{material.codigo_interno}</TableCell>
-              <TableCell className="text-right font-mono">{material.quantidade_stock}</TableCell>
-              <TableCell>{material.unidade_medida}</TableCell>
-              <TableCell>
-                <Badge variant={material.status_item === 'Disponível' ? 'default' : 'secondary'}>
-                  {material.status_item}
-                </Badge>
-              </TableCell>
-              <TableCell>{material.categoria_principal || '-'}</TableCell>
-              <TableCell>{material.subcategoria || '-'}</TableCell>
-              <TableCell>{material.localizacao_fisica || '-'}</TableCell>
-              <TableCell>
-                <MaterialArmazemModal material={material} trigger="edit" />
-              </TableCell>
+    <>
+      <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Código</TableHead>
+              <TableHead>Quantidade</TableHead>
+              <TableHead>Unidade</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Categoria</TableHead>
+              <TableHead>Subcategoria</TableHead>
+              <TableHead>Localização</TableHead>
+              <TableHead>Ações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {paginatedMaterials.map((material) => (
+              <TableRow key={material.id}>
+                <TableCell className="font-medium">{material.nome_material}</TableCell>
+                <TableCell>{material.codigo_interno}</TableCell>
+                <TableCell className="text-right font-mono">{material.quantidade_stock}</TableCell>
+                <TableCell>{material.unidade_medida}</TableCell>
+                <TableCell>
+                  <Badge variant={material.status_item === 'Disponível' ? 'default' : 'secondary'}>
+                    {material.status_item}
+                  </Badge>
+                </TableCell>
+                <TableCell>{material.categoria_principal || '-'}</TableCell>
+                <TableCell>{material.subcategoria || '-'}</TableCell>
+                <TableCell>{material.localizacao_fisica || '-'}</TableCell>
+                <TableCell>
+                  <MaterialArmazemModal material={material} trigger="edit" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <TablePagination
+        currentPage={materialsPagination.currentPage}
+        totalPages={materialsPagination.totalPages}
+        totalItems={filteredMaterials.length}
+        itemsPerPage={materialsPagination.itemsPerPage}
+        startIndex={materialsPagination.startIndex}
+        endIndex={materialsPagination.endIndex}
+        onPageChange={materialsPagination.goToPage}
+        onItemsPerPageChange={materialsPagination.setItemsPerPage}
+      />
+    </>
   );
 
   // Render materials in list view
@@ -217,38 +257,50 @@ export function ArmazemPage() {
 
   // Render movements in table view
   const renderMovementsTableView = () => (
-    <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Material</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Quantidade</TableHead>
-            <TableHead>Origem</TableHead>
-            <TableHead>Destino</TableHead>
-            <TableHead>Responsável</TableHead>
-            <TableHead>Data</TableHead>
-            <TableHead>Observações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {movements?.map((movement) => (
-            <TableRow key={movement.id}>
-              <TableCell className="font-medium">{movement.material?.nome_material}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{movement.tipo_movimentacao}</Badge>
-              </TableCell>
-              <TableCell className="text-right font-mono">{movement.quantidade}</TableCell>
-              <TableCell>{movement.projeto_origem?.nome || "Armazém"}</TableCell>
-              <TableCell>{movement.projeto_destino?.nome || "Armazém"}</TableCell>
-              <TableCell>{movement.responsavel}</TableCell>  
-              <TableCell>{new Date(movement.data_movimentacao).toLocaleDateString()}</TableCell>
-              <TableCell className="max-w-xs truncate">{movement.observacoes || '-'}</TableCell>
+    <>
+      <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Material</TableHead>
+              <TableHead>Tipo</TableHead>
+              <TableHead>Quantidade</TableHead>
+              <TableHead>Origem</TableHead>
+              <TableHead>Destino</TableHead>
+              <TableHead>Responsável</TableHead>
+              <TableHead>Data</TableHead>
+              <TableHead>Observações</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {paginatedMovements.map((movement) => (
+              <TableRow key={movement.id}>
+                <TableCell className="font-medium">{movement.material?.nome_material}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{movement.tipo_movimentacao}</Badge>
+                </TableCell>
+                <TableCell className="text-right font-mono">{movement.quantidade}</TableCell>
+                <TableCell>{movement.projeto_origem?.nome || "Armazém"}</TableCell>
+                <TableCell>{movement.projeto_destino?.nome || "Armazém"}</TableCell>
+                <TableCell>{movement.responsavel}</TableCell>  
+                <TableCell>{new Date(movement.data_movimentacao).toLocaleDateString()}</TableCell>
+                <TableCell className="max-w-xs truncate">{movement.observacoes || '-'}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <TablePagination
+        currentPage={movementsPagination.currentPage}
+        totalPages={movementsPagination.totalPages}
+        totalItems={movements?.length || 0}
+        itemsPerPage={movementsPagination.itemsPerPage}
+        startIndex={movementsPagination.startIndex}
+        endIndex={movementsPagination.endIndex}
+        onPageChange={movementsPagination.goToPage}
+        onItemsPerPageChange={movementsPagination.setItemsPerPage}
+      />
+    </>
   );
 
   // Render movements in list view

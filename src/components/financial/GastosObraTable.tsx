@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { GastoObra, useDeleteGastoObra } from "@/hooks/useGastosObra";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/common/TablePagination";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,21 +31,41 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const deleteMutation = useDeleteGastoObra();
 
-  const filteredGastos = gastos.filter((gasto) =>
-    gasto.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    gasto.observacoes?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredGastos = useMemo(() => {
+    return gastos.filter((gasto) =>
+      gasto.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      gasto.observacoes?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [gastos, searchTerm]);
 
   // Calculate accumulated balance
-  let accumulatedBalance = 0;
-  const gastosComSaldo = filteredGastos.map((gasto) => {
-    const movimento = gasto.recebimento_foa + gasto.fof_financiamento + gasto.foa_auto - gasto.saida;
-    accumulatedBalance += movimento;
-    return {
-      ...gasto,
-      saldoAcumulado: accumulatedBalance,
-    };
+  const gastosComSaldo = useMemo(() => {
+    let accumulatedBalance = 0;
+    return filteredGastos.map((gasto) => {
+      const movimento = gasto.recebimento_foa + gasto.fof_financiamento + gasto.foa_auto - gasto.saida;
+      accumulatedBalance += movimento;
+      return {
+        ...gasto,
+        saldoAcumulado: accumulatedBalance,
+      };
+    });
+  }, [filteredGastos]);
+
+  // Pagination
+  const pagination = usePagination({
+    totalItems: gastosComSaldo.length,
+    initialItemsPerPage: 100,
+    persistKey: 'gastos-obra',
   });
+
+  const paginatedGastos = useMemo(() => {
+    return gastosComSaldo.slice(pagination.startIndex, pagination.endIndex);
+  }, [gastosComSaldo, pagination.startIndex, pagination.endIndex]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    pagination.resetToFirstPage();
+  }, [searchTerm]);
 
   const handleDelete = async () => {
     if (deleteId) {
@@ -89,7 +111,7 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              gastosComSaldo.map((gasto) => (
+              paginatedGastos.map((gasto) => (
                 <TableRow key={gasto.id}>
                   <TableCell className="font-medium whitespace-nowrap">
                     {format(new Date(gasto.data_movimento), "dd/MM/yyyy", { locale: ptBR })}
@@ -158,6 +180,17 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
           </TableBody>
         </Table>
       </div>
+
+      <TablePagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={gastosComSaldo.length}
+        itemsPerPage={pagination.itemsPerPage}
+        startIndex={pagination.startIndex}
+        endIndex={pagination.endIndex}
+        onPageChange={pagination.goToPage}
+        onItemsPerPageChange={pagination.setItemsPerPage}
+      />
 
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>

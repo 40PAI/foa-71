@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash, Plus, Search, Eye } from "lucide-react";
 import { useClientes, useDeleteCliente } from "@/hooks/useClientes";
 import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "@/components/common/TablePagination";
 import type { Cliente } from "@/types/contasCorrentes";
 
 interface ClientesTableProps {
@@ -20,11 +22,29 @@ export function ClientesTable({ projectId, onEdit, onView, onAdd }: ClientesTabl
   const { data: clientes = [], isLoading } = useClientes(projectId);
   const deleteMutation = useDeleteCliente();
 
-  const filteredClientes = clientes.filter((cliente) =>
-    cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.nif?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cliente.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClientes = useMemo(() => {
+    return clientes.filter((cliente) =>
+      cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cliente.nif?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cliente.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [clientes, searchTerm]);
+
+  // Pagination
+  const pagination = usePagination({
+    totalItems: filteredClientes.length,
+    initialItemsPerPage: 50,
+    persistKey: 'clientes',
+  });
+
+  const paginatedClientes = useMemo(() => {
+    return filteredClientes.slice(pagination.startIndex, pagination.endIndex);
+  }, [filteredClientes, pagination.startIndex, pagination.endIndex]);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    pagination.resetToFirstPage();
+  }, [searchTerm]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -71,14 +91,14 @@ export function ClientesTable({ projectId, onEdit, onView, onAdd }: ClientesTabl
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredClientes.length === 0 ? (
+            {paginatedClientes.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center text-muted-foreground">
                   Nenhum cliente encontrado
                 </TableCell>
               </TableRow>
             ) : (
-              filteredClientes.map((cliente) => (
+              paginatedClientes.map((cliente) => (
                 <TableRow key={cliente.id}>
                   <TableCell className="font-medium">{cliente.nome}</TableCell>
                   <TableCell>{cliente.nif || "-"}</TableCell>
@@ -121,6 +141,17 @@ export function ClientesTable({ projectId, onEdit, onView, onAdd }: ClientesTabl
           </TableBody>
         </Table>
       </div>
+
+      <TablePagination
+        currentPage={pagination.currentPage}
+        totalPages={pagination.totalPages}
+        totalItems={filteredClientes.length}
+        itemsPerPage={pagination.itemsPerPage}
+        startIndex={pagination.startIndex}
+        endIndex={pagination.endIndex}
+        onPageChange={pagination.goToPage}
+        onItemsPerPageChange={pagination.setItemsPerPage}
+      />
     </div>
   );
 }
