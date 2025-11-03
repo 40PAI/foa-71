@@ -57,7 +57,7 @@ export function ClientesTable({ projectId, onEdit, onView, onAdd }: ClientesTabl
         </Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
         <Table>
           <TableHeader>
             <TableRow>

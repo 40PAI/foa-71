@@ -82,7 +82,7 @@ export function SegurancaPage() {
         <CardContent className="p-0">
           {/* Desktop Table View */}
           <div className="hidden sm:block">
-            <div className="overflow-x-auto">
+            <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
               <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow>

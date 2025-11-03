@@ -48,7 +48,7 @@ export function EmployeeTableView({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="scrollable-table-container" style={{ maxHeight: '500px' }}>
       <Table>
         <TableHeader>
           <TableRow>

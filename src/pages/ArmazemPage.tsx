@@ -101,7 +101,7 @@ export function ArmazemPage() {
 
   // Render materials in table view
   const renderTableView = () => (
-    <div className="rounded-md border">
+    <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
       <Table>
         <TableHeader>
           <TableRow>
@@ -217,7 +217,7 @@ export function ArmazemPage() {
 
   // Render movements in table view
   const renderMovementsTableView = () => (
-    <div className="rounded-md border">
+    <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
       <Table>
         <TableHeader>
           <TableRow>

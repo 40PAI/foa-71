@@ -66,7 +66,7 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
         </div>
       </div>
 
-      <div className="rounded-md border">
+      <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
         <Table>
           <TableHeader>
             <TableRow>

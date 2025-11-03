@@ -497,6 +497,78 @@ All colors MUST be HSL.
   }
 }
 
+/* Scrollable Tables with Sticky Headers */
+.scrollable-table-container {
+  position: relative;
+  overflow-y: auto;
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background));
+}
+
+.scrollable-table-container table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scrollable-table-container thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: hsl(var(--background));
+}
+
+.scrollable-table-container thead::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: hsl(var(--border));
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.scrollable-table-container.has-scroll thead {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Word break for long text in table cells */
+.scrollable-table-container td {
+  word-break: break-word;
+  max-width: 300px;
+}
+
+.scrollable-table-container td.no-break {
+  word-break: normal;
+  white-space: nowrap;
+}
+
+/* Smooth scroll behavior */
+.scrollable-table-container {
+  scroll-behavior: smooth;
+}
+
+/* Mobile optimizations for scrollable tables */
+@media (max-width: 768px) {
+  .scrollable-table-container {
+    max-height: 400px !important;
+  }
+  
+  .scrollable-table-container td {
+    max-width: 200px;
+    font-size: 0.875rem;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1023px) {
+  .scrollable-table-container {
+    max-height: 500px !important;
+  }
+}
+
 /* 
  * Extended Design System - Component Variants & Utilities
  */

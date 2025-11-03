@@ -134,26 +134,28 @@ export default function ContasFornecedoresPage() {
               ))}
             </div>
           ) : contasFiltradas && contasFiltradas.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead> {/* Nova coluna para a data */}
-                  <TableHead>Fornecedor</TableHead>
-                  <TableHead>NIF</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Crédito</TableHead>
-                  <TableHead className="text-right">Débito</TableHead>
-                  <TableHead className="text-right">Saldo Atual</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contasFiltradas.map((conta: any) => (
-                  <ContaRow key={conta.id} conta={conta} />
-                ))}
-              </TableBody>
-            </Table>
+            <div className="scrollable-table-container" style={{ maxHeight: '600px' }}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Fornecedor</TableHead>
+                    <TableHead>NIF</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Crédito</TableHead>
+                    <TableHead className="text-right">Débito</TableHead>
+                    <TableHead className="text-right">Saldo Atual</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead>Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {contasFiltradas.map((conta: any) => (
+                    <ContaRow key={conta.id} conta={conta} />
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : filtroFornecedor ? (
             <div className="text-center py-8 text-muted-foreground">
               <Search className="mx-auto h-12 w-12 mb-2 opacity-50" />
@@ -232,45 +234,47 @@ function ContaRow({ conta }: { conta: any }) {
 
       {expanded && lancamentos && lancamentos.length > 0 && (
         <TableRow>
-          <TableCell colSpan={9} className="bg-muted/50 p-4"> {/* Colspan ajustado para 9 */}
+          <TableCell colSpan={9} className="bg-muted/50 p-4">
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Material Recebido / Lançamentos:</h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead>Centro de Custo</TableHead>
-                    <TableHead className="text-right">Crédito</TableHead>
-                    <TableHead className="text-right">Débito</TableHead>
-                    <TableHead className="text-right">Saldo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {lancamentos.map((lanc: any) => (
-                    <TableRow key={lanc.id}>
-                      <TableCell>{new Date(lanc.data_lancamento).toLocaleDateString("pt-BR")}</TableCell>
-                      <TableCell>{lanc.descricao}</TableCell>
-                      <TableCell>
-                        {lanc.centros_custo ? (
-                          <Badge variant="outline">
-                            {lanc.centros_custo.codigo} - {lanc.centros_custo.nome}
-                          </Badge>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right text-destructive"> {/* Cor vermelha */}
-                        {lanc.credito ? formatCurrency(lanc.credito) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right text-success"> {/* Cor verde */}
-                        {lanc.debito ? formatCurrency(lanc.debito) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(lanc.saldo_corrente || 0)}</TableCell>
+              <div className="scrollable-table-container" style={{ maxHeight: '400px' }}>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Data</TableHead>
+                      <TableHead>Descrição</TableHead>
+                      <TableHead>Centro de Custo</TableHead>
+                      <TableHead className="text-right">Crédito</TableHead>
+                      <TableHead className="text-right">Débito</TableHead>
+                      <TableHead className="text-right">Saldo</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {lancamentos.map((lanc: any) => (
+                      <TableRow key={lanc.id}>
+                        <TableCell>{new Date(lanc.data_lancamento).toLocaleDateString("pt-BR")}</TableCell>
+                        <TableCell>{lanc.descricao}</TableCell>
+                        <TableCell>
+                          {lanc.centros_custo ? (
+                            <Badge variant="outline">
+                              {lanc.centros_custo.codigo} - {lanc.centros_custo.nome}
+                            </Badge>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right text-destructive">
+                          {lanc.credito ? formatCurrency(lanc.credito) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right text-success">
+                          {lanc.debito ? formatCurrency(lanc.debito) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono">{formatCurrency(lanc.saldo_corrente || 0)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </TableCell>
         </TableRow>
