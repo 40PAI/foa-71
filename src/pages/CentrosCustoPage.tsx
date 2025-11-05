@@ -106,54 +106,67 @@ export default function CentrosCustoPage() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Orçamento Total
+                Recebimento FOA
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalOrcamento)}</div>
+              <div className="text-2xl font-bold text-green-600">{formatCurrencyInput(totalOrcamento)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Cliente</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Custo
+                FOF Financiamento
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalGasto)}</div>
+              <div className="text-2xl font-bold text-blue-600">{formatCurrencyInput(0)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Financiamento</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                FOA Auto Financiamento
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">{formatCurrencyInput(0)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Auto Financiamento</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Custo Total
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{formatCurrencyInput(totalGasto)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Saídas</p>
+            </CardContent>
+          </Card>
+
+          <Card className={totalSaldo >= 0 ? "border-green-200 bg-green-50/50" : "border-red-200 bg-red-50/50"}>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Saldo Atual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${totalSaldo >= 0 ? "text-green-600" : "text-red-600"}`}>
+                {formatCurrencyInput(totalSaldo)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {totalOrcamento > 0 ? Math.round((totalGasto / totalOrcamento) * 100) : 0}% do orçamento
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Saldo Disponível
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalSaldo)}</div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                Centros em Alerta
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{centrosEmAlerta}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                ≥80% do orçamento
+                {filteredSaldos?.reduce((acc, s) => acc + (s.total_entradas + s.total_saidas), 0) || 0} movimentos
               </p>
             </CardContent>
           </Card>
