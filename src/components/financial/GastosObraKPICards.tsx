@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowDownCircle, ArrowUpCircle, TrendingUp, Wallet } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, TrendingUp, Wallet, Coins } from "lucide-react";
 import { formatCurrency } from "@/utils/currency";
 import { GastoObraSummary } from "@/hooks/useGastosObra";
 interface GastosObraKPICardsProps {
@@ -12,7 +12,7 @@ export function GastosObraKPICards({
 }: GastosObraKPICardsProps) {
   const totalEntradas = summary.total_recebimento_foa + summary.total_fof_financiamento + summary.total_foa_auto;
   const saldoPositivo = summary.saldo_atual >= 0;
-  return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+  return <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Recebimento FOA</CardTitle>
@@ -36,6 +36,19 @@ export function GastosObraKPICards({
             {isLoading ? "..." : formatCurrency(summary.total_fof_financiamento)}
           </div>
           <p className="text-xs text-muted-foreground mt-1">Financiamento</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">FOA Auto Financiamento</CardTitle>
+          <Coins className="h-4 w-4 text-purple-600" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-purple-600">
+            {isLoading ? "..." : formatCurrency(summary.total_foa_auto)}
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">Auto</p>
         </CardContent>
       </Card>
 
