@@ -2,12 +2,12 @@ export interface ExcelMovimentoRow {
   linha: number;
   data: string;
   descricao: string;
-  categoria: string;
+  categoria?: string;
   subcategoria?: string;
   tipo: 'entrada' | 'saida';
   valor: number;
   centro_custo?: string;
-  fonte_financiamento?: string;
+  fonte_financiamento: string;
   forma_pagamento?: string;
   numero_documento?: string;
   observacoes?: string;

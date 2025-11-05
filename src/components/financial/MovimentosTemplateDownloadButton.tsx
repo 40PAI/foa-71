@@ -75,12 +75,12 @@ export function MovimentosTemplateDownloadButton() {
       const instrucoesData = [
         { 'Campo': 'Data', 'Obrigatório': 'SIM', 'Formato': 'DD/MM/YYYY', 'Exemplo': '15/01/2025', 'Observações': 'Data do movimento financeiro' },
         { 'Campo': 'Descrição', 'Obrigatório': 'SIM', 'Formato': 'Texto', 'Exemplo': 'Compra de Material', 'Observações': 'Descrição detalhada do movimento' },
-        { 'Campo': 'Categoria', 'Obrigatório': 'SIM', 'Formato': 'Texto', 'Exemplo': 'Material', 'Observações': 'Categoria principal do gasto/receita' },
+        { 'Campo': 'Categoria', 'Obrigatório': 'NÃO', 'Formato': 'Texto', 'Exemplo': 'Material', 'Observações': 'Categoria principal do gasto/receita (opcional)' },
         { 'Campo': 'Subcategoria', 'Obrigatório': 'NÃO', 'Formato': 'Texto', 'Exemplo': 'Cimento', 'Observações': 'Subcategoria para maior detalhamento' },
         { 'Campo': 'Tipo', 'Obrigatório': 'SIM', 'Formato': 'entrada ou saida', 'Exemplo': 'saida', 'Observações': 'Tipo de movimento: entrada ou saida' },
         { 'Campo': 'Valor', 'Obrigatório': 'SIM', 'Formato': 'Número', 'Exemplo': '15000.00', 'Observações': 'Valor em número positivo (sem símbolo de moeda)' },
         { 'Campo': 'Centro Custo', 'Obrigatório': 'NÃO', 'Formato': 'Código ou Nome', 'Exemplo': 'PROJ-001', 'Observações': 'Código ou nome do centro de custo existente' },
-        { 'Campo': 'Fonte Financiamento', 'Obrigatório': 'NÃO', 'Formato': 'REC_FOA, FOF_FIN, FOA_AUTO', 'Exemplo': 'FOF_FIN', 'Observações': 'Fonte de financiamento do projeto' },
+        { 'Campo': 'Fonte Financiamento', 'Obrigatório': 'SIM', 'Formato': 'REC_FOA, FOF_FIN, FOA_AUTO', 'Exemplo': 'FOF_FIN', 'Observações': 'Fonte de financiamento (obrigatório)' },
         { 'Campo': 'Forma Pagamento', 'Obrigatório': 'NÃO', 'Formato': 'Texto', 'Exemplo': 'transferencia', 'Observações': 'Forma como foi realizado o pagamento' },
         { 'Campo': 'Número Documento', 'Obrigatório': 'NÃO', 'Formato': 'Texto', 'Exemplo': 'NF-001', 'Observações': 'Número da nota fiscal ou documento' },
         { 'Campo': 'Observações', 'Obrigatório': 'NÃO', 'Formato': 'Texto', 'Exemplo': 'Compra urgente', 'Observações': 'Informações adicionais relevantes' },
@@ -88,10 +88,11 @@ export function MovimentosTemplateDownloadButton() {
         { 'Campo': '🔴 IMPORTANTE:', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': '' },
         { 'Campo': '1.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Não altere os nomes das colunas na planilha' },
         { 'Campo': '2.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Mantenha a primeira linha (cabeçalho) intacta' },
-        { 'Campo': '3.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'O Centro de Custo informado deve existir no projeto' },
-        { 'Campo': '4.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Valores devem ser positivos (sem sinal negativo)' },
-        { 'Campo': '5.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Use vírgula ou ponto para decimais (15000,00 ou 15000.00)' },
-        { 'Campo': '6.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Tamanho máximo do arquivo: 10MB' },
+        { 'Campo': '3.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Fonte Financiamento é OBRIGATÓRIA para todos os movimentos' },
+        { 'Campo': '4.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'O Centro de Custo informado deve existir no projeto' },
+        { 'Campo': '5.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Valores devem ser positivos (sem sinal negativo)' },
+        { 'Campo': '6.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Use vírgula ou ponto para decimais (15000,00 ou 15000.00)' },
+        { 'Campo': '7.', 'Obrigatório': '', 'Formato': '', 'Exemplo': '', 'Observações': 'Tamanho máximo do arquivo: 10MB' },
       ];
 
       const ws2 = XLSX.utils.json_to_sheet(instrucoesData);

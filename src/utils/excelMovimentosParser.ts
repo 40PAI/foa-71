@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { ExcelMovimentoRow, ExcelMovimentoData, MovimentoValidationError } from '@/types/movimentoImport';
 
-const REQUIRED_COLUMNS = ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'];
+const REQUIRED_COLUMNS = ['Data', 'Descrição', 'Tipo', 'Valor', 'Fonte Financiamento'];
 
 const COLUMN_MAPPING: Record<string, keyof ExcelMovimentoRow> = {
   'Data': 'data',
@@ -99,8 +99,8 @@ export class ExcelMovimentosParser {
     // Parse Descrição
     const descricao = this.parseString(row['Descrição'], linha, 'Descrição', errors, true);
     
-    // Parse Categoria
-    const categoria = this.parseString(row['Categoria'], linha, 'Categoria', errors, true);
+    // Parse Categoria (opcional)
+    const categoria = this.parseString(row['Categoria'], linha, 'Categoria', errors, false);
     
     // Parse Tipo
     const tipo = this.parseTipo(row['Tipo'], linha, errors);
@@ -111,7 +111,9 @@ export class ExcelMovimentosParser {
     // Optional fields
     const subcategoria = this.parseString(row['Subcategoria'], linha, 'Subcategoria', errors, false);
     const centro_custo = this.parseString(row['Centro Custo'], linha, 'Centro Custo', errors, false);
-    const fonte_financiamento = this.parseString(row['Fonte Financiamento'], linha, 'Fonte Financiamento', errors, false);
+    
+    // Fonte Financiamento é obrigatória
+    const fonte_financiamento = this.parseString(row['Fonte Financiamento'], linha, 'Fonte Financiamento', errors, true);
     const forma_pagamento = this.parseString(row['Forma Pagamento'], linha, 'Forma Pagamento', errors, false);
     const numero_documento = this.parseString(row['Número Documento'], linha, 'Número Documento', errors, false);
     const observacoes = this.parseString(row['Observações'], linha, 'Observações', errors, false);
@@ -126,12 +128,12 @@ export class ExcelMovimentosParser {
       linha,
       data: data!,
       descricao: descricao!,
-      categoria: categoria!,
+      categoria,
       subcategoria,
       tipo: tipo!,
       valor: valor!,
       centro_custo,
-      fonte_financiamento,
+      fonte_financiamento: fonte_financiamento!,
       forma_pagamento,
       numero_documento,
       observacoes,
