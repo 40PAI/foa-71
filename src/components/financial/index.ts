@@ -6,3 +6,4 @@ export { FinancialOverview } from "./FinancialOverview";
 export { CategoryBreakdown } from "./CategoryBreakdown";
 export { DetailedBreakdown } from "./DetailedBreakdown";
 export { ContasCorrentesSection } from "./ContasCorrentesSection";
+export { MovimentosPorFonteTable } from "./MovimentosPorFonteTable";
