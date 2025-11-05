@@ -32,6 +32,7 @@ import { useClientes } from "@/hooks/useClientes";
 import { FundingBreakdownSection } from "@/components/financial/FundingBreakdownSection";
 import { ReembolsosFOASection } from "@/components/financial/ReembolsosFOASection";
 import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
+import { FluxoCaixaSection } from "@/components/financial/FluxoCaixaSection";
 
 // Loading skeleton components
 const SummaryCardSkeleton = () => <Card>
@@ -376,6 +377,18 @@ export function OptimizedFinancasPage() {
         variant: "outline"
       }}>
           <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
+        </CollapsibleFinancialSection>
+
+        <CollapsibleFinancialSection 
+          value="fluxo-caixa" 
+          title="Fluxo de Caixa (Administrativo)" 
+          icon={Wallet}
+          badge={{
+            text: "FOA",
+            variant: "default"
+          }}
+        >
+          <FluxoCaixaSection projectId={selectedProjectId} />
         </CollapsibleFinancialSection>
       </Accordion>
     </div>;
