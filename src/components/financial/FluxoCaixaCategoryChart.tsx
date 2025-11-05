@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { CashFlowMovement } from "@/types/cashflow";
 import { formatCurrency } from "@/utils/formatters";
-import type { MovimentoFinanceiro } from "@/types/centroCusto";
 
 interface FluxoCaixaCategoryChartProps {
-  movimentos: MovimentoFinanceiro[];
+  movements: CashFlowMovement[];
 }
 
-// Cores para o gráfico (usando sistema de design)
+// Cores do design system
 const COLORS = [
   "hsl(var(--chart-1))",
   "hsl(var(--chart-2))",
@@ -16,49 +16,62 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ];
 
-export function FluxoCaixaCategoryChart({ movimentos }: FluxoCaixaCategoryChartProps) {
+export function FluxoCaixaCategoryChart({ movements }: FluxoCaixaCategoryChartProps) {
   // Agrupar saídas por categoria
-  const despesasPorCategoria = movimentos
-    .filter((mov) => mov.tipo_movimento === "saida")
-    .reduce((acc, mov) => {
-      const categoria = mov.categoria || "Sem Categoria";
-      if (!acc[categoria]) {
-        acc[categoria] = 0;
-      }
-      acc[categoria] += Number(mov.valor);
+  const categoryData = movements
+    .filter(m => m.tipo_movimento === 'saida')
+    .reduce((acc, m) => {
+      const categoria = m.categoria || "Sem Categoria";
+      acc[categoria] = (acc[categoria] || 0) + Number(m.valor);
       return acc;
     }, {} as Record<string, number>);
 
-  // Converter para array e ordenar por valor
-  const dados = Object.entries(despesasPorCategoria)
-    .map(([categoria, valor]) => ({
-      categoria: categoria.length > 25 ? categoria.substring(0, 25) + "..." : categoria,
-      valor,
+  // Converter para array e ordenar
+  const chartData = Object.entries(categoryData)
+    .map(([name, value]) => ({
+      name: name.length > 25 ? name.substring(0, 25) + "..." : name,
+      value: value,
+      fullName: name
     }))
-    .sort((a, b) => b.valor - a.valor)
+    .sort((a, b) => b.value - a.value)
     .slice(0, 10); // Top 10 categorias
 
-  const totalDespesas = dados.reduce((sum, item) => sum + item.valor, 0);
+  const totalDespesas = chartData.reduce((sum, item) => sum + item.value, 0);
 
+  if (chartData.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribuição de Gastos por Categoria</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+            Nenhum gasto registrado no período selecionado
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Função para formatar valores no eixo Y de forma compacta
   const formatCompactCurrency = (value: number) => {
-    const absValue = Math.abs(value);
-    
-    if (absValue >= 1000000) {
-      return `${(absValue / 1000000).toFixed(1)}M Kz`;
-    } else if (absValue >= 1000) {
-      return `${(absValue / 1000).toFixed(0)}K Kz`;
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
     }
-    return `${absValue.toFixed(0)} Kz`;
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(0)}K`;
+    }
+    return value.toString();
   };
 
+  // Tooltip customizado
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
-      const data = payload[0];
+      const data = payload[0].payload;
       const percentual = ((data.value / totalDespesas) * 100).toFixed(1);
-      
       return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-sm mb-1">{data.payload.categoria}</p>
+        <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+          <p className="font-semibold text-sm mb-1">{data.fullName}</p>
           <p className="text-sm text-muted-foreground">
             {formatCurrency(data.value)}
           </p>
@@ -71,53 +84,28 @@ export function FluxoCaixaCategoryChart({ movimentos }: FluxoCaixaCategoryChartP
     return null;
   };
 
-  if (dados.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Distribuição de Gastos por Categoria</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            <p>Nenhum gasto registrado</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Distribuição de Gastos por Categoria</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Top 10 categorias com maior despesa
-        </p>
+        <CardTitle>Distribuição de Gastos por Categoria</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart
-            data={dados}
-            layout="vertical"
-            margin={{ top: 5, right: 30, left: 120, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={true} vertical={false} />
-            <XAxis
-              type="number"
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData} layout="vertical" margin={{ left: 100, right: 20 }}>
+            <XAxis 
+              type="number" 
               tickFormatter={formatCompactCurrency}
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
             />
-            <YAxis
-              type="category"
-              dataKey="categoria"
+            <YAxis 
+              type="category" 
+              dataKey="name" 
+              width={90}
               stroke="hsl(var(--muted-foreground))"
-              fontSize={12}
-              width={110}
             />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="valor" radius={[0, 8, 8, 0]}>
-              {dados.map((entry, index) => (
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
+            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+              {chartData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>
