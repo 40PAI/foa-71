@@ -267,6 +267,18 @@ export function OptimizedFinancasPage() {
 
       {/* Collapsible Sections with Accordion */}
       <Accordion type="multiple" className="w-full space-y-3">
+        <CollapsibleFinancialSection 
+          value="fluxo-caixa" 
+          title="Fluxo de Caixa (Administrativo)" 
+          icon={Wallet}
+          badge={{
+            text: "FOA",
+            variant: "default"
+          }}
+        >
+          <FluxoCaixaSection projectId={selectedProjectId} />
+        </CollapsibleFinancialSection>
+
         <CollapsibleFinancialSection value="expenses" title="Gestão de Gastos por Categoria" icon={TrendingDown} badge={{
         text: `${allExpenses.length} gastos`,
         variant: "outline"
@@ -377,18 +389,6 @@ export function OptimizedFinancasPage() {
         variant: "outline"
       }}>
           <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
-        </CollapsibleFinancialSection>
-
-        <CollapsibleFinancialSection 
-          value="fluxo-caixa" 
-          title="Fluxo de Caixa (Administrativo)" 
-          icon={Wallet}
-          badge={{
-            text: "FOA",
-            variant: "default"
-          }}
-        >
-          <FluxoCaixaSection projectId={selectedProjectId} />
         </CollapsibleFinancialSection>
       </Accordion>
     </div>;
