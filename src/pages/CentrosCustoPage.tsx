@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Download, Upload, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,12 +15,48 @@ import { useMovimentosFinanceiros } from "@/hooks/useMovimentosFinanceiros";
 import { toast } from "sonner";
 import { MovimentacoesFinanceirasCard } from "@/components/financial/MovimentacoesFinanceirasCard";
 import { ProjectGuard } from "@/components/common/ProjectGuard";
+import { FluxoCaixaFilters } from "@/components/financial/FluxoCaixaFilters";
+import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from "date-fns";
 
 export default function CentrosCustoPage() {
   const { selectedProjectId } = useProjectContext();
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [selectedCentroCustoId, setSelectedCentroCustoId] = useState<string>("all");
+  
+  // Estados para filtros temporais
+  const [filterType, setFilterType] = useState<"week" | "month" | "custom">("month");
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>();
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>();
+
+  // Calcular datas baseado no tipo de filtro
+  const { dataInicio, dataFim } = useMemo(() => {
+    const now = new Date();
+    
+    if (filterType === "week") {
+      return {
+        dataInicio: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+        dataFim: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+      };
+    }
+    
+    if (filterType === "month") {
+      return {
+        dataInicio: format(startOfMonth(now), "yyyy-MM-dd"),
+        dataFim: format(endOfMonth(now), "yyyy-MM-dd"),
+      };
+    }
+    
+    // custom
+    if (customStartDate && customEndDate) {
+      return {
+        dataInicio: format(customStartDate, "yyyy-MM-dd"),
+        dataFim: format(customEndDate, "yyyy-MM-dd"),
+      };
+    }
+    
+    return { dataInicio: undefined, dataFim: undefined };
+  }, [filterType, customStartDate, customEndDate]);
 
   const handleExportExcel = async () => {
     if (!selectedProjectId) return;
@@ -36,7 +72,9 @@ export default function CentrosCustoPage() {
   const { data: saldos } = useSaldosCentrosCusto(selectedProjectId || undefined);
   const { data: centrosCusto } = useCentrosCusto(selectedProjectId || undefined);
   const { data: movimentos } = useMovimentosFinanceiros(selectedProjectId || undefined, {
-    centroCustoId: selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined
+    centroCustoId: selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined,
+    dataInicio,
+    dataFim,
   });
 
 
@@ -103,6 +141,16 @@ export default function CentrosCustoPage() {
               </div>
             )}
           </div>
+
+          {/* Filtros Temporais */}
+          <FluxoCaixaFilters
+            filterType={filterType}
+            onFilterTypeChange={setFilterType}
+            startDate={customStartDate}
+            endDate={customEndDate}
+            onStartDateChange={setCustomStartDate}
+            onEndDateChange={setCustomEndDate}
+          />
         </div>
 
         {/* KPIs */}
