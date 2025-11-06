@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { ExcelMovimentoRow, ExcelMovimentoData, MovimentoValidationError } from '@/types/movimentoImport';
 
-const REQUIRED_COLUMNS = ['Data', 'Descrição', 'Categoria', 'Tipo', 'Valor'];
+const REQUIRED_COLUMNS = ['Data', 'Descrição', 'Tipo', 'Valor', 'Fonte Financiamento'];
 
 const COLUMN_MAPPING: Record<string, keyof ExcelMovimentoRow> = {
   'Data': 'data',
@@ -99,19 +99,19 @@ export class ExcelMovimentosParser {
     // Parse Descrição
     const descricao = this.parseString(row['Descrição'], linha, 'Descrição', errors, true);
     
-    // Parse Categoria
-    const categoria = this.parseString(row['Categoria'], linha, 'Categoria', errors, true);
-    
     // Parse Tipo
     const tipo = this.parseTipo(row['Tipo'], linha, errors);
     
     // Parse Valor
     const valor = this.parseValor(row['Valor'], linha, errors);
+    
+    // Parse Fonte Financiamento (obrigatório)
+    const fonte_financiamento = this.parseFonteFinanciamento(row['Fonte Financiamento'], linha, errors);
 
     // Optional fields
+    const categoria = this.parseString(row['Categoria'], linha, 'Categoria', errors, false);
     const subcategoria = this.parseString(row['Subcategoria'], linha, 'Subcategoria', errors, false);
     const centro_custo = this.parseString(row['Centro Custo'], linha, 'Centro Custo', errors, false);
-    const fonte_financiamento = this.parseString(row['Fonte Financiamento'], linha, 'Fonte Financiamento', errors, false);
     const forma_pagamento = this.parseString(row['Forma Pagamento'], linha, 'Forma Pagamento', errors, false);
     const numero_documento = this.parseString(row['Número Documento'], linha, 'Número Documento', errors, false);
     const observacoes = this.parseString(row['Observações'], linha, 'Observações', errors, false);
@@ -126,12 +126,12 @@ export class ExcelMovimentosParser {
       linha,
       data: data!,
       descricao: descricao!,
-      categoria: categoria!,
-      subcategoria,
       tipo: tipo!,
       valor: valor!,
+      fonte_financiamento: fonte_financiamento!,
+      categoria,
+      subcategoria,
       centro_custo,
-      fonte_financiamento,
       forma_pagamento,
       numero_documento,
       observacoes,
@@ -257,6 +257,36 @@ export class ExcelMovimentosParser {
     }
 
     return numValue;
+  }
+
+  private parseFonteFinanciamento(
+    value: any,
+    linha: number,
+    errors: MovimentoValidationError[]
+  ): 'REC_FOA' | 'FOF_FIN' | 'FOA_AUTO' | null {
+    if (!value || String(value).trim() === '') {
+      errors.push({
+        linha,
+        campo: 'Fonte Financiamento',
+        mensagem: 'Fonte de Financiamento é obrigatória',
+      });
+      return null;
+    }
+
+    const fonte = String(value).trim().toUpperCase();
+    const validFontes = ['REC_FOA', 'FOF_FIN', 'FOA_AUTO'];
+
+    if (!validFontes.includes(fonte)) {
+      errors.push({
+        linha,
+        campo: 'Fonte Financiamento',
+        mensagem: 'Fonte deve ser REC_FOA, FOF_FIN ou FOA_AUTO',
+        valor: value,
+      });
+      return null;
+    }
+
+    return fonte as 'REC_FOA' | 'FOF_FIN' | 'FOA_AUTO';
   }
 
   getErrors(): MovimentoValidationError[] {
