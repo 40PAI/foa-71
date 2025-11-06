@@ -82,11 +82,19 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
           const valor = Number(mov.valor) || 0;
 
           if (tipo === "entrada") {
-            if (fonte === "REC_FOA") acc.total_recebimento_foa += valor;
-            else if (fonte === "FOF_FIN") acc.total_fof_financiamento += valor;
-            else if (fonte === "FOA_AUTO") acc.total_foa_auto += valor;
-            else acc.total_recebimento_foa += valor; // fallback
+            // Apenas REC_FOA conta como entrada real (dinheiro recebido)
+            if (fonte === "REC_FOA") {
+              acc.total_recebimento_foa += valor;
+            }
+            // FOF_FIN e FOA_AUTO são CUSTOS, mesmo que registrados como entrada
+            else if (fonte === "FOF_FIN") {
+              acc.total_fof_financiamento += valor;
+            }
+            else if (fonte === "FOA_AUTO") {
+              acc.total_foa_auto += valor;
+            }
           } else if (tipo === "saida") {
+            // Saídas sem fonte específica vão para total_saidas genérico
             acc.total_saidas += valor;
           }
 
@@ -103,11 +111,12 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
         } as GastoObraSummary
       );
 
-      summary.saldo_atual =
-        summary.total_recebimento_foa +
-        summary.total_fof_financiamento +
-        summary.total_foa_auto -
-        summary.total_saidas;
+      // Aplicar as fórmulas corretas:
+      // TOTAL DE CUSTO = FOF_FIN + FOA_AUTO + outras saídas
+      summary.total_saidas = summary.total_fof_financiamento + summary.total_foa_auto + summary.total_saidas;
+
+      // SALDO ATUAL = REC_FOA - TOTAL DE CUSTO
+      summary.saldo_atual = summary.total_recebimento_foa - summary.total_saidas;
 
       return summary as GastoObraSummary;
     },
