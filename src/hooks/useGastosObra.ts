@@ -26,6 +26,7 @@ export interface GastoObraSummary {
   total_fof_financiamento: number;
   total_foa_auto: number;
   total_saidas: number;
+  total_custos: number;
   saldo_atual: number;
   total_movimentos: number;
 }
@@ -94,6 +95,9 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
               acc.total_foa_auto += valor;
             }
           } else if (tipo === "saida") {
+            // Accumulate ALL saidas for total_custos
+            acc.total_custos += valor;
+            
             if (fonte === "FOF_FIN") {
               acc.total_fof_financiamento -= valor; // Subtract saidas from FOF_FIN
             } else if (fonte === "FOA_AUTO") {
@@ -111,6 +115,7 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
           total_fof_financiamento: 0,
           total_foa_auto: 0,
           total_saidas: 0,
+          total_custos: 0,
           saldo_atual: 0,
           total_movimentos: 0,
         } as GastoObraSummary
