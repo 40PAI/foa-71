@@ -121,12 +121,8 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
         } as GastoObraSummary
       );
 
-      // Calculate final balance: REC_FOA + FOF_FIN (net) + FOA_AUTO (net) - Other saidas
-      summary.saldo_atual = 
-        summary.total_recebimento_foa + 
-        summary.total_fof_financiamento + 
-        summary.total_foa_auto - 
-        summary.total_saidas;
+      // Calculate final balance: REC_FOA - Total Custos
+      summary.saldo_atual = summary.total_recebimento_foa - summary.total_custos;
 
       return summary as GastoObraSummary;
     },
