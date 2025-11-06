@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { GastosObraKPICards } from "./GastosObraKPICards";
-import { GastosObraTable } from "./GastosObraTable";
+import { MovimentosPorFonteTable } from "./MovimentosPorFonteTable";
 import { GastoObraModal } from "@/components/modals/GastoObraModal";
-import { useGastosObra, useGastosObraSummary, GastoObra } from "@/hooks/useGastosObra";
+import { useGastosObraSummary } from "@/hooks/useGastosObra";
+import { useMovimentosPorFonte } from "@/hooks/useMovimentosPorFonte";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MovimentacoesFinanceirasCardProps {
@@ -24,9 +25,15 @@ export function MovimentacoesFinanceirasCard({
   centroCustoId,
 }: MovimentacoesFinanceirasCardProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingGasto, setEditingGasto] = useState<GastoObra | undefined>();
 
-  const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId, centroCustoId);
+  // Usar o novo hook para movimentos por fonte
+  const { data: movimentos, isLoading: movimentosLoading } = useMovimentosPorFonte({
+    projectId,
+    centroCustoId,
+    // TODO: Adicionar dataInicio/dataFim quando filtros temporais estiverem implementados
+  });
+
+  // Manter os KPIs usando o hook existente
   const { data: summary, isLoading: summaryLoading } = useGastosObraSummary(
     projectId,
     filterType === "month" ? selectedMonth : undefined,
@@ -34,24 +41,7 @@ export function MovimentacoesFinanceirasCard({
     centroCustoId
   );
 
-  const filteredGastos =
-    filterType === "all"
-      ? gastos || []
-      : gastos?.filter((gasto) => {
-          const gastoDate = new Date(gasto.data_movimento);
-          return (
-            gastoDate.getMonth() + 1 === selectedMonth &&
-            gastoDate.getFullYear() === selectedYear
-          );
-        }) || [];
-
-  const handleEdit = (gasto: GastoObra) => {
-    setEditingGasto(gasto);
-    setModalOpen(true);
-  };
-
   const handleNewGasto = () => {
-    setEditingGasto(undefined);
     setModalOpen(true);
   };
 
@@ -92,14 +82,14 @@ export function MovimentacoesFinanceirasCard({
           </div>
         </CardHeader>
         <CardContent>
-          {gastosLoading ? (
+          {movimentosLoading ? (
             <div className="space-y-2">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
           ) : (
-            <GastosObraTable gastos={filteredGastos} onEdit={handleEdit} />
+            <MovimentosPorFonteTable movimentos={movimentos || []} />
           )}
         </CardContent>
       </Card>
@@ -108,7 +98,6 @@ export function MovimentacoesFinanceirasCard({
         open={modalOpen}
         onOpenChange={setModalOpen}
         projectId={projectId}
-        gasto={editingGasto}
         defaultCentroCustoId={centroCustoId}
       />
     </div>

@@ -105,6 +105,17 @@ export function useMovimentosImport() {
         });
 
         try {
+          // Validação crítica: Saídas devem ter fonte de financiamento
+          if (movimento.tipo === 'saida' && !movimento.fonte_financiamento) {
+            errors.push({
+              linha: movimento.linha,
+              campo: 'Fonte Financiamento',
+              mensagem: 'Saídas devem ter Fonte de Financiamento definida (REC_FOA, FOF_FIN ou FOA_AUTO)',
+            });
+            errorCount++;
+            continue;
+          }
+
           // Find centro_custo_id if specified
           let centroCustoId = null;
           if (movimento.centro_custo && centrosCusto) {
@@ -130,6 +141,12 @@ export function useMovimentosImport() {
           const [day, month, year] = movimento.data.split('/');
           const dataFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
 
+          // Definir fonte padrão para entradas sem fonte especificada
+          let fonteFinanciamento = movimento.fonte_financiamento;
+          if (movimento.tipo === 'entrada' && !fonteFinanciamento) {
+            fonteFinanciamento = 'REC_FOA'; // Padrão: Recebimento do Cliente
+          }
+
           // Insert movimento
           const { error: insertError } = await supabase
             .from('movimentos_financeiros')
@@ -137,15 +154,15 @@ export function useMovimentosImport() {
               projeto_id: projectId,
               centro_custo_id: centroCustoId,
               tipo_movimento: movimento.tipo,
-              categoria: movimento.categoria || null,
-              subcategoria: movimento.subcategoria || null,
+              categoria: movimento.categoria,
+              subcategoria: movimento.subcategoria,
               descricao: movimento.descricao,
               valor: movimento.valor,
               data_movimento: dataFormatted,
-              fonte_financiamento: movimento.fonte_financiamento,
-              forma_pagamento: movimento.forma_pagamento || null,
-              numero_documento: movimento.numero_documento || null,
-              observacoes: movimento.observacoes || null,
+              fonte_financiamento: fonteFinanciamento as any,
+              forma_pagamento: movimento.forma_pagamento as any,
+              numero_documento: movimento.numero_documento,
+              observacoes: movimento.observacoes,
               status_aprovacao: 'aprovado',
             });
 
