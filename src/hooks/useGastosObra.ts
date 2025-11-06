@@ -181,7 +181,6 @@ export function useCreateGastoObra() {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
       queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
-      queryClient.invalidateQueries({ queryKey: ["movimentos-por-fonte"] });
       queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Movimento registrado com sucesso");
     },
@@ -225,7 +224,6 @@ export function useUpdateGastoObra() {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
       queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
-      queryClient.invalidateQueries({ queryKey: ["movimentos-por-fonte"] });
       queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Gasto atualizado com sucesso");
     },
@@ -252,7 +250,6 @@ export function useDeleteGastoObra() {
       queryClient.invalidateQueries({ queryKey: ["gastos-obra"] });
       queryClient.invalidateQueries({ queryKey: ["gastos-obra-summary"] });
       queryClient.invalidateQueries({ queryKey: ["movimentos-financeiros"] });
-      queryClient.invalidateQueries({ queryKey: ["movimentos-por-fonte"] });
       queryClient.invalidateQueries({ queryKey: ["saldos-centros-custo"] });
       toast.success("Gasto excluído com sucesso");
     },
