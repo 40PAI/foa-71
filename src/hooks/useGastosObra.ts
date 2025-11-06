@@ -56,59 +56,69 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
   return useQuery({
     queryKey: ["gastos-obra-summary", projectId, mes, ano, centroCustoId],
     queryFn: async () => {
-      // Se temos centroCustoId, calcular summary manualmente dos dados filtrados
+      // Calcular sempre do movimentos_financeiros para garantir totais corretos por fonte
+      let query = supabase
+        .from("movimentos_financeiros")
+        .select("tipo_movimento, fonte_financiamento, valor, projeto_id, centro_custo_id, data_movimento")
+        .eq("projeto_id", projectId);
+
       if (centroCustoId) {
-        let query = supabase
-          .from("gastos_obra_view")
-          .select("*")
-          .eq("projeto_id", projectId)
-          .eq("centro_custo_id", centroCustoId);
-        
-        if (mes && ano) {
-          const startDate = new Date(ano, mes - 1, 1).toISOString();
-          const endDate = new Date(ano, mes, 0, 23, 59, 59).toISOString();
-          query = query.gte("data_movimento", startDate).lte("data_movimento", endDate);
-        }
-        
-        const { data, error } = await query;
-        if (error) throw error;
-        
-        const summary = (data || []).reduce((acc, mov) => {
-          acc.total_recebimento_foa += mov.recebimento_foa || 0;
-          acc.total_fof_financiamento += mov.fof_financiamento || 0;
-          acc.total_foa_auto += mov.foa_auto || 0;
-          acc.total_saidas += mov.saida || 0;
+        query = query.eq("centro_custo_id", centroCustoId);
+      }
+
+      if (mes && ano) {
+        const startDate = new Date(ano, mes - 1, 1).toISOString();
+        const endDate = new Date(ano, mes, 0, 23, 59, 59).toISOString();
+        query = query.gte("data_movimento", startDate).lte("data_movimento", endDate);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const summary = (data || []).reduce(
+        (acc, mov: any) => {
+          const tipo = mov.tipo_movimento as string | null;
+          const fonte = mov.fonte_financiamento as string | null;
+          const valor = Number(mov.valor) || 0;
+
+          if (tipo === "entrada") {
+            // Apenas REC_FOA conta como entrada real (dinheiro recebido)
+            if (fonte === "REC_FOA") {
+              acc.total_recebimento_foa += valor;
+            }
+            // FOF_FIN e FOA_AUTO são CUSTOS, mesmo que registrados como entrada
+            else if (fonte === "FOF_FIN") {
+              acc.total_fof_financiamento += valor;
+            }
+            else if (fonte === "FOA_AUTO") {
+              acc.total_foa_auto += valor;
+            }
+          } else if (tipo === "saida") {
+            // Saídas sem fonte específica vão para total_saidas genérico
+            acc.total_saidas += valor;
+          }
+
           acc.total_movimentos += 1;
           return acc;
-        }, {
+        },
+        {
           total_recebimento_foa: 0,
           total_fof_financiamento: 0,
           total_foa_auto: 0,
           total_saidas: 0,
           saldo_atual: 0,
           total_movimentos: 0,
-        });
-        
-        summary.saldo_atual = summary.total_recebimento_foa + summary.total_fof_financiamento + summary.total_foa_auto - summary.total_saidas;
-        return summary as GastoObraSummary;
-      }
-      
-      // Caso contrário, usar a RPC function existente
-      const { data, error } = await supabase.rpc("get_gastos_obra_summary", {
-        p_projeto_id: projectId,
-        p_mes: mes || null,
-        p_ano: ano || null,
-      });
-      
-      if (error) throw error;
-      return (data?.[0] || {
-        total_recebimento_foa: 0,
-        total_fof_financiamento: 0,
-        total_foa_auto: 0,
-        total_saidas: 0,
-        saldo_atual: 0,
-        total_movimentos: 0,
-      }) as GastoObraSummary;
+        } as GastoObraSummary
+      );
+
+      // Aplicar as fórmulas corretas:
+      // TOTAL DE CUSTO = FOF_FIN + FOA_AUTO + outras saídas
+      summary.total_saidas = summary.total_fof_financiamento + summary.total_foa_auto + summary.total_saidas;
+
+      // SALDO ATUAL = REC_FOA - TOTAL DE CUSTO
+      summary.saldo_atual = summary.total_recebimento_foa - summary.total_saidas;
+
+      return summary as GastoObraSummary;
     },
     enabled: !!projectId,
   });

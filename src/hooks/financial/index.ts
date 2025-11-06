@@ -67,6 +67,3 @@ export type {
   DetailedExpense,
   FinancialCategory
 } from "@/types/finance";
-
-// Movimentos por fonte
-export { useMovimentosPorFonte, type MovimentoPorFonte } from "../useMovimentosPorFonte";
