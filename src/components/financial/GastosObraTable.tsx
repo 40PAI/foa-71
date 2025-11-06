@@ -95,8 +95,8 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
               <TableHead>Data</TableHead>
               <TableHead>Descrição</TableHead>
               <TableHead className="text-right text-green-600">Rec. FOA</TableHead>
-              <TableHead className="text-right text-blue-600">FOF Financ.</TableHead>
-              <TableHead className="text-right text-orange-600">FOA Auto</TableHead>
+              <TableHead className="text-right">FOF Financ.</TableHead>
+              <TableHead className="text-right">FOA Auto</TableHead>
               <TableHead className="text-right text-red-600">Saída</TableHead>
               <TableHead className="text-right font-bold">Saldo Acum.</TableHead>
               <TableHead>Centro Custo</TableHead>
@@ -127,11 +127,25 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
                   <TableCell className="text-right text-green-600 font-semibold">
                     {gasto.recebimento_foa > 0 ? formatCurrency(gasto.recebimento_foa) : "-"}
                   </TableCell>
-                  <TableCell className="text-right text-blue-600 font-semibold">
-                    {gasto.fof_financiamento > 0 ? formatCurrency(gasto.fof_financiamento) : "-"}
+                  <TableCell className="text-right font-semibold">
+                    {gasto.fof_financiamento !== 0 ? (
+                      <span className={gasto.fof_financiamento > 0 ? "text-green-600" : "text-red-600"}>
+                        {gasto.fof_financiamento > 0 ? "+" : ""}
+                        {formatCurrency(Math.abs(gasto.fof_financiamento))}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
-                  <TableCell className="text-right text-orange-600 font-semibold">
-                    {gasto.foa_auto > 0 ? formatCurrency(gasto.foa_auto) : "-"}
+                  <TableCell className="text-right font-semibold">
+                    {gasto.foa_auto !== 0 ? (
+                      <span className={gasto.foa_auto > 0 ? "text-green-600" : "text-red-600"}>
+                        {gasto.foa_auto > 0 ? "+" : ""}
+                        {formatCurrency(Math.abs(gasto.foa_auto))}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
                   <TableCell className="text-right text-red-600 font-semibold">
                     {gasto.saida > 0 ? formatCurrency(gasto.saida) : "-"}

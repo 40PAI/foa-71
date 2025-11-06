@@ -81,21 +81,26 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
           const fonte = mov.fonte_financiamento as string | null;
           const valor = Number(mov.valor) || 0;
 
+          // REC_FOA is only entrada
+          if (tipo === "entrada" && fonte === "REC_FOA") {
+            acc.total_recebimento_foa += valor;
+          }
+
+          // FOF_FIN and FOA_AUTO can be entrada or saida
           if (tipo === "entrada") {
-            // Apenas REC_FOA conta como entrada real (dinheiro recebido)
-            if (fonte === "REC_FOA") {
-              acc.total_recebimento_foa += valor;
-            }
-            // FOF_FIN e FOA_AUTO são CUSTOS, mesmo que registrados como entrada
-            else if (fonte === "FOF_FIN") {
+            if (fonte === "FOF_FIN") {
               acc.total_fof_financiamento += valor;
-            }
-            else if (fonte === "FOA_AUTO") {
+            } else if (fonte === "FOA_AUTO") {
               acc.total_foa_auto += valor;
             }
           } else if (tipo === "saida") {
-            // Saídas sem fonte específica vão para total_saidas genérico
-            acc.total_saidas += valor;
+            if (fonte === "FOF_FIN") {
+              acc.total_fof_financiamento -= valor; // Subtract saidas from FOF_FIN
+            } else if (fonte === "FOA_AUTO") {
+              acc.total_foa_auto -= valor; // Subtract saidas from FOA_AUTO
+            } else {
+              acc.total_saidas += valor; // Other saidas without specific source
+            }
           }
 
           acc.total_movimentos += 1;
@@ -111,12 +116,12 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
         } as GastoObraSummary
       );
 
-      // Aplicar as fórmulas corretas:
-      // TOTAL DE CUSTO = FOF_FIN + FOA_AUTO + outras saídas
-      summary.total_saidas = summary.total_fof_financiamento + summary.total_foa_auto + summary.total_saidas;
-
-      // SALDO ATUAL = REC_FOA - TOTAL DE CUSTO
-      summary.saldo_atual = summary.total_recebimento_foa - summary.total_saidas;
+      // Calculate final balance: REC_FOA + FOF_FIN (net) + FOA_AUTO (net) - Other saidas
+      summary.saldo_atual = 
+        summary.total_recebimento_foa + 
+        summary.total_fof_financiamento + 
+        summary.total_foa_auto - 
+        summary.total_saidas;
 
       return summary as GastoObraSummary;
     },

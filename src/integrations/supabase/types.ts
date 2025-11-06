@@ -2914,6 +2914,9 @@ export type Database = {
           descricao: string | null
           foa_auto: number | null
           fof_financiamento: number | null
+          fonte_financiamento:
+            | Database["public"]["Enums"]["fonte_foa_enum"]
+            | null
           id: string | null
           observacoes: string | null
           projeto_id: number | null
@@ -2922,6 +2925,7 @@ export type Database = {
           responsavel_id: string | null
           responsavel_nome: string | null
           saida: number | null
+          tipo_movimento: string | null
         }
         Relationships: [
           {
