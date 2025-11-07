@@ -14,6 +14,8 @@ interface CategoryExpenseCardProps {
   icon: LucideIcon;
   projectId: number;
   totalBudget?: number;
+  fromTasks?: number;
+  manualExpenses?: number;
 }
 
 export function CategoryExpenseCard({
@@ -22,16 +24,13 @@ export function CategoryExpenseCard({
   icon: Icon,
   projectId,
   totalBudget = 1000000,
+  fromTasks = 0,
+  manualExpenses = 0,
 }: CategoryExpenseCardProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: allExpenses = [] } = useDetailedExpenses(projectId);
 
-  // Calculate total for this category
-  const totalAmount = useMemo(() => {
-    return allExpenses
-      .filter((e) => e.categoria_gasto === category)
-      .reduce((sum, e) => sum + Number(e.valor), 0);
-  }, [allExpenses, category]);
+  // Total amount is sum of tasks + manual expenses
+  const totalAmount = fromTasks + manualExpenses;
 
   // Calculate percentage of budget
   const percentageOfBudget = useMemo(() => {
@@ -62,6 +61,22 @@ export function CategoryExpenseCard({
               <p className="text-lg sm:text-xl lg:text-2xl font-bold text-primary">
                 {formatCurrency(totalAmount)}
               </p>
+              
+              {/* Breakdown of sources */}
+              {totalAmount > 0 && (
+                <div className="text-xs text-muted-foreground space-y-1 mt-2">
+                  <div className="flex justify-between items-center">
+                    <span>Das Tarefas:</span>
+                    <span className="font-medium">{formatCurrency(fromTasks)}</span>
+                  </div>
+                  {manualExpenses > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span>Gastos Manuais:</span>
+                      <span className="font-medium">{formatCurrency(manualExpenses)}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Progress bar */}
@@ -98,6 +113,7 @@ export function CategoryExpenseCard({
               projectId={projectId} 
               filterByCategory={category}
               showAddButton={false}
+              fromTasksValue={fromTasks}
             />
           </div>
         </DialogContent>

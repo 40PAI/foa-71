@@ -30,12 +30,14 @@ interface ExpenseManagementProps {
   projectId: number;
   filterByCategory?: string;
   showAddButton?: boolean;
+  fromTasksValue?: number;
 }
 
 export function ExpenseManagement({ 
   projectId, 
   filterByCategory,
-  showAddButton = true 
+  showAddButton = true,
+  fromTasksValue = 0,
 }: ExpenseManagementProps) {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
@@ -345,9 +347,37 @@ export function ExpenseManagement({
       </CardHeader>
       <CardContent>
         {expenses.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Nenhum gasto registrado ainda.</p>
+          <div className="text-center py-8">
+            <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+            {fromTasksValue > 0 ? (
+              <>
+                <p className="font-medium mb-2 text-foreground">
+                  Gastos calculados automaticamente das tarefas
+                </p>
+                <p className="text-2xl font-bold text-primary mb-1">
+                  {formatCurrency(fromTasksValue)}
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Estes valores são calculados com base nos custos das tarefas do projeto
+                </p>
+                {showAddButton && (
+                  <Button onClick={() => setIsAddingExpense(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar Gasto Manual Extra
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="text-muted-foreground mb-4">Nenhum gasto registrado ainda.</p>
+                {showAddButton && (
+                  <Button onClick={() => setIsAddingExpense(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Registrar Primeiro Gasto
+                  </Button>
+                )}
+              </>
+            )}
           </div>
         ) : (
           <Table>

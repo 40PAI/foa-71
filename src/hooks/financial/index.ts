@@ -57,6 +57,9 @@ export { useTaskFinancialSummary } from "../useTaskFinancialSummary";
 // Enhanced financial chart data
 export { useEnhancedFinancialChartData } from "../useEnhancedFinancialChartData";
 
+// Category integrated expenses
+export { useCategoryIntegratedExpenses } from "../useCategoryIntegratedExpenses";
+
 // Re-export types
 export type {
   Finance,

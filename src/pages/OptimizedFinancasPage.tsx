@@ -33,6 +33,7 @@ import { FundingBreakdownSection } from "@/components/financial/FundingBreakdown
 import { ReembolsosFOASection } from "@/components/financial/ReembolsosFOASection";
 import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
 import { FluxoCaixaSection } from "@/components/financial/FluxoCaixaSection";
+import { useCategoryIntegratedExpenses } from "@/hooks/useCategoryIntegratedExpenses";
 
 // Loading skeleton components
 const SummaryCardSkeleton = () => <Card>
@@ -87,20 +88,9 @@ export function OptimizedFinancasPage() {
     data: clientes = []
   } = useClientes(selectedProjectId);
   const [expandedDashboardOpen, setExpandedDashboardOpen] = useState(false);
-
-  // Calculate totals by category for cards
-  const categoryTotals = useMemo(() => {
-    const materialTotal = allExpenses.filter(e => e.categoria_gasto === "material").reduce((sum, e) => sum + Number(e.valor), 0);
-    const payrollTotal = allExpenses.filter(e => e.categoria_gasto === "mao_obra").reduce((sum, e) => sum + Number(e.valor), 0);
-    const patrimonyTotal = allExpenses.filter(e => e.categoria_gasto === "patrimonio").reduce((sum, e) => sum + Number(e.valor), 0);
-    const indirectTotal = allExpenses.filter(e => e.categoria_gasto === "indireto").reduce((sum, e) => sum + Number(e.valor), 0);
-    return {
-      materialTotal,
-      payrollTotal,
-      patrimonyTotal,
-      indirectTotal
-    };
-  }, [allExpenses]);
+  
+  // Fetch integrated expenses (tasks + manual)
+  const { data: integratedExpenses } = useCategoryIntegratedExpenses(selectedProjectId);
 
   // Optimized realtime sync
   useOptimizedRealtimeSync(selectedProjectId || 0, !!selectedProjectId);
@@ -279,15 +269,52 @@ export function OptimizedFinancasPage() {
           <FluxoCaixaSection projectId={selectedProjectId} />
         </CollapsibleFinancialSection>
 
-        <CollapsibleFinancialSection value="expenses" title="Gestão de Gastos por Categoria" icon={TrendingDown} badge={{
-        text: `${allExpenses.length} gastos`,
-        variant: "outline"
-      }}>
+        <CollapsibleFinancialSection 
+          value="expenses" 
+          title="Gestão de Gastos por Categoria" 
+          icon={TrendingDown} 
+          badge={{
+            text: `${allExpenses.length} gastos manuais`,
+            variant: "outline"
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={financas.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} />
-            <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={financas.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} />
-            <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={financas.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} />
-            <CategoryExpenseCard category="indireto" title="Custos Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={financas.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} />
+            <CategoryExpenseCard 
+              category="material" 
+              title="Materiais" 
+              icon={Building} 
+              projectId={selectedProjectId} 
+              totalBudget={financas.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000}
+              fromTasks={integratedExpenses?.material.fromTasks || 0}
+              manualExpenses={integratedExpenses?.material.manual || 0}
+            />
+            <CategoryExpenseCard 
+              category="mao_obra" 
+              title="Mão de Obra" 
+              icon={Users} 
+              projectId={selectedProjectId} 
+              totalBudget={financas.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000}
+              fromTasks={integratedExpenses?.mao_obra.fromTasks || 0}
+              manualExpenses={integratedExpenses?.mao_obra.manual || 0}
+            />
+            <CategoryExpenseCard 
+              category="patrimonio" 
+              title="Patrimônio" 
+              icon={Truck} 
+              projectId={selectedProjectId} 
+              totalBudget={financas.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000}
+              fromTasks={integratedExpenses?.patrimonio.fromTasks || 0}
+              manualExpenses={integratedExpenses?.patrimonio.manual || 0}
+            />
+            <CategoryExpenseCard 
+              category="indireto" 
+              title="Custos Indiretos" 
+              icon={DollarSign} 
+              projectId={selectedProjectId} 
+              totalBudget={financas.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000}
+              fromTasks={integratedExpenses?.indireto.fromTasks || 0}
+              manualExpenses={integratedExpenses?.indireto.manual || 0}
+            />
           </div>
         </CollapsibleFinancialSection>
 
