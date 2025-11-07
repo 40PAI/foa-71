@@ -19,13 +19,19 @@ import {
   FileText,
   DollarSign,
   Eye,
-  Download
+  Download,
+  Building,
+  ShoppingCart,
+  Hammer,
+  PenTool
 } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { formatCurrency } from "@/utils/formatters";
 import { useDetailedExpenses, useCreateDetailedExpense, useApproveExpense } from "@/hooks/useIntegratedFinances";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTaskExpensesByCategory } from "@/hooks/useTaskExpensesByCategory";
+import { useUnifiedExpenses } from "@/hooks/useUnifiedExpenses";
 
 interface ExpenseManagementProps {
   projectId: number;
@@ -56,6 +62,7 @@ export function ExpenseManagement({
 
   const { data: allExpenses = [], isLoading } = useDetailedExpenses(projectId);
   const { data: taskExpenses = [], isLoading: isLoadingTasks } = useTaskExpensesByCategory(projectId, filterByCategory || '');
+  const { data: unifiedExpenses = [], isLoading: isLoadingUnified } = useUnifiedExpenses(projectId, filterByCategory || '');
   const createExpense = useCreateDetailedExpense();
   const approveExpense = useApproveExpense();
   const { toast } = useToast();
@@ -222,7 +229,27 @@ export function ExpenseManagement({
     window.open(url, '_blank', 'noopener');
   };
 
-  if (isLoading) {
+  const getSourceIcon = (fonte: string) => {
+    switch (fonte) {
+      case 'centro_custo': return <Building className="h-4 w-4 text-blue-600" />;
+      case 'requisicao': return <ShoppingCart className="h-4 w-4 text-purple-600" />;
+      case 'tarefa': return <Hammer className="h-4 w-4 text-orange-600" />;
+      case 'manual': return <PenTool className="h-4 w-4 text-green-600" />;
+      default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getSourceLabel = (fonte: string) => {
+    switch (fonte) {
+      case 'centro_custo': return 'Centro de Custos';
+      case 'requisicao': return 'Requisição';
+      case 'tarefa': return 'Tarefa';
+      case 'manual': return 'Manual';
+      default: return 'Outro';
+    }
+  };
+
+  if (isLoading || isLoadingUnified) {
     return (
       <Card>
         <CardHeader>
@@ -381,39 +408,159 @@ export function ExpenseManagement({
                   )}
                 </div>
 
-                {/* Tabela de tarefas com custos */}
-                {taskExpenses && taskExpenses.length > 0 && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-semibold mb-3 text-foreground">Detalhamento por Tarefa</h4>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Tarefa</TableHead>
-                          <TableHead>Etapa</TableHead>
-                          <TableHead>Valor</TableHead>
-                          <TableHead>Período</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {taskExpenses.map((task: any) => (
-                          <TableRow key={task.tarefa_id}>
-                            <TableCell className="font-medium">
-                              {task.nome_tarefa}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{task.etapa_nome}</Badge>
-                            </TableCell>
-                            <TableCell className="font-medium text-primary">
-                              {formatCurrency(task.relevantCost)}
-                            </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {task.data_inicio ? new Date(task.data_inicio).toLocaleDateString('pt-BR') : '-'} até{' '}
-                              {task.data_fim_prevista ? new Date(task.data_fim_prevista).toLocaleDateString('pt-BR') : '-'}
-                            </TableCell>
+                {/* Tabela Unificada de Todos os Gastos */}
+                {unifiedExpenses && unifiedExpenses.length > 0 && (
+                  <div className="mt-6 border-t pt-6">
+                    <h4 className="text-sm font-semibold mb-3 text-foreground flex items-center gap-2">
+                      <Receipt className="h-4 w-4" />
+                      Todos os Gastos ({unifiedExpenses.length} movimentos)
+                    </h4>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Origem</TableHead>
+                            <TableHead>Data</TableHead>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead>Valor</TableHead>
+                            <TableHead>Responsável</TableHead>
+                            <TableHead>Ações</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {unifiedExpenses.map((expense) => (
+                            <TableRow key={expense.id}>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {getSourceIcon(expense.fonte)}
+                                  <Badge variant="outline" className="text-xs">
+                                    {getSourceLabel(expense.fonte)}
+                                  </Badge>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-sm">
+                                    {new Date(expense.data).toLocaleDateString('pt-BR')}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell className="max-w-xs">
+                                <p className="text-sm truncate" title={expense.descricao}>
+                                  {expense.descricao}
+                                </p>
+                                {expense.documento && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Doc: {expense.documento}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <span className="font-medium text-red-600">
+                                  -{formatCurrency(expense.valor)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-sm">{expense.responsavel || '-'}</span>
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setSelectedExpense(expense.metadata);
+                                      setIsViewingDetails(true);
+                                    }}
+                                    title="Ver detalhes"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+                                  {expense.comprovante_url && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => openReceipt(expense.comprovante_url!)}
+                                      title="Ver comprovante"
+                                    >
+                                      <FileText className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Resumo com breakdown por fonte */}
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg border space-y-2">
+                      <div className="flex justify-between items-center font-bold text-lg">
+                        <span>Total Geral:</span>
+                        <span className="text-primary">
+                          {formatCurrency(unifiedExpenses.reduce((sum, e) => sum + e.valor, 0))}
+                        </span>
+                      </div>
+                      
+                      <Separator />
+                      
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="flex items-center gap-2">
+                            <Building className="h-3 w-3 text-blue-600" /> Centro de Custos:
+                          </span>
+                          <span>
+                            {formatCurrency(
+                              unifiedExpenses
+                                .filter(e => e.fonte === 'centro_custo')
+                                .reduce((sum, e) => sum + e.valor, 0)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="flex items-center gap-2">
+                            <ShoppingCart className="h-3 w-3 text-purple-600" /> Requisições:
+                          </span>
+                          <span>
+                            {formatCurrency(
+                              unifiedExpenses
+                                .filter(e => e.fonte === 'requisicao')
+                                .reduce((sum, e) => sum + e.valor, 0)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="flex items-center gap-2">
+                            <Hammer className="h-3 w-3 text-orange-600" /> Tarefas:
+                          </span>
+                          <span>
+                            {formatCurrency(
+                              unifiedExpenses
+                                .filter(e => e.fonte === 'tarefa')
+                                .reduce((sum, e) => sum + e.valor, 0)
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="flex items-center gap-2">
+                            <PenTool className="h-3 w-3 text-green-600" /> Gastos Manuais:
+                          </span>
+                          <span>
+                            {formatCurrency(
+                              unifiedExpenses
+                                .filter(e => e.fonte === 'manual')
+                                .reduce((sum, e) => sum + e.valor, 0)
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground text-center pt-2">
+                        {unifiedExpenses.length} movimento(s) registrado(s)
+                      </p>
+                    </div>
                   </div>
                 )}
               </>
@@ -542,7 +689,7 @@ export function ExpenseManagement({
                   <Label className="text-sm font-medium text-muted-foreground">Data do Gasto</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    {new Date(selectedExpense.data_gasto).toLocaleDateString('pt-BR')}
+                    {new Date(selectedExpense.data_gasto || selectedExpense.data_movimento || selectedExpense.data).toLocaleDateString('pt-BR')}
                   </div>
                 </div>
                 
