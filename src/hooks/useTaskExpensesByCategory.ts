@@ -35,8 +35,9 @@ export function useTaskExpensesByCategory(projectId: number | null, category: st
         return [];
       }
       
-      // Filter and map manually
+      // Filter and map manually - only include tasks with progress >= 1%
       const filtered: TaskExpenseDetail[] = (fallbackData || [])
+        .filter((task: any) => (Number(task.percentual_conclusao) || 0) >= 1)
         .map((task: any) => {
           let relevantCost = 0;
           

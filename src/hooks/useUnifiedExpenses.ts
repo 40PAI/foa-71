@@ -78,12 +78,13 @@ export function useUnifiedExpenses(projectId: number, category: string) {
         });
       });
       
-      // 3. GASTOS REAIS DAS TAREFAS
+      // 3. GASTOS REAIS DAS TAREFAS (apenas com progresso >= 1%)
       const { data: tarefas } = await supabase
         .from('tarefas_lean')
         .select('*')
         .eq('id_projeto', projectId)
-        .gt('gasto_real', 0);
+        .gt('gasto_real', 0)
+        .gte('percentual_conclusao', 1);
       
       tarefas?.forEach(t => {
         // Para cada tarefa, criar entradas baseadas no tipo de custo
