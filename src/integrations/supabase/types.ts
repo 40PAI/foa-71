@@ -3428,6 +3428,7 @@ export type Database = {
         Args: { new_amount: number; project_id: number }
         Returns: boolean
       }
+      zerar_custos_projeto: { Args: { p_projeto_id: number }; Returns: Json }
     }
     Enums: {
       app_role:
