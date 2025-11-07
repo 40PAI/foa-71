@@ -32,6 +32,7 @@ interface ExpenseManagementProps {
   filterByCategory?: string;
   showAddButton?: boolean;
   fromTasksValue?: number;
+  fromCentroCustoValue?: number;
 }
 
 export function ExpenseManagement({ 
@@ -39,6 +40,7 @@ export function ExpenseManagement({
   filterByCategory,
   showAddButton = true,
   fromTasksValue = 0,
+  fromCentroCustoValue = 0,
 }: ExpenseManagementProps) {
   const [isAddingExpense, setIsAddingExpense] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
@@ -350,18 +352,26 @@ export function ExpenseManagement({
       <CardContent>
         {expenses.length === 0 ? (
           <div className="py-6">
-            {fromTasksValue > 0 && taskExpenses && taskExpenses.length > 0 ? (
+            {(fromTasksValue > 0 || fromCentroCustoValue > 0) ? (
               <>
                 <div className="text-center mb-6">
                   <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                   <p className="font-medium mb-2 text-foreground">
-                    Gastos calculados automaticamente das tarefas
+                    Gastos calculados automaticamente
                   </p>
                   <p className="text-2xl font-bold text-primary mb-1">
-                    {formatCurrency(fromTasksValue)}
+                    {formatCurrency(fromTasksValue + fromCentroCustoValue)}
                   </p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Estes valores são calculados com base nos custos das tarefas do projeto
+                  <div className="text-sm text-muted-foreground space-y-1 mb-4">
+                    {fromTasksValue > 0 && (
+                      <p>🏗️ Das Tarefas: {formatCurrency(fromTasksValue)}</p>
+                    )}
+                    {fromCentroCustoValue > 0 && (
+                      <p>📊 Centro de Custos: {formatCurrency(fromCentroCustoValue)}</p>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Estes valores são calculados automaticamente com base nas tarefas e centros de custo do projeto
                   </p>
                   {showAddButton && (
                     <Button onClick={() => setIsAddingExpense(true)} size="sm">
@@ -372,38 +382,40 @@ export function ExpenseManagement({
                 </div>
 
                 {/* Tabela de tarefas com custos */}
-                <div className="mt-6">
-                  <h4 className="text-sm font-semibold mb-3 text-foreground">Detalhamento por Tarefa</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Tarefa</TableHead>
-                        <TableHead>Etapa</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Período</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {taskExpenses && taskExpenses.map((task: any) => (
-                        <TableRow key={task.tarefa_id}>
-                          <TableCell className="font-medium">
-                            {task.nome_tarefa}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{task.etapa_nome}</Badge>
-                          </TableCell>
-                          <TableCell className="font-medium text-primary">
-                            {formatCurrency(task.relevantCost)}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {task.data_inicio ? new Date(task.data_inicio).toLocaleDateString('pt-BR') : '-'} até{' '}
-                            {task.data_fim_prevista ? new Date(task.data_fim_prevista).toLocaleDateString('pt-BR') : '-'}
-                          </TableCell>
+                {taskExpenses && taskExpenses.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-semibold mb-3 text-foreground">Detalhamento por Tarefa</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Tarefa</TableHead>
+                          <TableHead>Etapa</TableHead>
+                          <TableHead>Valor</TableHead>
+                          <TableHead>Período</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {taskExpenses.map((task: any) => (
+                          <TableRow key={task.tarefa_id}>
+                            <TableCell className="font-medium">
+                              {task.nome_tarefa}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{task.etapa_nome}</Badge>
+                            </TableCell>
+                            <TableCell className="font-medium text-primary">
+                              {formatCurrency(task.relevantCost)}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {task.data_inicio ? new Date(task.data_inicio).toLocaleDateString('pt-BR') : '-'} até{' '}
+                              {task.data_fim_prevista ? new Date(task.data_fim_prevista).toLocaleDateString('pt-BR') : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-8">

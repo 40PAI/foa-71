@@ -286,6 +286,7 @@ export function OptimizedFinancasPage() {
               projectId={selectedProjectId} 
               totalBudget={financas.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000}
               fromTasks={integratedExpenses?.material.fromTasks || 0}
+              fromCentroCusto={integratedExpenses?.material.fromCentroCusto || 0}
               manualExpenses={integratedExpenses?.material.manual || 0}
             />
             <CategoryExpenseCard 
@@ -295,6 +296,7 @@ export function OptimizedFinancasPage() {
               projectId={selectedProjectId} 
               totalBudget={financas.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000}
               fromTasks={integratedExpenses?.mao_obra.fromTasks || 0}
+              fromCentroCusto={integratedExpenses?.mao_obra.fromCentroCusto || 0}
               manualExpenses={integratedExpenses?.mao_obra.manual || 0}
             />
             <CategoryExpenseCard 
@@ -304,6 +306,7 @@ export function OptimizedFinancasPage() {
               projectId={selectedProjectId} 
               totalBudget={financas.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000}
               fromTasks={integratedExpenses?.patrimonio.fromTasks || 0}
+              fromCentroCusto={integratedExpenses?.patrimonio.fromCentroCusto || 0}
               manualExpenses={integratedExpenses?.patrimonio.manual || 0}
             />
             <CategoryExpenseCard 
@@ -313,6 +316,7 @@ export function OptimizedFinancasPage() {
               projectId={selectedProjectId} 
               totalBudget={financas.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000}
               fromTasks={integratedExpenses?.indireto.fromTasks || 0}
+              fromCentroCusto={integratedExpenses?.indireto.fromCentroCusto || 0}
               manualExpenses={integratedExpenses?.indireto.manual || 0}
             />
           </div>
