@@ -3129,9 +3129,6 @@ export type Database = {
           material_expenses: number
           patrimony_expenses: number
           payroll_expenses: number
-          task_labor_cost: number
-          task_material_cost: number
-          task_real_expenses: number
           total_budget: number
           total_expenses: number
         }[]
