@@ -134,13 +134,21 @@ export function MovimentoFinanceiroModal({ open, onOpenChange, movimento, projec
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="categoria">Categoria*</Label>
-              <Input
-                id="categoria"
+              <Select
                 value={formData.categoria}
-                onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                placeholder="Ex: Material de Construção"
-                required
-              />
+                onValueChange={(value) => setFormData({ ...formData, categoria: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma categoria..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Material">Material</SelectItem>
+                  <SelectItem value="Mão de Obra">Mão de Obra</SelectItem>
+                  <SelectItem value="Patrimônio">Patrimônio</SelectItem>
+                  <SelectItem value="Custos Indiretos">Custos Indiretos</SelectItem>
+                  <SelectItem value="Segurança e Higiene no Trabalho">Segurança e Higiene no Trabalho</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
