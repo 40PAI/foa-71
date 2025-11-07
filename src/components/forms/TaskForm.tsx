@@ -40,9 +40,6 @@ const taskSchema = z.object({
   status: z.enum(["Pendente", "Em Andamento", "Concluído"]).default("Pendente"),
   gasto_real: z.number().min(0).default(0),
   tempo_real_dias: z.number().int().min(0).default(0),
-  preco_unitario: z.number().min(0).default(0),
-  custo_material: z.number().min(0).default(0),
-  custo_mao_obra: z.number().min(0).default(0),
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
@@ -71,9 +68,6 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
       status: task?.status || "Pendente",
       gasto_real: task?.gasto_real || 0,
       tempo_real_dias: task?.tempo_real_dias || 0,
-      preco_unitario: task?.preco_unitario || 0,
-      custo_material: task?.custo_material || 0,
-      custo_mao_obra: task?.custo_mao_obra || 0,
     },
   });
 
@@ -103,9 +97,6 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
         status: values.status,
         gasto_real: values.gasto_real || 0,
         tempo_real_dias: values.tempo_real_dias || 0,
-        preco_unitario: values.preco_unitario || 0,
-        custo_material: values.custo_material || 0,
-        custo_mao_obra: values.custo_mao_obra || 0,
       };
 
       console.log("Dados processados da tarefa (prontos para inserção):", taskData);
@@ -408,111 +399,6 @@ export function TaskForm({ task, onSuccess }: TaskFormProps) {
                 </FormItem>
               )}
             />
-          </div>
-        </div>
-
-        <div className="space-y-4 border-t pt-4 mt-4">
-          <div>
-            <h3 className="text-lg font-semibold text-primary">Composição de Custos Orçamentários</h3>
-            <p className="text-sm text-muted-foreground">
-              Preencha os valores conforme orçamento (estrutura das planilhas)
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="preco_unitario"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PREÇO / UN (AKZ)</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="0,00"
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Preço unitário conforme orçamento
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="custo_material"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PREÇO MATERIAL (AKZ)</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="0,00"
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Custo total de materiais
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="custo_mao_obra"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>PREÇO MÃO DE OBRA (AKZ)</FormLabel>
-                  <FormControl>
-                    <CurrencyInput
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      placeholder="0,00"
-                    />
-                  </FormControl>
-                  <p className="text-xs text-muted-foreground">
-                    Custo total de mão de obra
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="bg-muted/50 p-4 rounded-lg border">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Subtotal Material:</span>
-                <span className="font-semibold">
-                  {formatCurrency(form.watch("custo_material") || 0)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Subtotal Mão de Obra:</span>
-                <span className="font-semibold">
-                  {formatCurrency(form.watch("custo_mao_obra") || 0)}
-                </span>
-              </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold text-base">TOTAL da Tarefa:</span>
-                  <span className="text-xl font-bold text-primary">
-                    {formatCurrency(
-                      (form.watch("custo_material") || 0) + 
-                      (form.watch("custo_mao_obra") || 0)
-                    )}
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground text-center mt-2">
-                Este valor será agregado automaticamente em Finanças
-              </p>
-            </div>
           </div>
         </div>
 
