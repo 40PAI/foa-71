@@ -60,6 +60,9 @@ export { useEnhancedFinancialChartData } from "../useEnhancedFinancialChartData"
 // Category integrated expenses
 export { useCategoryIntegratedExpenses } from "../useCategoryIntegratedExpenses";
 
+// Task expenses by category
+export { useTaskExpensesByCategory } from "../useTaskExpensesByCategory";
+
 // Re-export types
 export type {
   Finance,

@@ -25,6 +25,7 @@ import { formatCurrency } from "@/utils/formatters";
 import { useDetailedExpenses, useCreateDetailedExpense, useApproveExpense } from "@/hooks/useIntegratedFinances";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTaskExpensesByCategory } from "@/hooks/useTaskExpensesByCategory";
 
 interface ExpenseManagementProps {
   projectId: number;
@@ -52,6 +53,7 @@ export function ExpenseManagement({
   });
 
   const { data: allExpenses = [], isLoading } = useDetailedExpenses(projectId);
+  const { data: taskExpenses = [], isLoading: isLoadingTasks } = useTaskExpensesByCategory(projectId, filterByCategory || '');
   const createExpense = useCreateDetailedExpense();
   const approveExpense = useApproveExpense();
   const { toast } = useToast();
@@ -347,28 +349,65 @@ export function ExpenseManagement({
       </CardHeader>
       <CardContent>
         {expenses.length === 0 ? (
-          <div className="text-center py-8">
-            <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
-            {fromTasksValue > 0 ? (
+          <div className="py-6">
+            {fromTasksValue > 0 && taskExpenses && taskExpenses.length > 0 ? (
               <>
-                <p className="font-medium mb-2 text-foreground">
-                  Gastos calculados automaticamente das tarefas
-                </p>
-                <p className="text-2xl font-bold text-primary mb-1">
-                  {formatCurrency(fromTasksValue)}
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Estes valores são calculados com base nos custos das tarefas do projeto
-                </p>
-                {showAddButton && (
-                  <Button onClick={() => setIsAddingExpense(true)} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Gasto Manual Extra
-                  </Button>
-                )}
+                <div className="text-center mb-6">
+                  <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
+                  <p className="font-medium mb-2 text-foreground">
+                    Gastos calculados automaticamente das tarefas
+                  </p>
+                  <p className="text-2xl font-bold text-primary mb-1">
+                    {formatCurrency(fromTasksValue)}
+                  </p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Estes valores são calculados com base nos custos das tarefas do projeto
+                  </p>
+                  {showAddButton && (
+                    <Button onClick={() => setIsAddingExpense(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Adicionar Gasto Manual Extra
+                    </Button>
+                  )}
+                </div>
+
+                {/* Tabela de tarefas com custos */}
+                <div className="mt-6">
+                  <h4 className="text-sm font-semibold mb-3 text-foreground">Detalhamento por Tarefa</h4>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tarefa</TableHead>
+                        <TableHead>Etapa</TableHead>
+                        <TableHead>Valor</TableHead>
+                        <TableHead>Período</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {taskExpenses && taskExpenses.map((task: any) => (
+                        <TableRow key={task.tarefa_id}>
+                          <TableCell className="font-medium">
+                            {task.nome_tarefa}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{task.etapa_nome}</Badge>
+                          </TableCell>
+                          <TableCell className="font-medium text-primary">
+                            {formatCurrency(task.relevantCost)}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {task.data_inicio ? new Date(task.data_inicio).toLocaleDateString('pt-BR') : '-'} até{' '}
+                            {task.data_fim_prevista ? new Date(task.data_fim_prevista).toLocaleDateString('pt-BR') : '-'}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </>
             ) : (
-              <>
+              <div className="text-center py-8">
+                <Receipt className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                 <p className="text-muted-foreground mb-4">Nenhum gasto registrado ainda.</p>
                 {showAddButton && (
                   <Button onClick={() => setIsAddingExpense(true)} size="sm">
@@ -376,7 +415,7 @@ export function ExpenseManagement({
                     Registrar Primeiro Gasto
                   </Button>
                 )}
-              </>
+              </div>
             )}
           </div>
         ) : (
