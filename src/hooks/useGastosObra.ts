@@ -87,21 +87,15 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
             acc.total_recebimento_foa += valor;
           }
 
-          // FOF_FIN and FOA_AUTO can be entrada or saida
-          if (tipo === "entrada") {
-            if (fonte === "FOF_FIN") {
-              acc.total_fof_financiamento += valor;
-            } else if (fonte === "FOA_AUTO") {
-              acc.total_foa_auto += valor;
-            }
-          } else if (tipo === "saida") {
+          if (tipo === "saida") {
             // Accumulate ALL saidas for total_custos
             acc.total_custos += valor;
             
+            // Accumulate only SAIDAS by specific source
             if (fonte === "FOF_FIN") {
-              acc.total_fof_financiamento -= valor; // Subtract saidas from FOF_FIN
+              acc.total_fof_financiamento += valor; // Sum FOF_FIN saidas
             } else if (fonte === "FOA_AUTO") {
-              acc.total_foa_auto -= valor; // Subtract saidas from FOA_AUTO
+              acc.total_foa_auto += valor; // Sum FOA_AUTO saidas
             } else {
               acc.total_saidas += valor; // Other saidas without specific source
             }
@@ -112,10 +106,10 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
         },
         {
           total_recebimento_foa: 0,
-          total_fof_financiamento: 0,
-          total_foa_auto: 0,
-          total_saidas: 0,
-          total_custos: 0,
+          total_fof_financiamento: 0, // Now will be sum of FOF_FIN saidas
+          total_foa_auto: 0,            // Now will be sum of FOA_AUTO saidas
+          total_saidas: 0,              // Other saidas
+          total_custos: 0,              // ALL saidas
           saldo_atual: 0,
           total_movimentos: 0,
         } as GastoObraSummary
