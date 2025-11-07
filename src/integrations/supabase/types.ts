@@ -3076,6 +3076,19 @@ export type Database = {
         Args: { descricao_texto: string }
         Returns: string
       }
+      calcular_dre_evolucao_mensal: {
+        Args: { p_projeto_id: number }
+        Returns: {
+          ano: number
+          custos_totais: number
+          foa_auto: number
+          fof_financiamento: number
+          mes: number
+          periodo: string
+          receita_cliente: number
+          resultado: number
+        }[]
+      }
       calcular_dre_mensal: {
         Args: { p_ano: number; p_mes: number; p_projeto_id: number }
         Returns: {
@@ -3086,6 +3099,22 @@ export type Database = {
           fof_financiamento: number
           receita_cliente: number
           resultado: number
+        }[]
+      }
+      calcular_dre_por_periodo: {
+        Args: {
+          p_data_fim: string
+          p_data_inicio: string
+          p_projeto_id: number
+        }
+        Returns: {
+          custos_totais: number
+          foa_auto: number
+          fof_financiamento: number
+          receita_cliente: number
+          resultado: number
+          total_entradas: number
+          total_saidas: number
         }[]
       }
       calculate_dias_restantes: {

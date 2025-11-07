@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProjects } from "@/hooks/useProjects";
 import { generateDREPDF } from "@/utils/pdfGenerator";
+import { DREChartsSection } from "@/components/financial/DREChartsSection";
 
 export function DashboardDRESection() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -220,6 +221,10 @@ export function DashboardDRESection() {
           )}
         </CardContent>
       </Card>
+
+      {selectedProject && dreLinhas && dreLinhas.length > 0 && (
+        <DREChartsSection projectId={selectedProject.id} />
+      )}
     </div>
   );
 }
