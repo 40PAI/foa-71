@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface CategoryExpenseData {
   fromTasks: number;
+  fromCentroCusto: number;
   manual: number;
   total: number;
 }
@@ -24,10 +25,10 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
     queryFn: async () => {
       if (!projectId) {
         return {
-          material: { fromTasks: 0, manual: 0, total: 0 },
-          mao_obra: { fromTasks: 0, manual: 0, total: 0 },
-          patrimonio: { fromTasks: 0, manual: 0, total: 0 },
-          indireto: { fromTasks: 0, manual: 0, total: 0 },
+          material: { fromTasks: 0, fromCentroCusto: 0, manual: 0, total: 0 },
+          mao_obra: { fromTasks: 0, fromCentroCusto: 0, manual: 0, total: 0 },
+          patrimonio: { fromTasks: 0, fromCentroCusto: 0, manual: 0, total: 0 },
+          indireto: { fromTasks: 0, fromCentroCusto: 0, manual: 0, total: 0 },
         };
       }
 
@@ -51,6 +52,26 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         console.error('Error fetching manual expenses:', manualError);
       }
 
+      // Fetch financial movements from centros de custo
+      const { data: movimentos, error: movimentosError } = await supabase
+        .from('movimentos_financeiros')
+        .select('categoria, valor, tipo_movimento')
+        .eq('projeto_id', projectId)
+        .eq('status_aprovacao', 'aprovado');
+
+      if (movimentosError) {
+        console.error('Error fetching movimentos financeiros:', movimentosError);
+      }
+
+      // Helper function to map categories
+      const mapCategory = (cat: string): 'material' | 'mao_obra' | 'patrimonio' | 'indireto' => {
+        const lower = cat.toLowerCase();
+        if (lower.includes('material')) return 'material';
+        if (lower.includes('mão') || lower.includes('mao') || lower.includes('obra')) return 'mao_obra';
+        if (lower.includes('patrimônio') || lower.includes('patrimonio') || lower.includes('equipamento')) return 'patrimonio';
+        return 'indireto';
+      };
+
       // Calculate manual totals by category
       const manualByCategory = {
         material: 0,
@@ -66,6 +87,20 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         }
       });
 
+      // Calculate centro de custo totals by category
+      const centroCustoByCategory = {
+        material: 0,
+        mao_obra: 0,
+        patrimonio: 0,
+        indireto: 0,
+      };
+
+      movimentos?.forEach((movimento) => {
+        const category = mapCategory(movimento.categoria);
+        const valor = movimento.tipo_movimento === 'saida' ? Number(movimento.valor) : -Number(movimento.valor);
+        centroCustoByCategory[category] += valor || 0;
+      });
+
       // Combine both sources (RPC returns array, get first element)
       const integratedData = integrated?.[0];
       const material_from_tasks = Number(integratedData?.material_expenses) || 0;
@@ -76,23 +111,27 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
       return {
         material: {
           fromTasks: material_from_tasks,
+          fromCentroCusto: centroCustoByCategory.material,
           manual: manualByCategory.material,
-          total: material_from_tasks + manualByCategory.material,
+          total: material_from_tasks + centroCustoByCategory.material + manualByCategory.material,
         },
         mao_obra: {
           fromTasks: labor_from_tasks,
+          fromCentroCusto: centroCustoByCategory.mao_obra,
           manual: manualByCategory.mao_obra,
-          total: labor_from_tasks + manualByCategory.mao_obra,
+          total: labor_from_tasks + centroCustoByCategory.mao_obra + manualByCategory.mao_obra,
         },
         patrimonio: {
           fromTasks: equipment_from_tasks,
+          fromCentroCusto: centroCustoByCategory.patrimonio,
           manual: manualByCategory.patrimonio,
-          total: equipment_from_tasks + manualByCategory.patrimonio,
+          total: equipment_from_tasks + centroCustoByCategory.patrimonio + manualByCategory.patrimonio,
         },
         indireto: {
           fromTasks: indirect_from_tasks,
+          fromCentroCusto: centroCustoByCategory.indireto,
           manual: manualByCategory.indireto,
-          total: indirect_from_tasks + manualByCategory.indireto,
+          total: indirect_from_tasks + centroCustoByCategory.indireto + manualByCategory.indireto,
         },
       };
     },
