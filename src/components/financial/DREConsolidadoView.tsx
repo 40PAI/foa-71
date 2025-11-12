@@ -1,14 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
+import { FileDown, AlertTriangle } from "lucide-react";
 import { useDREConsolidado } from "@/hooks/useDREConsolidado";
 import { formatCurrency } from "@/utils/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { toast } from "sonner";
 
 export function DREConsolidadoView() {
-  const { data: linhas, isLoading } = useDREConsolidado();
+  const { data: linhas, isLoading, isError, error, refetch } = useDREConsolidado();
 
   const totais = linhas?.reduce(
     (acc, linha) => ({
@@ -44,7 +45,18 @@ export function DREConsolidadoView() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {isLoading ? (
+        {isError ? (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Erro ao carregar DRE Consolidado</AlertTitle>
+            <AlertDescription className="mt-2 space-y-2">
+              <p>{error?.message || "Ocorreu um erro ao buscar os dados."}</p>
+              <Button onClick={() => refetch()} variant="outline" size="sm">
+                Tentar novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-12 w-full" />
@@ -107,7 +119,7 @@ export function DREConsolidadoView() {
           </div>
         ) : (
           <div className="text-center py-8 text-muted-foreground">
-            Nenhum dado encontrado para o período selecionado
+            Nenhum dado encontrado
           </div>
         )}
       </CardContent>
