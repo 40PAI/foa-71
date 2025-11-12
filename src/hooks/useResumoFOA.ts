@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 export interface ResumoFOA {
   projeto_id: number;
@@ -11,6 +12,35 @@ export interface ResumoFOA {
 }
 
 export function useResumoFOA(projectId?: number) {
+  const queryClient = useQueryClient();
+
+  // Realtime subscription para invalidar quando houver mudanças
+  useEffect(() => {
+    const channel = supabase
+      .channel('resumo-foa-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'movimentos_financeiros' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
+          queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'reembolsos_foa_fof' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
+          queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   return useQuery({
     queryKey: ["resumo-foa", projectId],
     queryFn: async () => {
@@ -19,9 +49,15 @@ export function useResumoFOA(projectId?: number) {
           p_projeto_id: projectId !== undefined ? projectId : null 
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao calcular resumo FOA:', error);
+        throw error;
+      }
+      
+      console.log('Resumo FOA data:', data);
       return data as ResumoFOA[];
     },
+    staleTime: 30000, // 30 segundos
   });
 }
 
@@ -34,7 +70,23 @@ export function useResumoFOAGeral() {
           p_projeto_id: null // null = todos os projetos
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao calcular resumo FOA geral:', error);
+        throw error;
+      }
+
+      console.log('Resumo FOA geral raw data:', data);
+
+      // Se não houver dados, retornar zeros
+      if (!data || data.length === 0) {
+        console.log('Nenhum dado FOA encontrado');
+        return {
+          fof_financiamento: 0,
+          amortizacao: 0,
+          custos_suportados: 0,
+          divida_foa_com_fof: 0,
+        };
+      }
 
       // Agregar todos os projetos
       const totais = (data as ResumoFOA[]).reduce(
@@ -52,7 +104,9 @@ export function useResumoFOAGeral() {
         }
       );
 
+      console.log('Resumo FOA geral totais:', totais);
       return totais;
     },
+    staleTime: 30000, // 30 segundos
   });
 }
