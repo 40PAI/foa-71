@@ -74,8 +74,12 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
         descricao: formData.descricao,
         tipo_movimento: formData.tipo_movimento,
         valor: formData.valor,
-        fonte_financiamento: formData.fonte_financiamento,
       };
+
+      // Adicionar fonte_financiamento apenas se for entrada
+      if (formData.tipo_movimento === "entrada" && formData.fonte_financiamento) {
+        gastoData.fonte_financiamento = formData.fonte_financiamento;
+      }
 
       // Adicionar campos opcionais apenas se tiverem valor
       if (formData.observacoes?.trim()) {
@@ -136,14 +140,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
             <Label htmlFor="tipo_movimento">Tipo de Movimento *</Label>
             <Select
               value={formData.tipo_movimento}
-              onValueChange={(value: "entrada" | "saida") => {
-                // Limpar fonte_financiamento ao trocar tipo
-                setFormData({ 
-                  ...formData, 
-                  tipo_movimento: value,
-                  fonte_financiamento: value === "entrada" ? "REC_FOA" : "FOF_FIN"
-                });
-              }}
+              onValueChange={(value: "entrada" | "saida") => setFormData({ ...formData, tipo_movimento: value })}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -156,30 +153,26 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="fonte_financiamento">Fonte de Financiamento *</Label>
-          <Select
-            value={formData.fonte_financiamento}
-            onValueChange={(value: "REC_FOA" | "FOF_FIN" | "FOA_AUTO") => 
-              setFormData({ ...formData, fonte_financiamento: value })
-            }
-            required
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {formData.tipo_movimento === "entrada" ? (
+        {formData.tipo_movimento === "entrada" && (
+          <div className="space-y-2">
+            <Label htmlFor="fonte_financiamento">Fonte de Financiamento *</Label>
+            <Select
+              value={formData.fonte_financiamento}
+              onValueChange={(value: "REC_FOA" | "FOF_FIN" | "FOA_AUTO") => 
+                setFormData({ ...formData, fonte_financiamento: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
                 <SelectItem value="REC_FOA">Recebimento FOA (Cliente)</SelectItem>
-              ) : (
-                <>
-                  <SelectItem value="FOF_FIN">FOF Financiamento</SelectItem>
-                  <SelectItem value="FOA_AUTO">FOA Auto-financiamento</SelectItem>
-                </>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
+                <SelectItem value="FOF_FIN">FOF Financiamento</SelectItem>
+                <SelectItem value="FOA_AUTO">FOA Auto-financiamento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="descricao">Descrição *</Label>
