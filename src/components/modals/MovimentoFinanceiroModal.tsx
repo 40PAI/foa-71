@@ -69,18 +69,14 @@ export function MovimentoFinanceiroModal({ open, onOpenChange, movimento, projec
               <Label htmlFor="tipo_movimento">Tipo*</Label>
               <Select
                 value={formData.tipo_movimento}
-                onValueChange={(value: TipoMovimento) => setFormData({ 
-                  ...formData, 
-                  tipo_movimento: value,
-                  fonte_financiamento: undefined // Limpar fonte ao mudar tipo
-                })}
+                onValueChange={(value: TipoMovimento) => setFormData({ ...formData, tipo_movimento: value })}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="entrada">Entrada (Recebimento)</SelectItem>
-                  <SelectItem value="saida">Saída (Gasto)</SelectItem>
+                  <SelectItem value="entrada">Entrada</SelectItem>
+                  <SelectItem value="saida">Saída</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -118,26 +114,18 @@ export function MovimentoFinanceiroModal({ open, onOpenChange, movimento, projec
             </div>
             
             <div>
-              <Label htmlFor="fonte_financiamento">
-                Fonte de Financiamento{formData.tipo_movimento === "saida" && " *"}
-              </Label>
+              <Label htmlFor="fonte_financiamento">Fonte de Financiamento</Label>
               <Select
                 value={formData.fonte_financiamento || ''}
                 onValueChange={(value: FonteFinanciamento) => setFormData({ ...formData, fonte_financiamento: value })}
-                required={formData.tipo_movimento === "saida"}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
                 <SelectContent>
-                  {formData.tipo_movimento === "entrada" ? (
-                    <SelectItem value="REC_FOA">Recebimento FOA (Cliente)</SelectItem>
-                  ) : (
-                    <>
-                      <SelectItem value="FOF_FIN">FOF Financiamento</SelectItem>
-                      <SelectItem value="FOA_AUTO">FOA Auto Financiamento</SelectItem>
-                    </>
-                  )}
+                  <SelectItem value="REC_FOA">Rec. FOA - Recebimento FOA</SelectItem>
+                  <SelectItem value="FOF_FIN">FOF Financiamento - Aporte FOF</SelectItem>
+                  <SelectItem value="FOA_AUTO">FOA Auto Financiamento - Fundos Próprios</SelectItem>
                 </SelectContent>
               </Select>
             </div>
