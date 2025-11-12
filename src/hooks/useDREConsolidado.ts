@@ -7,8 +7,10 @@ export interface DRELinhaConsolidada {
   centro_nome: string;
   projeto_nome: string;
   receita_cliente: number;
-  fof_financiamento: number;
-  foa_auto: number;
+  fof_entrada: number;
+  fof_saida: number;
+  foa_entrada: number;
+  foa_saida: number;
   custos_totais: number;
   resultado: number;
 }

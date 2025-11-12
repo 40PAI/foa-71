@@ -14,12 +14,14 @@ export function DREConsolidadoView() {
   const totais = linhas?.reduce(
     (acc, linha) => ({
       receita_cliente: acc.receita_cliente + Number(linha.receita_cliente),
-      fof_financiamento: acc.fof_financiamento + Number(linha.fof_financiamento),
-      foa_auto: acc.foa_auto + Number(linha.foa_auto),
+      fof_entrada: acc.fof_entrada + Number(linha.fof_entrada),
+      fof_saida: acc.fof_saida + Number(linha.fof_saida),
+      foa_entrada: acc.foa_entrada + Number(linha.foa_entrada),
+      foa_saida: acc.foa_saida + Number(linha.foa_saida),
       custos_totais: acc.custos_totais + Number(linha.custos_totais),
       resultado: acc.resultado + Number(linha.resultado),
     }),
-    { receita_cliente: 0, fof_financiamento: 0, foa_auto: 0, custos_totais: 0, resultado: 0 }
+    { receita_cliente: 0, fof_entrada: 0, fof_saida: 0, foa_entrada: 0, foa_saida: 0, custos_totais: 0, resultado: 0 }
   );
 
   const handleExportar = () => {
@@ -67,21 +69,33 @@ export function DREConsolidadoView() {
             <Table>
               <TableHeader className="bg-primary/90">
                 <TableRow className="hover:bg-primary/90">
-                  <TableHead className="text-primary-foreground font-bold">Nº</TableHead>
-                  <TableHead className="text-primary-foreground font-bold">Projeto</TableHead>
-                  <TableHead className="text-right text-primary-foreground font-bold">
+                  <TableHead rowSpan={2} className="text-primary-foreground font-bold align-middle">Nº</TableHead>
+                  <TableHead rowSpan={2} className="text-primary-foreground font-bold align-middle">Projeto</TableHead>
+                  <TableHead rowSpan={2} className="text-right text-primary-foreground font-bold align-middle">
                     FOA RECEBIMENTO DO CLIENTE
                     <div className="text-xs text-green-300 mt-1">▲ ENTRADA</div>
                   </TableHead>
-                  <TableHead className="text-right text-primary-foreground font-bold">
+                  <TableHead colSpan={2} className="text-center text-primary-foreground font-bold border-l border-primary-foreground/20">
                     FOF FINANCIAMENTO
-                    <div className="text-xs text-red-300 mt-1">▼ SAÍDA</div>
                   </TableHead>
-                  <TableHead className="text-right text-primary-foreground font-bold">
+                  <TableHead colSpan={2} className="text-center text-primary-foreground font-bold border-l border-primary-foreground/20">
                     FOA AUTO FINANCIAMENTO
-                    <div className="text-xs text-red-300 mt-1">▼ SAÍDA</div>
                   </TableHead>
-                  <TableHead className="text-right text-primary-foreground font-bold">RESULTADO</TableHead>
+                  <TableHead rowSpan={2} className="text-right text-primary-foreground font-bold align-middle border-l border-primary-foreground/20">RESULTADO</TableHead>
+                </TableRow>
+                <TableRow className="hover:bg-primary/90">
+                  <TableHead className="text-center text-primary-foreground font-medium text-xs border-l border-primary-foreground/20">
+                    entrada
+                  </TableHead>
+                  <TableHead className="text-center text-primary-foreground font-medium text-xs">
+                    saida
+                  </TableHead>
+                  <TableHead className="text-center text-primary-foreground font-medium text-xs border-l border-primary-foreground/20">
+                    entrada
+                  </TableHead>
+                  <TableHead className="text-center text-primary-foreground font-medium text-xs">
+                    saida
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -90,9 +104,11 @@ export function DREConsolidadoView() {
                     <TableCell className="font-medium">{linha.numero}</TableCell>
                     <TableCell className="font-medium">{linha.projeto_nome}</TableCell>
                     <TableCell className="text-right">{formatCurrency(linha.receita_cliente)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(linha.fof_financiamento)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(linha.foa_auto)}</TableCell>
-                    <TableCell className={`text-right font-medium ${
+                    <TableCell className="text-right border-l">{formatCurrency(linha.fof_entrada)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(linha.fof_saida)}</TableCell>
+                    <TableCell className="text-right border-l">{formatCurrency(linha.foa_entrada)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(linha.foa_saida)}</TableCell>
+                    <TableCell className={`text-right font-medium border-l ${
                       linha.resultado >= 0 ? "text-green-600 dark:text-green-400" : "text-destructive"
                     }`}>
                       {formatCurrency(linha.resultado)}
@@ -107,13 +123,19 @@ export function DREConsolidadoView() {
                     <TableCell className="text-right font-bold text-primary-foreground">
                       {formatCurrency(totais.receita_cliente)}
                     </TableCell>
-                    <TableCell className="text-right font-bold text-primary-foreground">
-                      {formatCurrency(totais.fof_financiamento)}
+                    <TableCell className="text-right font-bold text-primary-foreground border-l">
+                      {formatCurrency(totais.fof_entrada)}
                     </TableCell>
                     <TableCell className="text-right font-bold text-primary-foreground">
-                      {formatCurrency(totais.foa_auto)}
+                      {formatCurrency(totais.fof_saida)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-primary-foreground border-l">
+                      {formatCurrency(totais.foa_entrada)}
                     </TableCell>
                     <TableCell className="text-right font-bold text-primary-foreground">
+                      {formatCurrency(totais.foa_saida)}
+                    </TableCell>
+                    <TableCell className="text-right font-bold text-primary-foreground border-l">
                       {formatCurrency(totais.resultado)}
                     </TableCell>
                   </TableRow>

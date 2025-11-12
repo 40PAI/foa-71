@@ -3082,8 +3082,10 @@ export type Database = {
           centro_custo_id: string
           centro_nome: string
           custos_totais: number
-          foa_auto: number
-          fof_financiamento: number
+          foa_entrada: number
+          foa_saida: number
+          fof_entrada: number
+          fof_saida: number
           numero: number
           projeto_nome: string
           receita_cliente: number
