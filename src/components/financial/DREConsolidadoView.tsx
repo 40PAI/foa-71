@@ -77,14 +77,9 @@ export function DREConsolidadoView() {
               </TableHeader>
               <TableBody>
                 {linhas.map((linha) => (
-                  <TableRow key={linha.centro_custo_id}>
+                  <TableRow key={linha.numero}>
                     <TableCell className="font-medium">{linha.numero}</TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span className="text-sm text-muted-foreground">{linha.projeto_nome}</span>
-                        <span>{linha.centro_nome}</span>
-                      </div>
-                    </TableCell>
+                    <TableCell className="font-medium">{linha.projeto_nome}</TableCell>
                     <TableCell className="text-right">{formatCurrency(linha.receita_cliente)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(linha.fof_financiamento)}</TableCell>
                     <TableCell className="text-right">{formatCurrency(linha.foa_auto)}</TableCell>
