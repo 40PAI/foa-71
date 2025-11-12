@@ -421,6 +421,18 @@ export function OptimizedFinancasPage() {
       }}>
           <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
         </CollapsibleFinancialSection>
+
+        <CollapsibleFinancialSection 
+          value="reembolsos-foa-fof" 
+          title="Controle de Dívida FOA ↔ FOF" 
+          icon={ArrowRight}
+          badge={{
+            text: "Automático",
+            variant: "default"
+          }}
+        >
+          <ReembolsosFOASection projectId={selectedProjectId} />
+        </CollapsibleFinancialSection>
       </Accordion>
     </div>;
 }

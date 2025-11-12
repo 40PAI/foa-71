@@ -3133,6 +3133,17 @@ export type Database = {
           total_saidas: number
         }[]
       }
+      calcular_resumo_foa: {
+        Args: { p_projeto_id?: number }
+        Returns: {
+          amortizacao: number
+          custos_suportados: number
+          divida_foa_com_fof: number
+          fof_financiamento: number
+          projeto_id: number
+          projeto_nome: string
+        }[]
+      }
       calculate_dias_restantes: {
         Args: { data_requisicao: string; prazo_limite_dias: number }
         Returns: string

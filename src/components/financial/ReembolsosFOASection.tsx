@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { useReembolsosFOA, useReembolsosAcumulados } from "@/hooks/useReembolsosFOA";
+import { useReembolsosFOA } from "@/hooks/useReembolsosFOA";
+import { useResumoFOA } from "@/hooks/useResumoFOA";
 import { ReembolsoFOAModal } from "@/components/modals/ReembolsoFOAModal";
 import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
@@ -16,10 +17,13 @@ interface ReembolsosFOASectionProps {
 
 export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const { data: reembolsos, isLoading } = useReembolsosFOA(projectId);
-  const { data: totais } = useReembolsosAcumulados(projectId);
+  const { data: reembolsos, isLoading: loadingReembolsos } = useReembolsosFOA(projectId);
+  const { data: resumoData, isLoading: loadingResumo } = useResumoFOA(projectId);
+  
+  // Pegar o primeiro (e único) projeto do array
+  const resumo = resumoData && resumoData.length > 0 ? resumoData[0] : null;
 
-  if (isLoading) {
+  if (loadingReembolsos || loadingResumo) {
     return <Skeleton className="h-[400px] w-full" />;
   }
 
@@ -29,14 +33,16 @@ export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Financiamento FOF</CardTitle>
+            <CardTitle className="text-sm font-medium">FOF Financiamento</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(totais?.aporte || 0)}
+              {formatCurrency(resumo?.fof_financiamento || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Total recebido de FOF</p>
+            <p className="text-xs text-muted-foreground">
+              Total recebido de FOF (Centro de Custos)
+            </p>
           </CardContent>
         </Card>
 
@@ -47,22 +53,24 @@ export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {formatCurrency(totais?.amortizacao || 0)}
+              {formatCurrency(resumo?.amortizacao || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">Total devolvido para FOF</p>
+            <p className="text-xs text-muted-foreground">
+              Total amortizado para FOF
+            </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className={resumo && resumo.divida_foa_com_fof > 0 ? "border-destructive" : "border-green-600"}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo em Aberto</CardTitle>
+            <CardTitle className="text-sm font-medium">Dívida FOA ↔ FOF</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(totais?.saldo || 0)}
+            <div className={`text-2xl font-bold ${resumo && resumo.divida_foa_com_fof > 0 ? "text-destructive" : "text-green-600"}`}>
+              {formatCurrency(resumo?.divida_foa_com_fof || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {totais && totais.saldo > 0 ? 'A favor de FOA' : totais && totais.saldo < 0 ? 'Em dívida com FOF' : 'Equilibrado'}
+              {resumo && resumo.divida_foa_com_fof > 0 ? '⚠️ A reembolsar' : '✅ Sem dívida'}
             </p>
           </CardContent>
         </Card>

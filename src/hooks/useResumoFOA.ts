@@ -14,15 +14,10 @@ export function useResumoFOA(projectId?: number) {
   return useQuery({
     queryKey: ["resumo-foa", projectId],
     queryFn: async () => {
-      let query = supabase
-        .from("vw_resumo_foa")
-        .select("*");
-
-      if (projectId) {
-        query = query.eq("projeto_id", projectId);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .rpc('calcular_resumo_foa', { 
+          p_projeto_id: projectId || null 
+        });
 
       if (error) throw error;
       return data as ResumoFOA[];
@@ -35,8 +30,9 @@ export function useResumoFOAGeral() {
     queryKey: ["resumo-foa-geral"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("vw_resumo_foa")
-        .select("*");
+        .rpc('calcular_resumo_foa', { 
+          p_projeto_id: null // null = todos os projetos
+        });
 
       if (error) throw error;
 
