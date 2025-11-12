@@ -3076,6 +3076,20 @@ export type Database = {
         Args: { descricao_texto: string }
         Returns: string
       }
+      calcular_dre_consolidado: {
+        Args: { p_ano: number; p_mes: number }
+        Returns: {
+          centro_custo_id: string
+          centro_nome: string
+          custos_totais: number
+          foa_auto: number
+          fof_financiamento: number
+          numero: number
+          projeto_nome: string
+          receita_cliente: number
+          resultado: number
+        }[]
+      }
       calcular_dre_evolucao_mensal: {
         Args: { p_projeto_id: number }
         Returns: {

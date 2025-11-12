@@ -2,17 +2,19 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDREPorCentro, useSalvarDRE } from "@/hooks/useDREPorCentro";
 import { formatCurrency } from "@/utils/currency";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileDown, Save } from "lucide-react";
+import { FileDown, Save, Grid3x3, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProjects } from "@/hooks/useProjects";
 import { generateDREPDF } from "@/utils/pdfGenerator";
 import { DREChartsSection } from "@/components/financial/DREChartsSection";
+import { DREConsolidadoView } from "@/components/financial/DREConsolidadoView";
 
 export function DashboardDRESection() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -76,6 +78,23 @@ export function DashboardDRESection() {
 
   return (
     <div className="space-y-4">
+      <Tabs defaultValue="consolidado" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="consolidado" className="flex items-center gap-2">
+            <Grid3x3 className="h-4 w-4" />
+            DRE Consolidado
+          </TabsTrigger>
+          <TabsTrigger value="individual" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            DRE por Projeto
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="consolidado" className="mt-6">
+          <DREConsolidadoView />
+        </TabsContent>
+
+        <TabsContent value="individual" className="mt-6 space-y-4">
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -225,6 +244,8 @@ export function DashboardDRESection() {
       {selectedProject && dreLinhas && dreLinhas.length > 0 && (
         <DREChartsSection projectId={selectedProject.id} />
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

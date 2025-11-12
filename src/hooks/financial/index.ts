@@ -63,6 +63,9 @@ export { useCategoryIntegratedExpenses } from "../useCategoryIntegratedExpenses"
 // Task expenses by category
 export { useTaskExpensesByCategory } from "../useTaskExpensesByCategory";
 
+// DRE hooks
+export { useDREConsolidado, type DRELinhaConsolidada } from "../useDREConsolidado";
+
 // Re-export types
 export type {
   Finance,
