@@ -29,6 +29,7 @@ export interface TarefasResumo {
 }
 
 export interface ProjetoTarefas {
+  projeto_id: number;
   projeto_nome: string;
   total_tarefas: number;
   concluidas: number;

@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { TarefasResumo, ProjetoTarefas } from "@/hooks/useDashboardGeral";
+import { useNavigate } from "react-router-dom";
+import { useProjectContext } from "@/contexts/ProjectContext";
 
 interface DashboardTarefasSectionProps {
   tarefasResumo: TarefasResumo;
@@ -11,6 +13,14 @@ export function DashboardTarefasSection({
   tarefasResumo,
   topProjetosTarefas
 }: DashboardTarefasSectionProps) {
+  const navigate = useNavigate();
+  const { setSelectedProjectId } = useProjectContext();
+
+  const handleProjetoClick = (projetoId: number) => {
+    setSelectedProjectId(projetoId);
+    navigate('/tarefas');
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -49,7 +59,11 @@ export function DashboardTarefasSection({
             <h3 className="text-sm font-semibold mb-3">Top 5 Projetos por Tarefas Concluídas</h3>
             <div className="space-y-2">
               {topProjetosTarefas.map((projeto, index) => (
-                <div key={index} className="flex items-center justify-between p-2 border rounded bg-card">
+                <div 
+                  key={index} 
+                  onClick={() => handleProjetoClick(projeto.projeto_id)}
+                  className="flex items-center justify-between p-2 border rounded bg-card cursor-pointer hover:bg-accent hover:shadow-md transition-all duration-200"
+                >
                   <span className="text-sm font-medium truncate flex-1">
                     {projeto.projeto_nome}
                   </span>
