@@ -13,6 +13,7 @@ import { SegurancaPage } from "@/pages/SegurancaPage";
 import { TarefasPage } from "@/pages/TarefasPage";
 import { GraficosPage } from "@/pages/GraficosPage";
 import { UserManagementPage } from "@/pages/UserManagementPage";
+import { DividaFOAPage } from "@/pages/DividaFOAPage";
 import { useSidebar } from "@/components/ui/sidebar";
 
 export function MainContent() {
@@ -28,6 +29,7 @@ export function MainContent() {
           <Route path="/centros-custo" element={<CentrosCustoPage />} />
           <Route path="/contas-fornecedores" element={<ContasFornecedoresPage />} />
           <Route path="/gastos-obra" element={<GastosObraPage />} />
+          <Route path="/divida-foa-fof" element={<DividaFOAPage />} />
           <Route path="/compras" element={<ComprasPage />} />
           <Route path="/armazem" element={<ArmazemPage />} />
           <Route path="/rh" element={<RhPage />} />

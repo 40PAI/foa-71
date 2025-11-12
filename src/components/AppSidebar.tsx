@@ -32,6 +32,7 @@ import {
   X,
   FileText,
   ChevronDown,
+  ArrowRight,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -105,6 +106,12 @@ const financasItems = [
     path: "/contas-fornecedores",
     module: "financas",
   },
+  {
+    title: "Controle de Dívida FOA ↔ FOF",
+    icon: ArrowRight,
+    path: "/divida-foa-fof",
+    module: "financas",
+  },
 ];
 export function AppSidebar() {
   const { state, setOpenMobile, open: sidebarOpen, toggleSidebar } = useSidebar();
@@ -131,7 +138,8 @@ export function AppSidebar() {
   // Check if any financas route is active
   const isFinancasActive = filteredFinancasItems.some(item => currentPath === item.path) || 
     currentPath === "/financas" || 
-    currentPath === "/contas-fornecedores";
+    currentPath === "/contas-fornecedores" ||
+    currentPath === "/divida-foa-fof";
   const handleNavClick = () => {
     setOpenMobile(false);
   };
@@ -257,21 +265,21 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              <CollapsibleContent>
+              <CollapsibleContent className="ml-2 border-l-2 border-sidebar-accent/30">
                 {filteredFinancasItems.map((item) => (
                   <SidebarMenuItem key={item.path}>
                     <SidebarMenuButton
                       asChild
                       isActive={currentPath === item.path}
-                      className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3 pl-8"
+                      className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[36px] sm:min-h-[40px] px-2 sm:px-3 pl-6 sm:pl-8 ml-1"
                     >
                       <NavLink
                         to={item.path}
-                        className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
+                        className="flex items-center gap-2 p-1 sm:p-2 text-xs"
                         onClick={handleNavClick}
                       >
-                        <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                        <span className="truncate">{item.title}</span>
+                        <item.icon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                        <span className="truncate text-xs sm:text-sm">{item.title}</span>
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
