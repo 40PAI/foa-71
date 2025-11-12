@@ -4,6 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { formatCurrency } from "@/utils/formatters";
 import type { ProjetoLista } from "@/hooks/useDashboardGeral";
 import { cn } from "@/lib/utils";
+import { RefreshCw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface DashboardProjetosSectionProps {
   projetos: ProjetoLista[];
@@ -25,10 +27,19 @@ const statusFinanceiroColors = {
 };
 
 export function DashboardProjetosSection({ projetos }: DashboardProjetosSectionProps) {
+  const { dataUpdatedAt } = useQuery({ queryKey: ["dashboard-geral"] });
+  const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString('pt-BR') : "—";
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-responsive-xl">🏗️ Projetos - Visão Rápida</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-responsive-xl">🏗️ Projetos - Visão Rápida</CardTitle>
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <RefreshCw className="h-3 w-3" />
+            <span>Atualizado: {lastUpdate}</span>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {projetos.length > 0 ? (

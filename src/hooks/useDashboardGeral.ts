@@ -174,7 +174,7 @@ export function useDashboardGeral() {
     enabled: !!user?.id,
     retry: 2, // Tentar 2 vezes
     retryDelay: 1000, // 1 segundo entre tentativas
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 1000, // 30 segundos para atualização mais rápida
     gcTime: 10 * 60 * 1000,
   });
 }

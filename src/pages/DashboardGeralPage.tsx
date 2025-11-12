@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 import { useDashboardGeral } from "@/hooks/useDashboardGeral";
+import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardKPISection } from "@/components/dashboard/DashboardKPISection";
@@ -28,6 +29,7 @@ export function DashboardGeralPage() {
 function DashboardGeralContent() {
   const { profile } = useAuth();
   const permissions = useUserPermissions();
+  useRealtimeDashboard(); // Atualização automática em tempo real
   const { data: dashboardData, isLoading, error, refetch } = useDashboardGeral();
 
   const [financasOpen, setFinancasOpen] = useState(true);
