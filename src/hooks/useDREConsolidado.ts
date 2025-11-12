@@ -13,19 +13,15 @@ export interface DRELinhaConsolidada {
   resultado: number;
 }
 
-export function useDREConsolidado(mes: number, ano: number) {
+export function useDREConsolidado() {
   return useQuery({
-    queryKey: ["dre-consolidado", mes, ano],
+    queryKey: ["dre-consolidado"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("calcular_dre_consolidado", {
-        p_mes: mes,
-        p_ano: ano,
-      });
+      const { data, error } = await supabase.rpc("calcular_dre_consolidado");
 
       if (error) throw error;
       return (data || []) as DRELinhaConsolidada[];
     },
-    enabled: mes > 0 && ano > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }

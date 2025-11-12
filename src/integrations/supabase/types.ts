@@ -3077,7 +3077,7 @@ export type Database = {
         Returns: string
       }
       calcular_dre_consolidado: {
-        Args: { p_ano: number; p_mes: number }
+        Args: never
         Returns: {
           centro_custo_id: string
           centro_nome: string

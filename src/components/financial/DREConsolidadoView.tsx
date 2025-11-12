@@ -1,20 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
-import { useState } from "react";
 import { useDREConsolidado } from "@/hooks/useDREConsolidado";
 import { formatCurrency } from "@/utils/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
 export function DREConsolidadoView() {
-  const currentDate = new Date();
-  const [mes, setMes] = useState(currentDate.getMonth() + 1);
-  const [ano, setAno] = useState(currentDate.getFullYear());
-
-  const { data: linhas, isLoading } = useDREConsolidado(mes, ano);
+  const { data: linhas, isLoading } = useDREConsolidado();
 
   const totais = linhas?.reduce(
     (acc, linha) => ({
@@ -50,35 +44,6 @@ export function DREConsolidadoView() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Período:</span>
-          <Select value={mes.toString()} onValueChange={(v) => setMes(parseInt(v))}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Mês" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                <SelectItem key={m} value={m.toString()}>
-                  {new Date(2024, m - 1).toLocaleDateString("pt-BR", { month: "long" })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={ano.toString()} onValueChange={(v) => setAno(parseInt(v))}>
-            <SelectTrigger className="w-28">
-              <SelectValue placeholder="Ano" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i).map((y) => (
-                <SelectItem key={y} value={y.toString()}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
