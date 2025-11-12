@@ -16,7 +16,7 @@ export function useResumoFOA(projectId?: number) {
     queryFn: async () => {
       const { data, error } = await supabase
         .rpc('calcular_resumo_foa', { 
-          p_projeto_id: projectId || null 
+          p_projeto_id: projectId !== undefined ? projectId : null 
         });
 
       if (error) throw error;

@@ -17,7 +17,7 @@ export interface ReembolsoFOA {
   updated_at: string;
 }
 
-// Buscar reembolsos por projeto
+// Buscar reembolsos por projeto (se projectId = undefined, busca TODOS)
 export function useReembolsosFOA(projectId?: number) {
   return useQuery({
     queryKey: ["reembolsos-foa", projectId],
@@ -27,7 +27,7 @@ export function useReembolsosFOA(projectId?: number) {
         .select("*")
         .order("data_reembolso", { ascending: false });
 
-      if (projectId) {
+      if (projectId !== undefined) {
         query = query.eq("projeto_id", projectId);
       }
 
@@ -36,7 +36,6 @@ export function useReembolsosFOA(projectId?: number) {
       if (error) throw error;
       return data as ReembolsoFOA[];
     },
-    enabled: !!projectId,
   });
 }
 

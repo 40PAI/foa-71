@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,17 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateReembolso, useUpdateReembolso, type ReembolsoFOA } from "@/hooks/useReembolsosFOA";
+import { useProjects } from "@/hooks/useProjects";
 
 interface ReembolsoFOAModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   reembolso?: ReembolsoFOA;
-  projectId: number;
+  projectId?: number; // Agora é opcional
 }
 
 export function ReembolsoFOAModal({ open, onOpenChange, reembolso, projectId }: ReembolsoFOAModalProps) {
+  const { data: projects = [] } = useProjects();
+  
   const [formData, setFormData] = useState({
-    projeto_id: reembolso?.projeto_id || projectId,
+    projeto_id: reembolso?.projeto_id || projectId || 0,
     data_reembolso: reembolso?.data_reembolso || new Date().toISOString().split('T')[0],
     descricao: reembolso?.descricao || "",
     valor: reembolso?.valor || 0,
@@ -25,11 +28,23 @@ export function ReembolsoFOAModal({ open, onOpenChange, reembolso, projectId }: 
     observacoes: reembolso?.observacoes || "",
   });
 
+  // Atualizar projeto_id quando projectId prop mudar
+  useEffect(() => {
+    if (projectId) {
+      setFormData(prev => ({ ...prev, projeto_id: projectId }));
+    }
+  }, [projectId]);
+
   const createMutation = useCreateReembolso();
   const updateMutation = useUpdateReembolso();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.projeto_id) {
+      alert("Por favor, selecione um projeto");
+      return;
+    }
     
     try {
       if (reembolso) {
@@ -53,6 +68,28 @@ export function ReembolsoFOAModal({ open, onOpenChange, reembolso, projectId }: 
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Campo de seleção de projeto - mostrar apenas se projectId não foi fornecido */}
+          {!projectId && (
+            <div>
+              <Label htmlFor="projeto_id">Projeto*</Label>
+              <Select
+                value={formData.projeto_id.toString()}
+                onValueChange={(value) => setFormData({ ...formData, projeto_id: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um projeto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      {project.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="tipo">Tipo*</Label>

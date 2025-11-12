@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ReembolsosFOASectionProps {
-  projectId: number;
+  projectId?: number; // Agora é opcional
 }
 
 export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
