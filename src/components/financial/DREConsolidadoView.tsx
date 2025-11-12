@@ -68,7 +68,7 @@ export function DREConsolidadoView() {
               <TableHeader className="bg-primary/90">
                 <TableRow className="hover:bg-primary/90">
                   <TableHead className="text-primary-foreground font-bold">Nº</TableHead>
-                  <TableHead className="text-primary-foreground font-bold">Centro de Custo</TableHead>
+                  <TableHead className="text-primary-foreground font-bold">Projeto</TableHead>
                   <TableHead className="text-right text-primary-foreground font-bold">FOA RECEBIMENTO DO CLIENTE</TableHead>
                   <TableHead className="text-right text-primary-foreground font-bold">FOF FINANCIAMENTO</TableHead>
                   <TableHead className="text-right text-primary-foreground font-bold">FOA AUTO FINANCIAMENTO</TableHead>
