@@ -29,13 +29,15 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
   // Encontrar nome do centro de custo selecionado
   const selectedCentroCusto = centrosCusto?.find(cc => cc.id === defaultCentroCustoId);
 
+  const tipoMovimento = gasto?.saida ? "saida" : "entrada";
   const [formData, setFormData] = useState({
     data_movimento: gasto?.data_movimento || new Date().toISOString().split("T")[0],
     descricao: gasto?.descricao || "",
-    tipo_movimento: (gasto?.saida ? "saida" : "entrada") as "entrada" | "saida",
+    tipo_movimento: tipoMovimento as "entrada" | "saida",
     fonte_financiamento: (gasto?.recebimento_foa ? "REC_FOA" : 
                           gasto?.fof_financiamento ? "FOF_FIN" : 
-                          gasto?.foa_auto ? "FOA_AUTO" : "REC_FOA") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
+                          gasto?.foa_auto ? "FOA_AUTO" : 
+                          tipoMovimento === "entrada" ? "REC_FOA" : "FOF_FIN") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
     valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
     observacoes: gasto?.observacoes || "",
     categoria: gasto?.categoria || "",
@@ -47,13 +49,15 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
   // Resetar formulário quando o modal abre/fecha ou quando muda o centro de custo default
   useEffect(() => {
     if (open) {
+      const tipoMovimento = gasto?.saida ? "saida" : "entrada";
       setFormData({
         data_movimento: gasto?.data_movimento || new Date().toISOString().split("T")[0],
         descricao: gasto?.descricao || "",
-        tipo_movimento: (gasto?.saida ? "saida" : "entrada") as "entrada" | "saida",
+        tipo_movimento: tipoMovimento as "entrada" | "saida",
         fonte_financiamento: (gasto?.recebimento_foa ? "REC_FOA" : 
                               gasto?.fof_financiamento ? "FOF_FIN" : 
-                              gasto?.foa_auto ? "FOA_AUTO" : "REC_FOA") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
+                              gasto?.foa_auto ? "FOA_AUTO" : 
+                              tipoMovimento === "entrada" ? "REC_FOA" : "FOF_FIN") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
         valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
         observacoes: gasto?.observacoes || "",
         categoria: gasto?.categoria || "",
@@ -76,8 +80,8 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
         valor: formData.valor,
       };
 
-      // Adicionar fonte_financiamento apenas se for entrada
-      if (formData.tipo_movimento === "entrada" && formData.fonte_financiamento) {
+      // Adicionar fonte_financiamento para ambos tipos de movimento
+      if (formData.fonte_financiamento) {
         gastoData.fonte_financiamento = formData.fonte_financiamento;
       }
 
@@ -140,7 +144,14 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
             <Label htmlFor="tipo_movimento">Tipo de Movimento *</Label>
             <Select
               value={formData.tipo_movimento}
-              onValueChange={(value: "entrada" | "saida") => setFormData({ ...formData, tipo_movimento: value })}
+              onValueChange={(value: "entrada" | "saida") => {
+                const newFonte = value === "entrada" ? "REC_FOA" : "FOF_FIN";
+                setFormData({ 
+                  ...formData, 
+                  tipo_movimento: value,
+                  fonte_financiamento: newFonte as "REC_FOA" | "FOF_FIN" | "FOA_AUTO"
+                });
+              }}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -153,26 +164,27 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
           </div>
         </div>
 
-        {formData.tipo_movimento === "entrada" && (
-          <div className="space-y-2">
-            <Label htmlFor="fonte_financiamento">Fonte de Financiamento *</Label>
-            <Select
-              value={formData.fonte_financiamento}
-              onValueChange={(value: "REC_FOA" | "FOF_FIN" | "FOA_AUTO") => 
-                setFormData({ ...formData, fonte_financiamento: value })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
+        <div className="space-y-2">
+          <Label htmlFor="fonte_financiamento">Fonte de Financiamento *</Label>
+          <Select
+            value={formData.fonte_financiamento}
+            onValueChange={(value: "REC_FOA" | "FOF_FIN" | "FOA_AUTO") => 
+              setFormData({ ...formData, fonte_financiamento: value })
+            }
+            required
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {formData.tipo_movimento === "entrada" && (
                 <SelectItem value="REC_FOA">Recebimento FOA (Cliente)</SelectItem>
-                <SelectItem value="FOF_FIN">FOF Financiamento</SelectItem>
-                <SelectItem value="FOA_AUTO">FOA Auto-financiamento</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
+              )}
+              <SelectItem value="FOF_FIN">FOF Financiamento</SelectItem>
+              <SelectItem value="FOA_AUTO">FOA Auto-financiamento</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="descricao">Descrição *</Label>
