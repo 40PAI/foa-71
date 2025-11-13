@@ -45,6 +45,16 @@ export function CashFlowMovementForm({
   onCancel,
   isSubmitting,
 }: CashFlowMovementFormProps) {
+  console.log('🔵 CashFlowMovementForm render', { projectId, movement });
+  
+  if (!projectId) {
+    return (
+      <div className="p-4 text-center text-destructive">
+        Erro: Projeto não selecionado
+      </div>
+    );
+  }
+  
   const { data: stages = [] } = useProjectStages(projectId);
   const { data: tasks = [] } = useTasks();
 

@@ -12,6 +12,7 @@ export function BaseModal({
 }: BaseModalProps & { 
   size?: "sm" | "default" | "lg" | "xl" | "2xl" | "full";
 }) {
+  console.log('🔵 BaseModal render', { open, title });
   const sizeClasses = {
     sm: "max-w-sm",
     default: "max-w-lg",
@@ -22,8 +23,13 @@ export function BaseModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${sizeClasses[size]} ${className}`}>
+    <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
+      <DialogContent 
+        className={`${sizeClasses[size]} ${className}`}
+        onInteractOutside={(e) => {
+          console.log('🟡 Dialog interactOutside', e);
+        }}
+      >
         {title && (
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>

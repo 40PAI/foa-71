@@ -71,8 +71,16 @@ export function FluxoCaixaSection({ projectId }: FluxoCaixaSectionProps) {
   };
 
   const handleNewMovement = () => {
+    console.log('🔵 handleNewMovement chamado', { projectId, modalOpen });
+    
+    if (!projectId) {
+      console.error('❌ projectId não fornecido');
+      return;
+    }
+    
     setEditingMovement(undefined);
     setModalOpen(true);
+    console.log('🟢 Modal state atualizado para true');
   };
 
   // Validação: Sem movimentos
