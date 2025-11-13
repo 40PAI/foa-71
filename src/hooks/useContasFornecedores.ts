@@ -31,6 +31,9 @@ export interface LancamentoFornecedor {
 export function useContasFornecedores(projectId?: number) {
   return useQuery({
     queryKey: ["contas-fornecedores", projectId],
+    placeholderData: (previousData) => previousData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async () => {
       let query = supabase
         .from("contas_correntes_fornecedores")

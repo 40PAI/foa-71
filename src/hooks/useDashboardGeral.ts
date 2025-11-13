@@ -127,6 +127,9 @@ export function useDashboardGeral() {
 
   return useQuery({
     queryKey: ["dashboard-geral", user?.id],
+    placeholderData: (previousData) => previousData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async () => {
       if (!user?.id) {
         throw new Error("Usuário não autenticado");
@@ -172,9 +175,7 @@ export function useDashboardGeral() {
       }
     },
     enabled: !!user?.id,
-    retry: 2, // Tentar 2 vezes
-    retryDelay: 1000, // 1 segundo entre tentativas
-    staleTime: 30 * 1000, // 30 segundos para atualização mais rápida
-    gcTime: 10 * 60 * 1000,
+    retry: 2,
+    retryDelay: 1000,
   });
 }
