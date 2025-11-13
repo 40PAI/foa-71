@@ -40,25 +40,12 @@ export function usePrefetchPage() {
   const prefetchFinancas = () => {
     if (!selectedProjectId) return;
 
-    // Prefetch principais queries da página de finanças
+    // Prefetch dados financeiros consolidados (substitui 9 queries individuais)
     queryClient.prefetchQuery({
-      queryKey: ["financas", selectedProjectId],
+      queryKey: ["consolidated-financial-data", selectedProjectId],
       queryFn: async () => {
-        const { data, error } = await supabase
-          .from("financas")
-          .select("*")
-          .eq("id_projeto", selectedProjectId);
-        if (error) throw error;
-        return data;
-      },
-      staleTime: 30000,
-    });
-
-    queryClient.prefetchQuery({
-      queryKey: ["purchase-breakdown", selectedProjectId],
-      queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_purchase_breakdown", {
-          project_id: selectedProjectId,
+        const { data, error } = await supabase.rpc("get_consolidated_financial_data", {
+          p_projeto_id: selectedProjectId,
         });
         if (error) throw error;
         return data;

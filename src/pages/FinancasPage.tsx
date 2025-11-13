@@ -1,3 +1,3 @@
 
-// Re-export the optimized version
-export { OptimizedFinancasPage as FinancasPage } from './OptimizedFinancasPage';
+// Re-export the consolidated optimized version
+export { ConsolidatedFinancasPage as FinancasPage } from './ConsolidatedFinancasPage';
