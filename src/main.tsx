@@ -1,13 +1,12 @@
 // Main application entry point - FOA SmartSite
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { QueryClient } from "@tanstack/react-query";
-import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AllProviders } from "@/contexts/AllProviders";
+import { setupCachePersistence } from "@/lib/queryPersistence";
 import App from "./App.tsx";
 import "./index.css";
 import "./styles/status-theme.css";
@@ -32,31 +31,12 @@ const queryClient = new QueryClient({
   },
 });
 
-// Create persister for localStorage cache persistence
-const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-  key: "FOA_QUERY_CACHE", // Unique key for this app's cache
-  // Optional: serialize/deserialize for custom handling
-  serialize: JSON.stringify,
-  deserialize: JSON.parse,
-});
+// Setup automatic cache persistence (load on mount, save on unload/hide)
+setupCachePersistence(queryClient);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <PersistQueryClientProvider
-      client={queryClient}
-      persistOptions={{
-        persister,
-        maxAge: 1000 * 60 * 60 * 24, // 24 hours - cache expires after 1 day
-        buster: "v1", // Increment this to invalidate old cache on version changes
-        dehydrateOptions: {
-          // Don't persist queries that are still loading or errored
-          shouldDehydrateQuery: (query) => {
-            return query.state.status === "success";
-          },
-        },
-      }}
-    >
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AllProviders>
           <TooltipProvider>
@@ -65,6 +45,6 @@ createRoot(document.getElementById("root")!).render(
           </TooltipProvider>
         </AllProviders>
       </BrowserRouter>
-    </PersistQueryClientProvider>
+    </QueryClientProvider>
   </StrictMode>
 );
