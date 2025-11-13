@@ -86,13 +86,19 @@ export function useResumoFOAGeral() {
         };
       }
 
-      // Agregar todos os projetos
+      // Agregar todos os projetos - garantir conversão para número
       const totais = (data as ResumoFOA[]).reduce(
-        (acc, curr) => ({
-          fof_financiamento: acc.fof_financiamento + Number(curr.fof_financiamento),
-          amortizacao: acc.amortizacao + Number(curr.amortizacao),
-          divida_foa_com_fof: acc.divida_foa_com_fof + Number(curr.divida_foa_com_fof),
-        }),
+        (acc, curr) => {
+          const fof = Number(curr.fof_financiamento) || 0;
+          const amort = Number(curr.amortizacao) || 0;
+          const divida = Number(curr.divida_foa_com_fof) || 0;
+          
+          return {
+            fof_financiamento: acc.fof_financiamento + fof,
+            amortizacao: acc.amortizacao + amort,
+            divida_foa_com_fof: acc.divida_foa_com_fof + divida,
+          };
+        },
         {
           fof_financiamento: 0,
           amortizacao: 0,
@@ -100,9 +106,10 @@ export function useResumoFOAGeral() {
         }
       );
 
-      console.log('Resumo FOA geral totais:', totais);
+      console.log('Resumo FOA geral totais calculados:', totais);
       return totais;
     },
-    staleTime: 30000, // 30 segundos
+    staleTime: 0, // Sempre refetch para garantir dados atualizados
+    gcTime: 30000, // 30 segundos em cache
   });
 }
