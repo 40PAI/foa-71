@@ -44,7 +44,7 @@ export function usePrefetchPage() {
     queryClient.prefetchQuery({
       queryKey: ["consolidated-financial-data", selectedProjectId],
       queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_consolidated_financial_data", {
+        const { data, error } = await supabase.rpc("get_consolidated_financial_data" as any, {
           p_projeto_id: selectedProjectId,
         });
         if (error) throw error;

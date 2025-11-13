@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -23,8 +23,9 @@ interface CategoryBreakdownProps extends BaseComponentProps {
   data: CategoryData;
 }
 
-export function CategoryBreakdown({ data, className }: CategoryBreakdownProps) {
-  const categories = [
+export const CategoryBreakdown = memo(function CategoryBreakdown({ data, className }: CategoryBreakdownProps) {
+  // Memoize categories configuration
+  const categories = useMemo(() => [
     {
       title: "Materiais",
       value: data.material_expenses,
@@ -53,7 +54,7 @@ export function CategoryBreakdown({ data, className }: CategoryBreakdownProps) {
       color: "text-orange-600",
       bgColor: "bg-orange-50",
     },
-  ];
+  ], [data.material_expenses, data.payroll_expenses, data.patrimony_expenses, data.indirect_expenses]);
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
@@ -91,4 +92,4 @@ export function CategoryBreakdown({ data, className }: CategoryBreakdownProps) {
       })}
     </div>
   );
-}
+});

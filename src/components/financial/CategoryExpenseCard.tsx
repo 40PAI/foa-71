@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +19,7 @@ interface CategoryExpenseCardProps {
   manualExpenses?: number;
 }
 
-export function CategoryExpenseCard({
+export const CategoryExpenseCard = memo(function CategoryExpenseCard({
   category,
   title,
   icon: Icon,
@@ -31,8 +31,11 @@ export function CategoryExpenseCard({
 }: CategoryExpenseCardProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Total amount is sum of tasks + centro de custo + manual expenses
-  const totalAmount = fromTasks + fromCentroCusto + manualExpenses;
+  // Memoize total amount calculation
+  const totalAmount = useMemo(
+    () => fromTasks + fromCentroCusto + manualExpenses,
+    [fromTasks, fromCentroCusto, manualExpenses]
+  );
 
   // Calculate percentage of budget
   const percentageOfBudget = useMemo(() => {
@@ -127,4 +130,4 @@ export function CategoryExpenseCard({
       </Dialog>
     </>
   );
-}
+});

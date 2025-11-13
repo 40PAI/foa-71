@@ -1,3 +1,4 @@
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useTaskFinancialSummary } from "@/hooks/useTaskFinancialSummary";
@@ -8,7 +9,7 @@ interface TaskFinancialBreakdownProps {
   projectId: number;
 }
 
-export function TaskFinancialBreakdown({ projectId }: TaskFinancialBreakdownProps) {
+export const TaskFinancialBreakdown = memo(function TaskFinancialBreakdown({ projectId }: TaskFinancialBreakdownProps) {
   const { data, isLoading } = useTaskFinancialSummary(projectId);
   
   if (isLoading) {
@@ -143,4 +144,4 @@ export function TaskFinancialBreakdown({ projectId }: TaskFinancialBreakdownProp
       </Card>
     </div>
   );
-}
+});

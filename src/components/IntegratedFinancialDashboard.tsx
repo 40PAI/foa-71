@@ -1,4 +1,4 @@
-
+import { memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { FinancialOverview } from "@/components/financial/FinancialOverview";
 import { CategoryBreakdown } from "@/components/financial/CategoryBreakdown";
@@ -10,7 +10,7 @@ interface IntegratedFinancialDashboardProps {
   projectId: number;
 }
 
-export function IntegratedFinancialDashboard({ projectId }: IntegratedFinancialDashboardProps) {
+export const IntegratedFinancialDashboard = memo(function IntegratedFinancialDashboard({ projectId }: IntegratedFinancialDashboardProps) {
   const { data: financialData, isLoading: loadingFinancial } = useIntegratedFinancialProgress(projectId);
   const { data: breakdown = [], isLoading: loadingBreakdown } = useDetailedExpenseBreakdown(projectId);
 
@@ -34,4 +34,4 @@ export function IntegratedFinancialDashboard({ projectId }: IntegratedFinancialD
       <DetailedBreakdown breakdown={breakdown} />
     </div>
   );
-}
+});

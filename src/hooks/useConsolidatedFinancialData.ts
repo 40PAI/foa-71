@@ -64,7 +64,7 @@ export function useConsolidatedFinancialData(projectId: number | null) {
         throw new Error("Project ID is required");
       }
 
-      const { data, error } = await supabase.rpc("get_consolidated_financial_data", {
+      const { data, error } = await supabase.rpc("get_consolidated_financial_data" as any, {
         p_projeto_id: projectId,
       });
 
