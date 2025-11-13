@@ -111,6 +111,14 @@ export function FluxoCaixaSection({ projectId }: FluxoCaixaSectionProps) {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Modal de Movimento (também no estado vazio) */}
+        <CashFlowMovementModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          projectId={projectId}
+          movement={editingMovement}
+        />
       </div>
     );
   }
