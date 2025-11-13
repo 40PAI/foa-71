@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +17,7 @@ interface FinancialOverviewProps extends BaseComponentProps {
   hasDiscrepancies?: boolean;
 }
 
-export function FinancialOverview({ 
+export const FinancialOverview = memo(function FinancialOverview({
   data, 
   hasDiscrepancies = false,
   className 
@@ -67,4 +67,4 @@ export function FinancialOverview({
       </CardContent>
     </Card>
   );
-}
+});

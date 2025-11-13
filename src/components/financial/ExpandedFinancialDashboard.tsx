@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { IntegratedFinancialDashboard } from "@/components/IntegratedFinancialDashboard";
 import { FinancialChartsSection } from "@/components/financial/FinancialChartsSection";
@@ -10,7 +11,7 @@ interface ExpandedFinancialDashboardProps {
   projectId: number;
 }
 
-export function ExpandedFinancialDashboard({
+export const ExpandedFinancialDashboard = memo(function ExpandedFinancialDashboard({
   open,
   onOpenChange,
   projectId,
@@ -47,4 +48,4 @@ export function ExpandedFinancialDashboard({
       </DialogContent>
     </Dialog>
   );
-}
+});
