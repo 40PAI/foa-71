@@ -16,6 +16,12 @@ export function CashFlowMovementModal({
   projectId,
   movement,
 }: CashFlowMovementModalProps) {
+  console.log('🔵 CashFlowMovementModal render', { open, projectId, movement });
+  
+  if (!projectId) {
+    console.error('❌ projectId não fornecido ao CashFlowMovementModal');
+  }
+  
   const createMutation = useCreateCashFlowMovement();
   const updateMutation = useUpdateCashFlowMovement();
 
@@ -37,7 +43,10 @@ export function CashFlowMovementModal({
   return (
     <BaseModal
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(newOpen) => {
+        console.log('🟡 Modal onOpenChange', { newOpen });
+        onOpenChange(newOpen);
+      }}
       title={movement ? "Editar Movimento de Caixa" : "Novo Movimento de Caixa"}
       size="2xl"
     >

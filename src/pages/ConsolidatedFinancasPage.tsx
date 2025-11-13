@@ -208,7 +208,13 @@ export function ConsolidatedFinancasPage() {
         variant: "default"
       }}>
           <Suspense fallback={<SectionLoadingFallback rows={5} />}>
-            <FluxoCaixaSection projectId={selectedProjectId} />
+            {selectedProjectId ? (
+              <FluxoCaixaSection projectId={selectedProjectId} />
+            ) : (
+              <div className="p-8 text-center">
+                <p className="text-muted-foreground">Selecione um projeto para visualizar o fluxo de caixa</p>
+              </div>
+            )}
           </Suspense>
         </CollapsibleFinancialSection>
 
