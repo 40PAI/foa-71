@@ -3,28 +3,25 @@ import { Progress } from "@/components/ui/progress";
 import type { TarefasResumo, ProjetoTarefas } from "@/hooks/useDashboardGeral";
 import { useNavigate } from "react-router-dom";
 import { useProjectContext } from "@/contexts/ProjectContext";
-
 interface DashboardTarefasSectionProps {
   tarefasResumo: TarefasResumo;
   topProjetosTarefas: ProjetoTarefas[];
 }
-
 export function DashboardTarefasSection({
   tarefasResumo,
   topProjetosTarefas
 }: DashboardTarefasSectionProps) {
   const navigate = useNavigate();
-  const { setSelectedProjectId } = useProjectContext();
-
+  const {
+    setSelectedProjectId
+  } = useProjectContext();
   const handleProjetoClick = (projetoId: number) => {
     setSelectedProjectId(projetoId);
     navigate('/tarefas');
   };
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
-        <CardTitle className="text-responsive-xl">✅ Tarefas</CardTitle>
+        <CardTitle className="text-responsive-xl">Tarefas</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -54,16 +51,10 @@ export function DashboardTarefasSection({
           <Progress value={tarefasResumo.taxa_conclusao} className="h-2" />
         </div>
 
-        {topProjetosTarefas.length > 0 && (
-          <div>
+        {topProjetosTarefas.length > 0 && <div>
             <h3 className="text-sm font-semibold mb-3">Top 5 Projetos por Tarefas Concluídas</h3>
             <div className="space-y-2">
-              {topProjetosTarefas.map((projeto, index) => (
-                <div 
-                  key={index} 
-                  onClick={() => handleProjetoClick(projeto.projeto_id)}
-                  className="flex items-center justify-between p-2 border rounded bg-card cursor-pointer hover:bg-accent hover:shadow-md transition-all duration-200"
-                >
+              {topProjetosTarefas.map((projeto, index) => <div key={index} onClick={() => handleProjetoClick(projeto.projeto_id)} className="flex items-center justify-between p-2 border rounded bg-card cursor-pointer hover:bg-accent hover:shadow-md transition-all duration-200">
                   <span className="text-sm font-medium truncate flex-1">
                     {projeto.projeto_nome}
                   </span>
@@ -73,12 +64,9 @@ export function DashboardTarefasSection({
                   <span className="text-xs font-bold min-w-[45px] text-right">
                     {projeto.percentual.toFixed(0)}%
                   </span>
-                </div>
-              ))}
+                </div>)}
             </div>
-          </div>
-        )}
+          </div>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
