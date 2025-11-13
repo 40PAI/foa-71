@@ -58,7 +58,7 @@ export function RequisitionsFinancialSection({ data }: RequisitionsFinancialSect
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Taxa Aprovação</p>
           </div>
-          <p className="text-2xl font-bold mt-2">{data.taxaAprovacao.toFixed(1)}%</p>
+          <p className="text-2xl font-bold mt-2">{(data.taxaAprovacao ?? 0).toFixed(1)}%</p>
         </Card>
       </div>
 

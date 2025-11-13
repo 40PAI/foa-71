@@ -59,7 +59,7 @@ export const FinancialOverview = memo(function FinancialOverview({
                 data.financial_progress > 80 ? 'text-orange-600' :
                 'text-green-600'
               }`}>
-                {data.financial_progress.toFixed(1)}%
+                {(data.financial_progress ?? 0).toFixed(1)}%
               </span>
             </div>
           </div>

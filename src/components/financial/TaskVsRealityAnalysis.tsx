@@ -18,7 +18,8 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
     return <LoadingSkeleton variant="card" className="mb-6" />;
   }
 
-  if (!analytics) return null;
+  // Validação defensiva - garante que analytics existe e tem todas as propriedades necessárias
+  if (!analytics || typeof analytics !== 'object') return null;
 
   const getDeviationColor = (percentage: number) => {
     if (percentage <= 0) return "text-success";
@@ -61,12 +62,12 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(analytics.total_real_expenses)}</div>
-            <div className={`mt-2 flex items-center text-xs ${getDeviationColor(analytics.budget_deviation_percentage)}`}>
-              {analytics.budget_deviation >= 0 ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
-              {Math.abs(analytics.budget_deviation_percentage).toFixed(1)}% de desvio
+            <div className={`mt-2 flex items-center text-xs ${getDeviationColor(analytics.budget_deviation_percentage ?? 0)}`}>
+              {(analytics.budget_deviation ?? 0) >= 0 ? <TrendingUp className="mr-1 h-3 w-3" /> : <TrendingDown className="mr-1 h-3 w-3" />}
+              {Math.abs(analytics.budget_deviation_percentage ?? 0).toFixed(1)}% de desvio
             </div>
             <div className="text-xs text-muted-foreground mt-1">
-              {formatCurrency(Math.abs(analytics.budget_deviation))} {analytics.budget_deviation >= 0 ? 'acima' : 'abaixo'}
+              {formatCurrency(Math.abs(analytics.budget_deviation ?? 0))} {(analytics.budget_deviation ?? 0) >= 0 ? 'acima' : 'abaixo'}
             </div>
           </CardContent>
         </Card>
@@ -77,12 +78,12 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.time_efficiency_percentage.toFixed(1)}%</div>
+            <div className="text-2xl font-bold">{(analytics.time_efficiency_percentage ?? 0).toFixed(1)}%</div>
             <div className="mt-2 text-xs text-muted-foreground">
-              Previsto: {analytics.total_planned_days} dias
+              Previsto: {analytics.total_planned_days ?? 0} dias
             </div>
             <div className="text-xs text-muted-foreground">
-              Real: {analytics.total_real_days} dias
+              Real: {analytics.total_real_days ?? 0} dias
             </div>
           </CardContent>
         </Card>
@@ -93,10 +94,10 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${getEfficiencyColor(analytics.efficiency_score)}`}>
-              {analytics.efficiency_score.toFixed(0)}%
+            <div className={`text-2xl font-bold ${getEfficiencyColor(analytics.efficiency_score ?? 0)}`}>
+              {(analytics.efficiency_score ?? 0).toFixed(0)}%
             </div>
-            <Progress value={analytics.efficiency_score} className="mt-2" />
+            <Progress value={analytics.efficiency_score ?? 0} className="mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -124,11 +125,11 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
               <div className="flex justify-between text-sm mb-2">
                 <span>Taxa de Sucesso Orçamentário</span>
                 <span className="font-medium">
-                  {((analytics.tasks_on_budget / (analytics.tasks_on_budget + analytics.tasks_over_budget)) * 100).toFixed(0)}%
+                  {(((analytics.tasks_on_budget ?? 0) / ((analytics.tasks_on_budget ?? 0) + (analytics.tasks_over_budget ?? 0)) || 0) * 100).toFixed(0)}%
                 </span>
               </div>
               <Progress 
-                value={(analytics.tasks_on_budget / (analytics.tasks_on_budget + analytics.tasks_over_budget)) * 100} 
+                value={((analytics.tasks_on_budget ?? 0) / ((analytics.tasks_on_budget ?? 0) + (analytics.tasks_over_budget ?? 0)) || 0) * 100} 
               />
             </div>
           </CardContent>
@@ -155,11 +156,11 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
               <div className="flex justify-between text-sm mb-2">
                 <span>Taxa de Cumprimento de Prazo</span>
                 <span className="font-medium">
-                  {((analytics.tasks_on_time / (analytics.tasks_on_time + analytics.tasks_delayed)) * 100).toFixed(0)}%
+                  {(((analytics.tasks_on_time ?? 0) / ((analytics.tasks_on_time ?? 0) + (analytics.tasks_delayed ?? 0)) || 0) * 100).toFixed(0)}%
                 </span>
               </div>
               <Progress 
-                value={(analytics.tasks_on_time / (analytics.tasks_on_time + analytics.tasks_delayed)) * 100} 
+                value={((analytics.tasks_on_time ?? 0) / ((analytics.tasks_on_time ?? 0) + (analytics.tasks_delayed ?? 0)) || 0) * 100} 
               />
             </div>
           </CardContent>
@@ -184,8 +185,8 @@ export function TaskVsRealityAnalysis({ projectId }: TaskVsRealityAnalysisProps)
                       <h4 className="font-medium">{task.descricao}</h4>
                       <p className="text-sm text-muted-foreground">Responsável: {task.responsavel}</p>
                     </div>
-                    <Badge variant={task.desvio_percentual > 0 ? "destructive" : "default"}>
-                      {task.desvio_percentual > 0 ? '+' : ''}{task.desvio_percentual.toFixed(1)}%
+                    <Badge variant={(task.desvio_percentual ?? 0) > 0 ? "destructive" : "default"}>
+                      {(task.desvio_percentual ?? 0) > 0 ? '+' : ''}{(task.desvio_percentual ?? 0).toFixed(1)}%
                     </Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">

@@ -7,7 +7,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 const CACHE_KEY = "FOA_QUERY_CACHE";
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2"; // Incremented to clear old cache with undefined values
 const MAX_AGE = 1000 * 60 * 60 * 24; // 24 hours
 
 interface CachedData {
@@ -59,21 +59,30 @@ export function loadQueryCache(queryClient: QueryClient) {
       cachedData.version !== CACHE_VERSION ||
       Date.now() - cachedData.timestamp > MAX_AGE
     ) {
+      console.log("⚠️ Cache expired or version mismatch - clearing cache");
       localStorage.removeItem(CACHE_KEY);
       return;
     }
 
     // Restore queries to cache
+    let restoredCount = 0;
     Object.entries(cachedData.queries).forEach(([key, data]) => {
       try {
         const queryKey = JSON.parse(key);
-        queryClient.setQueryData(queryKey, data);
+        
+        // Validate data structure before restoring
+        if (data && typeof data === 'object') {
+          queryClient.setQueryData(queryKey, data);
+          restoredCount++;
+        }
       } catch (error) {
         console.warn("Failed to restore query:", key, error);
       }
     });
 
-    console.log("✅ Query cache restored from localStorage");
+    if (restoredCount > 0) {
+      console.log(`✅ Query cache restored: ${restoredCount} queries from localStorage`);
+    }
   } catch (error) {
     console.warn("Failed to load query cache:", error);
     localStorage.removeItem(CACHE_KEY);
