@@ -7,19 +7,17 @@ interface DashboardRequisicoesSectionProps {
   requisicoesResumo: RequisicoesResumo;
 }
 
-export function DashboardRequisicoesSection({
-  requisicoesResumo
-}: DashboardRequisicoesSectionProps) {
+export function DashboardRequisicoesSection({ requisicoesResumo }: DashboardRequisicoesSectionProps) {
   const chartData = [
     { name: "Pendentes", value: requisicoesResumo.pendentes, fill: "hsl(var(--warning))" },
     { name: "Em Aprovação", value: requisicoesResumo.aprovacao, fill: "hsl(var(--chart-2))" },
-    { name: "Aprovadas", value: requisicoesResumo.aprovadas, fill: "hsl(var(--chart-1))" }
+    { name: "Aprovadas", value: requisicoesResumo.aprovadas, fill: "hsl(var(--chart-1))" },
   ];
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-responsive-xl">🛒 Compras & Requisições</CardTitle>
+        <CardTitle className="text-responsive-xl">Compras & Requisições</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -55,10 +53,7 @@ export function DashboardRequisicoesSection({
         {requisicoesResumo.total > 0 && (
           <div>
             <h3 className="text-sm font-semibold mb-3">Distribuição por Status</h3>
-            <DonutChart
-              data={chartData}
-              title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`}
-            />
+            <DonutChart data={chartData} title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`} />
           </div>
         )}
       </CardContent>
