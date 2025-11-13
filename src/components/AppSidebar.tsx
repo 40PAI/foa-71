@@ -243,9 +243,6 @@ export function AppSidebar() {
                   asChild
                   isActive={currentPath === "/financas"}
                   className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
-                  onClick={(e) => {
-                    setFinancasOpen(!financasOpen);
-                  }}
                 >
                   <NavLink
                     to="/financas"
@@ -256,9 +253,14 @@ export function AppSidebar() {
                     {!isCollapsed && <span className="flex-1 truncate">Finanças</span>}
                     {!isCollapsed && (
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform ${
+                        className={`h-4 w-4 transition-transform cursor-pointer hover:text-primary ${
                           financasOpen ? "rotate-180" : ""
                         }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFinancasOpen(!financasOpen);
+                        }}
                       />
                     )}
                   </NavLink>
