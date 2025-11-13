@@ -358,8 +358,8 @@ const HRChartsContent = ({ projectId }: { projectId: number }) => {
         
         <SmartKPICard
           title="Taxa de Absentismo"
-          value={`${hrData?.hr_kpis.absentismo_percentual.toFixed(1)}%`}
-          type={hrData?.hr_kpis.absentismo_percentual && hrData.hr_kpis.absentismo_percentual > 10 ? 'alert' : 'success'}
+          value={`${(hrData?.hr_kpis?.absentismo_percentual ?? 0).toFixed(1)}%`}
+          type={(hrData?.hr_kpis?.absentismo_percentual ?? 0) > 10 ? 'alert' : 'success'}
           subtitle="Percentual de ausências"
         />
       </div>

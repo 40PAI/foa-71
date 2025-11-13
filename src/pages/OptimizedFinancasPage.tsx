@@ -211,7 +211,7 @@ export function OptimizedFinancasPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Taxa Aprovação</p>
                     <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
-                      {summaryStats.approvalRate.toFixed(1)}%
+                      {(summaryStats.approvalRate ?? 0).toFixed(1)}%
                     </p>
                   </div>
                   <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 shrink-0" />
@@ -225,7 +225,7 @@ export function OptimizedFinancasPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Score Eficiência</p>
                     <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${(taskAnalytics?.efficiency_score || 0) >= 80 ? 'text-green-600' : (taskAnalytics?.efficiency_score || 0) >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
-                      {taskAnalytics?.efficiency_score.toFixed(0) || 0}%
+                      {(taskAnalytics?.efficiency_score ?? 0).toFixed(0)}%
                     </p>
                   </div>
                   <Target className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground shrink-0" />
@@ -337,8 +337,8 @@ export function OptimizedFinancasPage() {
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection value="tasks" title="Custos e Performance por Tarefas" icon={Target} badge={taskAnalytics ? {
-        text: `Score: ${taskAnalytics.efficiency_score.toFixed(0)}%`,
-        variant: taskAnalytics.efficiency_score >= 80 ? "default" : taskAnalytics.efficiency_score >= 60 ? "secondary" : "destructive"
+        text: `Score: ${(taskAnalytics.efficiency_score ?? 0).toFixed(0)}%`,
+        variant: (taskAnalytics.efficiency_score ?? 0) >= 80 ? "default" : (taskAnalytics.efficiency_score ?? 0) >= 60 ? "secondary" : "destructive"
       } : undefined}>
           <div className="space-y-6">
             <Suspense fallback={<SectionLoadingFallback rows={4} />}>
@@ -399,8 +399,8 @@ export function OptimizedFinancasPage() {
                             {formatCurrency(item.valor_pendente + item.valor_aprovado)}
                           </TableCell>
                           <TableCell>
-                            <span className={`font-medium ${item.percentual_aprovacao >= 80 ? 'text-green-600' : item.percentual_aprovacao >= 50 ? 'text-orange-600' : 'text-red-600'}`}>
-                              {item.percentual_aprovacao.toFixed(1)}%
+                            <span className={`font-medium ${(item.percentual_aprovacao ?? 0) >= 80 ? 'text-green-600' : (item.percentual_aprovacao ?? 0) >= 50 ? 'text-orange-600' : 'text-red-600'}`}>
+                              {(item.percentual_aprovacao ?? 0).toFixed(1)}%
                             </span>
                           </TableCell>
                           <TableCell>

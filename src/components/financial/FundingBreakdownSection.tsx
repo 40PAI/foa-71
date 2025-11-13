@@ -106,7 +106,7 @@ export function FundingBreakdownSection({ projectId }: FundingBreakdownSectionPr
                     {formatCurrency(item.total_valor)}
                   </TableCell>
                   <TableCell className="text-right">
-                    <span className="font-semibold">{item.percentual_total?.toFixed(1)}%</span>
+                    <span className="font-semibold">{(item.percentual_total ?? 0).toFixed(1)}%</span>
                   </TableCell>
                 </TableRow>
               ))}
