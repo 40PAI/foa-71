@@ -54,7 +54,7 @@ export function ConsolidatedFinancasPage() {
       };
     }
 
-    const { total_value, pending_value, total_requisitions, approved_requisitions } = consolidatedData.requisitions_summary;
+    const { total_value = 0, pending_value = 0, total_requisitions = 0, approved_requisitions = 0 } = consolidatedData.requisitions_summary;
     
     return {
       totalPurchaseValue: total_value,
@@ -93,7 +93,7 @@ export function ConsolidatedFinancasPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
-        {isLoading ? (
+        {isLoading && !consolidatedData ? (
           <>
             <SummaryCardSkeleton />
             <SummaryCardSkeleton />

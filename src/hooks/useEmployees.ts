@@ -10,6 +10,9 @@ type EmployeeUpdate = TablesUpdate<"colaboradores">;
 export function useEmployees() {
   return useQuery({
     queryKey: ["employees"],
+    placeholderData: (previousData) => previousData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("colaboradores")

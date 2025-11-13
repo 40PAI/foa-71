@@ -10,6 +10,9 @@ type MaterialArmazemUpdate = TablesUpdate<"materiais_armazem">;
 export function useMaterialsArmazem() {
   return useQuery({
     queryKey: ["materials-armazem"],
+    placeholderData: (previousData) => previousData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("materiais_armazem")

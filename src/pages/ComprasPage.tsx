@@ -31,7 +31,7 @@ export function ComprasPage() {
     ? allRequisitions.filter(r => r.id_projeto === selectedProjectId)
     : allRequisitions;
 
-  if (loadingRequisitions || loadingKpis) {
+  if ((loadingRequisitions && !allRequisitions.length) || (loadingKpis && !kpis.length)) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">

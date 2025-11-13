@@ -45,7 +45,7 @@ export function saveQueryCache(queryClient: QueryClient) {
 }
 
 /**
- * Load query cache from localStorage
+ * Load query cache from localStorage (SYNCHRONOUSLY for instant restore)
  */
 export function loadQueryCache(queryClient: QueryClient) {
   try {
@@ -64,7 +64,7 @@ export function loadQueryCache(queryClient: QueryClient) {
       return;
     }
 
-    // Restore queries to cache
+    // Restore queries to cache SYNCHRONOUSLY (no async/await)
     let restoredCount = 0;
     Object.entries(cachedData.queries).forEach(([key, data]) => {
       try {
@@ -72,6 +72,7 @@ export function loadQueryCache(queryClient: QueryClient) {
         
         // Validate data structure before restoring
         if (data && typeof data === 'object') {
+          // Use setQueryData synchronously to populate cache immediately
           queryClient.setQueryData(queryKey, data);
           restoredCount++;
         }
@@ -81,7 +82,7 @@ export function loadQueryCache(queryClient: QueryClient) {
     });
 
     if (restoredCount > 0) {
-      console.log(`✅ Query cache restored: ${restoredCount} queries from localStorage`);
+      console.log(`✅ Query cache restored INSTANTLY: ${restoredCount} queries from localStorage`);
     }
   } catch (error) {
     console.warn("Failed to load query cache:", error);

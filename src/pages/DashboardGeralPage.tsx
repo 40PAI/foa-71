@@ -42,7 +42,7 @@ function DashboardGeralContent() {
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [projetosOpen, setProjetosOpen] = useState(false);
 
-  if (isLoading) {
+  if (isLoading && !dashboardData) {
     return (
       <div className="flex items-center justify-center h-96">
         <LoadingSpinner text="Carregando dashboard..." />

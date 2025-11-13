@@ -10,6 +10,9 @@ type ProjectUpdate = TablesUpdate<"projetos">;
 export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
+    placeholderData: (previousData) => previousData,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projetos")
