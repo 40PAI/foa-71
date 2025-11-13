@@ -141,9 +141,6 @@ export function DividaFOAPage() {
                         <TableCell className="text-right text-orange-600">
                           {formatCurrency(projeto.amortizacao)}
                         </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          {formatCurrency(projeto.custos_suportados)}
-                        </TableCell>
                         <TableCell className={`text-right font-bold ${temDivida ? 'text-destructive' : 'text-green-600'}`}>
                           {formatCurrency(projeto.divida_foa_com_fof)}
                         </TableCell>
