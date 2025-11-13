@@ -27,7 +27,7 @@ export function ExecutiveFOADashboard() {
   const chartData = [
     { name: "FOF Financiamento", value: resumo.fof_financiamento, fill: "hsl(var(--chart-1))" },
     { name: "Amortização", value: resumo.amortizacao, fill: "hsl(var(--chart-2))" },
-    { name: "Custos Suportados", value: resumo.custos_suportados, fill: "hsl(var(--chart-3))" },
+    { name: "Dívida", value: resumo.divida_foa_com_fof, fill: "hsl(var(--chart-3))" },
   ];
 
   return (
@@ -65,18 +65,21 @@ export function ExecutiveFOADashboard() {
           </CardContent>
         </Card>
 
-        {/* Custos Suportados FOA */}
+        {/* Percentual de Amortização */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Custos Suportados FOA</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Taxa de Amortização</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {formatCurrency(resumo.custos_suportados)}
+              {resumo.fof_financiamento > 0 
+                ? `${((resumo.amortizacao / resumo.fof_financiamento) * 100).toFixed(1)}%`
+                : '0%'
+              }
             </div>
             <p className="text-xs text-muted-foreground">
-              Valor configurado
+              Do financiamento FOF
             </p>
           </CardContent>
         </Card>
