@@ -1,3 +1,4 @@
+import { lazy, Suspense, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -9,31 +10,28 @@ import { useFinancesByProject } from "@/hooks/useFinances";
 import { useOptimizedPurchaseBreakdown } from "@/hooks/useOptimizedPurchaseBreakdown";
 import { useOptimizedRealtimeSync, useOptimizedFinancialDiscrepancies } from "@/hooks/useOptimizedFinancialIntegration";
 import { useProjectContext } from "@/contexts/ProjectContext";
-import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, Package, CheckCircle, Target, BarChart3, Activity, Layers, ClipboardCheck, Search, FileText, Maximize2, Wallet, ArrowRight } from "lucide-react";
+import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, Package, CheckCircle, Target, BarChart3, Activity, Layers, ClipboardCheck, Search, FileText, Maximize2, Wallet, ArrowRight, Building, Users, Truck, DollarSign } from "lucide-react";
 import { FinanceModal } from "@/components/modals/FinanceModal";
-import { OptimizedApprovalInterface } from "@/components/OptimizedApprovalInterface";
-import { DiscrepancyReport } from "@/components/DiscrepancyReport";
-import { IntegratedFinancialDashboard } from "@/components/IntegratedFinancialDashboard";
-import { ExpenseManagement } from "@/components/ExpenseManagement";
-import { TaskFinancialBreakdown } from "@/components/financial/TaskFinancialBreakdown";
-import { TaskVsRealityAnalysis } from "@/components/financial/TaskVsRealityAnalysis";
-import { FinancialChartsSection } from "@/components/financial/FinancialChartsSection";
-import { CollapsibleFinancialSection } from "@/components/financial/CollapsibleFinancialSection";
-import { ExpandedFinancialDashboard } from "@/components/financial/ExpandedFinancialDashboard";
 import { useTaskFinancialAnalytics } from "@/hooks/useTaskFinancialAnalytics";
-import { useMemo, useState } from "react";
 import { useRequisitions } from "@/hooks/useRequisitions";
-import { CategoryExpenseCard } from "@/components/financial/CategoryExpenseCard";
-import { Building, Users, Truck, DollarSign } from "lucide-react";
 import { useDetailedExpenses } from "@/hooks/useIntegratedFinances";
-import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
-import { CentrosCustoSummary } from "@/components/financial/CentrosCustoSummary";
 import { useClientes } from "@/hooks/useClientes";
-import { FundingBreakdownSection } from "@/components/financial/FundingBreakdownSection";
-import { ReembolsosFOASection } from "@/components/financial/ReembolsosFOASection";
 import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
-import { FluxoCaixaSection } from "@/components/financial/FluxoCaixaSection";
 import { useCategoryIntegratedExpenses } from "@/hooks/useCategoryIntegratedExpenses";
+import SectionLoadingFallback, { KPILoadingFallback, ChartLoadingFallback, TableLoadingFallback } from "@/components/loading/SectionLoadingFallback";
+
+// Lazy load componentes pesados para melhor performance
+const IntegratedFinancialDashboard = lazy(() => import("@/components/IntegratedFinancialDashboard").then(m => ({ default: m.IntegratedFinancialDashboard })));
+const ExpandedFinancialDashboard = lazy(() => import("@/components/financial/ExpandedFinancialDashboard").then(m => ({ default: m.ExpandedFinancialDashboard })));
+const FluxoCaixaSection = lazy(() => import("@/components/financial/FluxoCaixaSection").then(m => ({ default: m.FluxoCaixaSection })));
+const CategoryExpenseCard = lazy(() => import("@/components/financial/CategoryExpenseCard").then(m => ({ default: m.CategoryExpenseCard })));
+const TaskFinancialBreakdown = lazy(() => import("@/components/financial/TaskFinancialBreakdown").then(m => ({ default: m.TaskFinancialBreakdown })));
+const TaskVsRealityAnalysis = lazy(() => import("@/components/financial/TaskVsRealityAnalysis").then(m => ({ default: m.TaskVsRealityAnalysis })));
+const OptimizedApprovalInterface = lazy(() => import("@/components/OptimizedApprovalInterface").then(m => ({ default: m.OptimizedApprovalInterface })));
+const DiscrepancyReport = lazy(() => import("@/components/DiscrepancyReport").then(m => ({ default: m.DiscrepancyReport })));
+const ContasCorrentesSection = lazy(() => import("@/components/financial/ContasCorrentesSection").then(m => ({ default: m.ContasCorrentesSection })));
+const CentrosCustoSummary = lazy(() => import("@/components/financial/CentrosCustoSummary").then(m => ({ default: m.CentrosCustoSummary })));
+const CollapsibleFinancialSection = lazy(() => import("@/components/financial/CollapsibleFinancialSection").then(m => ({ default: m.CollapsibleFinancialSection })));
 
 // Loading skeleton components
 const SummaryCardSkeleton = () => <Card>
@@ -238,22 +236,28 @@ export function OptimizedFinancasPage() {
       </div>
 
       {/* Integrated Financial Dashboard - Expandable */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-0">
-          <div className="relative">
-            <IntegratedFinancialDashboard projectId={selectedProjectId} />
-            <div className="absolute top-4 right-4">
-              <Button variant="outline" size="sm" onClick={() => setExpandedDashboardOpen(true)} className="gap-2">
-                <Maximize2 className="h-4 w-4" />
-                Ver Detalhes
-              </Button>
+      <Suspense fallback={<ChartLoadingFallback />}>
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            <div className="relative">
+              <IntegratedFinancialDashboard projectId={selectedProjectId} />
+              <div className="absolute top-4 right-4">
+                <Button variant="outline" size="sm" onClick={() => setExpandedDashboardOpen(true)} className="gap-2">
+                  <Maximize2 className="h-4 w-4" />
+                  Ver Detalhes
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </Suspense>
 
       {/* Expanded Dashboard Dialog */}
-      <ExpandedFinancialDashboard open={expandedDashboardOpen} onOpenChange={setExpandedDashboardOpen} projectId={selectedProjectId} />
+      {expandedDashboardOpen && (
+        <Suspense fallback={null}>
+          <ExpandedFinancialDashboard open={expandedDashboardOpen} onOpenChange={setExpandedDashboardOpen} projectId={selectedProjectId} />
+        </Suspense>
+      )}
 
       {/* Collapsible Sections with Accordion */}
       <Accordion type="multiple" className="w-full space-y-3">
@@ -266,7 +270,9 @@ export function OptimizedFinancasPage() {
             variant: "default"
           }}
         >
-          <FluxoCaixaSection projectId={selectedProjectId} />
+          <Suspense fallback={<SectionLoadingFallback rows={5} />}>
+            <FluxoCaixaSection projectId={selectedProjectId} />
+          </Suspense>
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection 
@@ -279,46 +285,54 @@ export function OptimizedFinancasPage() {
           }}
         >
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <CategoryExpenseCard 
-              category="material" 
-              title="Materiais" 
-              icon={Building} 
-              projectId={selectedProjectId} 
-              totalBudget={financas.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000}
-              fromTasks={integratedExpenses?.material.fromTasks || 0}
-              fromCentroCusto={integratedExpenses?.material.fromCentroCusto || 0}
-              manualExpenses={integratedExpenses?.material.manual || 0}
-            />
-            <CategoryExpenseCard 
-              category="mao_obra" 
-              title="Mão de Obra" 
-              icon={Users} 
-              projectId={selectedProjectId} 
-              totalBudget={financas.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000}
-              fromTasks={integratedExpenses?.mao_obra.fromTasks || 0}
-              fromCentroCusto={integratedExpenses?.mao_obra.fromCentroCusto || 0}
-              manualExpenses={integratedExpenses?.mao_obra.manual || 0}
-            />
-            <CategoryExpenseCard 
-              category="patrimonio" 
-              title="Patrimônio" 
-              icon={Truck} 
-              projectId={selectedProjectId} 
-              totalBudget={financas.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000}
-              fromTasks={integratedExpenses?.patrimonio.fromTasks || 0}
-              fromCentroCusto={integratedExpenses?.patrimonio.fromCentroCusto || 0}
-              manualExpenses={integratedExpenses?.patrimonio.manual || 0}
-            />
-            <CategoryExpenseCard 
-              category="indireto" 
-              title="Custos Indiretos" 
-              icon={DollarSign} 
-              projectId={selectedProjectId} 
-              totalBudget={financas.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000}
-              fromTasks={integratedExpenses?.indireto.fromTasks || 0}
-              fromCentroCusto={integratedExpenses?.indireto.fromCentroCusto || 0}
-              manualExpenses={integratedExpenses?.indireto.manual || 0}
-            />
+            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
+              <CategoryExpenseCard 
+                category="material" 
+                title="Materiais" 
+                icon={Building} 
+                projectId={selectedProjectId} 
+                totalBudget={financas.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000}
+                fromTasks={integratedExpenses?.material.fromTasks || 0}
+                fromCentroCusto={integratedExpenses?.material.fromCentroCusto || 0}
+                manualExpenses={integratedExpenses?.material.manual || 0}
+              />
+            </Suspense>
+            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
+              <CategoryExpenseCard 
+                category="mao_obra" 
+                title="Mão de Obra" 
+                icon={Users} 
+                projectId={selectedProjectId} 
+                totalBudget={financas.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000}
+                fromTasks={integratedExpenses?.mao_obra.fromTasks || 0}
+                fromCentroCusto={integratedExpenses?.mao_obra.fromCentroCusto || 0}
+                manualExpenses={integratedExpenses?.mao_obra.manual || 0}
+              />
+            </Suspense>
+            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
+              <CategoryExpenseCard 
+                category="patrimonio" 
+                title="Patrimônio" 
+                icon={Truck} 
+                projectId={selectedProjectId} 
+                totalBudget={financas.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000}
+                fromTasks={integratedExpenses?.patrimonio.fromTasks || 0}
+                fromCentroCusto={integratedExpenses?.patrimonio.fromCentroCusto || 0}
+                manualExpenses={integratedExpenses?.patrimonio.manual || 0}
+              />
+            </Suspense>
+            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
+              <CategoryExpenseCard 
+                category="indireto" 
+                title="Custos Indiretos" 
+                icon={DollarSign} 
+                projectId={selectedProjectId} 
+                totalBudget={financas.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000}
+                fromTasks={integratedExpenses?.indireto.fromTasks || 0}
+                fromCentroCusto={integratedExpenses?.indireto.fromCentroCusto || 0}
+                manualExpenses={integratedExpenses?.indireto.manual || 0}
+              />
+            </Suspense>
           </div>
         </CollapsibleFinancialSection>
 
@@ -327,8 +341,12 @@ export function OptimizedFinancasPage() {
         variant: taskAnalytics.efficiency_score >= 80 ? "default" : taskAnalytics.efficiency_score >= 60 ? "secondary" : "destructive"
       } : undefined}>
           <div className="space-y-6">
-            <TaskFinancialBreakdown projectId={selectedProjectId} />
-            <TaskVsRealityAnalysis projectId={selectedProjectId} />
+            <Suspense fallback={<SectionLoadingFallback rows={4} />}>
+              <TaskFinancialBreakdown projectId={selectedProjectId} />
+            </Suspense>
+            <Suspense fallback={<ChartLoadingFallback />}>
+              <TaskVsRealityAnalysis projectId={selectedProjectId} />
+            </Suspense>
           </div>
         </CollapsibleFinancialSection>
 
@@ -405,21 +423,27 @@ export function OptimizedFinancasPage() {
         text: "0",
         variant: "outline"
       }}>
-          <OptimizedApprovalInterface projectId={selectedProjectId} />
+          <Suspense fallback={<SectionLoadingFallback rows={3} />}>
+            <OptimizedApprovalInterface projectId={selectedProjectId} />
+          </Suspense>
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection value="audit" title="Auditoria e Discrepâncias" icon={Search} badge={discrepancies.length > 0 ? {
         text: `${discrepancies.length}`,
         variant: "destructive"
       } : undefined}>
-          <DiscrepancyReport projectId={selectedProjectId} />
+          <Suspense fallback={<TableLoadingFallback rows={3} />}>
+            <DiscrepancyReport projectId={selectedProjectId} />
+          </Suspense>
         </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection value="clientes" title="Contas Correntes - Clientes" icon={Users} badge={{
         text: `${clientes.length} clientes`,
         variant: "outline"
       }}>
-          <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
+          <Suspense fallback={<SectionLoadingFallback rows={4} />}>
+            <ContasCorrentesSection projectId={selectedProjectId} mode="clientes" />
+          </Suspense>
         </CollapsibleFinancialSection>
       </Accordion>
     </div>;

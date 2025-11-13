@@ -1,22 +1,25 @@
+import { lazy, Suspense, useState } from "react";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
 import { useDashboardGeral } from "@/hooks/useDashboardGeral";
 import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { useAuth } from "@/contexts/AuthContext";
-import { DashboardKPISection } from "@/components/dashboard/DashboardKPISection";
-import { DashboardFinancasSection } from "@/components/dashboard/DashboardFinancasSection";
-import { DashboardTarefasSection } from "@/components/dashboard/DashboardTarefasSection";
-import { DashboardRequisicoesSection } from "@/components/dashboard/DashboardRequisicoesSection";
-import { DashboardProjetosSection } from "@/components/dashboard/DashboardProjetosSection";
-import { DashboardDRESection } from "@/components/dashboard/DashboardDRESection";
-import { DashboardRelatoriosFOASection } from "@/components/dashboard/DashboardRelatoriosFOASection";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import SectionLoadingFallback, { KPILoadingFallback } from "@/components/loading/SectionLoadingFallback";
+
+// Lazy load dashboard sections para melhor performance
+const DashboardKPISection = lazy(() => import("@/components/dashboard/DashboardKPISection").then(m => ({ default: m.DashboardKPISection })));
+const DashboardFinancasSection = lazy(() => import("@/components/dashboard/DashboardFinancasSection").then(m => ({ default: m.DashboardFinancasSection })));
+const DashboardTarefasSection = lazy(() => import("@/components/dashboard/DashboardTarefasSection").then(m => ({ default: m.DashboardTarefasSection })));
+const DashboardRequisicoesSection = lazy(() => import("@/components/dashboard/DashboardRequisicoesSection").then(m => ({ default: m.DashboardRequisicoesSection })));
+const DashboardProjetosSection = lazy(() => import("@/components/dashboard/DashboardProjetosSection").then(m => ({ default: m.DashboardProjetosSection })));
+const DashboardDRESection = lazy(() => import("@/components/dashboard/DashboardDRESection").then(m => ({ default: m.DashboardDRESection })));
+const DashboardRelatoriosFOASection = lazy(() => import("@/components/dashboard/DashboardRelatoriosFOASection").then(m => ({ default: m.DashboardRelatoriosFOASection })));
 
 export function DashboardGeralPage() {
   return (
@@ -103,7 +106,9 @@ function DashboardGeralContent() {
       />
 
       {/* KPIs Principais */}
-      <DashboardKPISection kpis={kpis_gerais} />
+      <Suspense fallback={<KPILoadingFallback />}>
+        <DashboardKPISection kpis={kpis_gerais} />
+      </Suspense>
 
       {/* Seção de Finanças */}
       {permissions.canViewFinances && (
@@ -119,11 +124,13 @@ function DashboardGeralContent() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-4">
-            <DashboardFinancasSection
-              topProjetosGasto={top_projetos_gasto}
-              orcamentoTotal={kpis_gerais.orcamento_total}
-              gastoTotal={kpis_gerais.gasto_total}
-            />
+            <Suspense fallback={<SectionLoadingFallback rows={4} />}>
+              <DashboardFinancasSection
+                topProjetosGasto={top_projetos_gasto}
+                orcamentoTotal={kpis_gerais.orcamento_total}
+                gastoTotal={kpis_gerais.gasto_total}
+              />
+            </Suspense>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -142,10 +149,12 @@ function DashboardGeralContent() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-4">
-            <DashboardTarefasSection
-              tarefasResumo={tarefas_resumo}
-              topProjetosTarefas={top_projetos_tarefas}
-            />
+            <Suspense fallback={<SectionLoadingFallback rows={4} />}>
+              <DashboardTarefasSection
+                tarefasResumo={tarefas_resumo}
+                topProjetosTarefas={top_projetos_tarefas}
+              />
+            </Suspense>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -164,7 +173,9 @@ function DashboardGeralContent() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-4">
-            <DashboardRequisicoesSection requisicoesResumo={requisicoes_resumo} />
+            <Suspense fallback={<SectionLoadingFallback rows={3} />}>
+              <DashboardRequisicoesSection requisicoesResumo={requisicoes_resumo} />
+            </Suspense>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -183,7 +194,9 @@ function DashboardGeralContent() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-4">
-            <DashboardDRESection />
+            <Suspense fallback={<SectionLoadingFallback rows={5} />}>
+              <DashboardDRESection />
+            </Suspense>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -202,7 +215,9 @@ function DashboardGeralContent() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-4">
-            <DashboardRelatoriosFOASection />
+            <Suspense fallback={<SectionLoadingFallback rows={4} />}>
+              <DashboardRelatoriosFOASection />
+            </Suspense>
           </CollapsibleContent>
         </Collapsible>
       )}
@@ -220,7 +235,9 @@ function DashboardGeralContent() {
           </CollapsibleTrigger>
         </div>
         <CollapsibleContent className="mt-4">
-          <DashboardProjetosSection projetos={projetos_lista} />
+          <Suspense fallback={<SectionLoadingFallback rows={5} />}>
+            <DashboardProjetosSection projetos={projetos_lista} />
+          </Suspense>
         </CollapsibleContent>
       </Collapsible>
 
