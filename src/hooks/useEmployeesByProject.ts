@@ -16,7 +16,7 @@ export function useEmployeesByProject(projectId?: number) {
         .from("colaboradores_projetos")
         .select(`
           *,
-          colaborador:colaboradores!inner(*)
+          colaborador:colaboradores!colaboradores_projetos_colaborador_id_fkey(*)
         `)
         .eq("projeto_id", projectId);
       
