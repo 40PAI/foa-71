@@ -4,7 +4,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Wallet, CheckSquare, ShoppingCart, BarChart3, FileText, Building2, XCircle, Lightbulb, RefreshCw, TrendingUp } from "lucide-react";
 import { useDashboardGeral } from "@/hooks/useDashboardGeral";
 import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
@@ -61,12 +61,15 @@ function DashboardGeralContent() {
         <Alert variant="destructive">
           <AlertDescription>
             <div className="space-y-2">
-              <strong>❌ Erro ao carregar dashboard</strong>
+              <div className="flex items-center gap-2">
+                <XCircle className="h-4 w-4" />
+                <strong>Erro ao carregar dashboard</strong>
+              </div>
               <p className="text-sm mt-2">{errorMessage}</p>
               {isServerError && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  💡 Este erro indica um problema no cálculo de dados no servidor. 
-                  Os dados básicos foram carregados como alternativa.
+                <p className="text-xs text-muted-foreground mt-2 flex items-start gap-2">
+                  <Lightbulb className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <span>Este erro indica um problema no cálculo de dados no servidor. Os dados básicos foram carregados como alternativa.</span>
                 </p>
               )}
             </div>
@@ -74,10 +77,12 @@ function DashboardGeralContent() {
         </Alert>
         <div className="flex gap-2">
           <Button onClick={() => refetch()} variant="outline">
-            🔄 Tentar novamente
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Tentar novamente
           </Button>
           <Button onClick={() => window.location.href = '/projetos'} variant="secondary">
-            📊 Ir para Projetos
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Ir para Projetos
           </Button>
         </div>
       </div>
@@ -117,7 +122,8 @@ function DashboardGeralContent() {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="p-0 hover:bg-transparent">
                 <span className="text-lg font-semibold flex items-center gap-2">
-                  💰 Finanças
+                  <Wallet className="h-5 w-5" />
+                  Finanças
                   {financasOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </Button>
@@ -142,7 +148,8 @@ function DashboardGeralContent() {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="p-0 hover:bg-transparent">
                 <span className="text-lg font-semibold flex items-center gap-2">
-                  ✅ Tarefas
+                  <CheckSquare className="h-5 w-5" />
+                  Tarefas
                   {tarefasOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </Button>
@@ -166,7 +173,8 @@ function DashboardGeralContent() {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="p-0 hover:bg-transparent">
                 <span className="text-lg font-semibold flex items-center gap-2">
-                  🛒 Compras & Requisições
+                  <ShoppingCart className="h-5 w-5" />
+                  Compras & Requisições
                   {requisicoesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </Button>
@@ -187,7 +195,8 @@ function DashboardGeralContent() {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="p-0 hover:bg-transparent">
                 <span className="text-lg font-semibold flex items-center gap-2">
-                  📊 DRE - Demonstração de Resultados
+                  <BarChart3 className="h-5 w-5" />
+                  DRE - Demonstração de Resultados
                   {dreOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </Button>
@@ -208,7 +217,8 @@ function DashboardGeralContent() {
             <CollapsibleTrigger asChild>
               <Button variant="ghost" className="p-0 hover:bg-transparent">
                 <span className="text-lg font-semibold flex items-center gap-2">
-                  📄 Relatórios FOA
+                  <FileText className="h-5 w-5" />
+                  Relatórios FOA
                   {relatoriosOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </Button>
@@ -228,7 +238,8 @@ function DashboardGeralContent() {
           <CollapsibleTrigger asChild>
             <Button variant="ghost" className="p-0 hover:bg-transparent">
               <span className="text-lg font-semibold flex items-center gap-2">
-                🏗️ Projetos - Visão Rápida
+                <Building2 className="h-5 w-5" />
+                Projetos - Visão Rápida
                 {projetosOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </span>
             </Button>
@@ -244,7 +255,9 @@ function DashboardGeralContent() {
       {/* Mensagem informativa sobre visualização */}
       <Alert className="mt-6">
         <AlertDescription className="text-sm">
-          <strong>ℹ️ Nota:</strong> Você está visualizando dados de {dashboardData.visible_project_count} projeto(s) 
+          <strong className="flex items-center gap-1.5">
+            <span className="text-blue-500">ℹ️</span> Nota:
+          </strong> Você está visualizando dados de {dashboardData.visible_project_count} projeto(s)
           baseado nas suas permissões de acesso ({permissions.roleLabel}).
         </AlertDescription>
       </Alert>
