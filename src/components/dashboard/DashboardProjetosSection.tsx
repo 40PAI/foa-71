@@ -6,11 +6,9 @@ import type { ProjetoLista } from "@/hooks/useDashboardGeral";
 import { cn } from "@/lib/utils";
 import { RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
 interface DashboardProjetosSectionProps {
   projetos: ProjetoLista[];
 }
-
 const statusColors = {
   "Em Andamento": "bg-blue-500",
   "Pausado": "bg-yellow-500",
@@ -19,22 +17,24 @@ const statusColors = {
   "Planeado": "bg-gray-500",
   "Cancelado": "bg-gray-700"
 };
-
 const statusFinanceiroColors = {
   verde: "text-green-600",
   amarelo: "text-yellow-600",
   vermelho: "text-red-600"
 };
-
-export function DashboardProjetosSection({ projetos }: DashboardProjetosSectionProps) {
-  const { dataUpdatedAt } = useQuery({ queryKey: ["dashboard-geral"] });
+export function DashboardProjetosSection({
+  projetos
+}: DashboardProjetosSectionProps) {
+  const {
+    dataUpdatedAt
+  } = useQuery({
+    queryKey: ["dashboard-geral"]
+  });
   const lastUpdate = dataUpdatedAt ? new Date(dataUpdatedAt).toLocaleTimeString('pt-BR') : "—";
-
-  return (
-    <Card>
+  return <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-responsive-xl">🏗️ Projetos - Visão Rápida</CardTitle>
+          <CardTitle className="text-responsive-xl">Projetos - Visão Rápida</CardTitle>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <RefreshCw className="h-3 w-3" />
             <span>Atualizado: {lastUpdate}</span>
@@ -42,24 +42,16 @@ export function DashboardProjetosSection({ projetos }: DashboardProjetosSectionP
         </div>
       </CardHeader>
       <CardContent>
-        {projetos.length > 0 ? (
-          <div className="space-y-3">
-            {projetos.map((projeto) => {
-              const percentualGasto = projeto.orcamento > 0 
-                ? ((projeto.gasto / projeto.orcamento) * 100)
-                : 0;
-
-              return (
-                <div key={projeto.id} className="p-4 border rounded-lg bg-card space-y-2">
+        {projetos.length > 0 ? <div className="space-y-3">
+            {projetos.map(projeto => {
+          const percentualGasto = projeto.orcamento > 0 ? projeto.gasto / projeto.orcamento * 100 : 0;
+          return <div key={projeto.id} className="p-4 border rounded-lg bg-card space-y-2">
                   <div className="flex justify-between items-start gap-2">
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{projeto.nome}</h3>
                       <p className="text-xs text-muted-foreground truncate">{projeto.cliente}</p>
                     </div>
-                    <Badge 
-                      variant="secondary" 
-                      className={cn("shrink-0", statusColors[projeto.status as keyof typeof statusColors])}
-                    >
+                    <Badge variant="secondary" className={cn("shrink-0", statusColors[projeto.status as keyof typeof statusColors])}>
                       {projeto.status}
                     </Badge>
                   </div>
@@ -71,10 +63,7 @@ export function DashboardProjetosSection({ projetos }: DashboardProjetosSectionP
                     </div>
                     <div>
                       <p className="text-muted-foreground">Gasto</p>
-                      <p className={cn(
-                        "font-medium",
-                        statusFinanceiroColors[projeto.status_financeiro]
-                      )}>
+                      <p className={cn("font-medium", statusFinanceiroColors[projeto.status_financeiro])}>
                         {formatCurrency(projeto.gasto)}
                       </p>
                     </div>
@@ -92,16 +81,11 @@ export function DashboardProjetosSection({ projetos }: DashboardProjetosSectionP
                     <span>Início: {new Date(projeto.data_inicio).toLocaleDateString('pt-BR')}</span>
                     <span>Fim: {new Date(projeto.data_fim_prevista).toLocaleDateString('pt-BR')}</span>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-center text-muted-foreground py-8">
+                </div>;
+        })}
+          </div> : <p className="text-center text-muted-foreground py-8">
             Nenhum projeto disponível para visualização
-          </p>
-        )}
+          </p>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 }
