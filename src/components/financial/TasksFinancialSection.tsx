@@ -48,7 +48,7 @@ export function TasksFinancialSection({ data }: TasksFinancialSectionProps) {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Eficiência Financeira</p>
           </div>
-          <p className="text-2xl font-bold mt-2">{data.eficienciaFinanceira.toFixed(1)}%</p>
+          <p className="text-2xl font-bold mt-2">{(data.eficienciaFinanceira ?? 0).toFixed(1)}%</p>
         </Card>
       </div>
 

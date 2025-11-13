@@ -151,7 +151,7 @@ export function ConsolidatedFinancasPage() {
                   <div className="min-w-0 flex-1">
                     <p className="text-xs sm:text-sm font-medium text-muted-foreground whitespace-nowrap">Taxa Aprovação</p>
                     <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600">
-                      {summaryStats.approvalRate.toFixed(1)}%
+                      {(summaryStats.approvalRate ?? 0).toFixed(1)}%
                     </p>
                   </div>
                   <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 shrink-0" />
@@ -168,7 +168,7 @@ export function ConsolidatedFinancasPage() {
                       (consolidatedData?.task_analytics?.efficiency_score || 0) >= 80 ? 'text-green-600' : 
                       (consolidatedData?.task_analytics?.efficiency_score || 0) >= 60 ? 'text-orange-600' : 'text-red-600'
                     }`}>
-                      {consolidatedData?.task_analytics?.efficiency_score.toFixed(0) || 0}%
+                      {(consolidatedData?.task_analytics?.efficiency_score ?? 0).toFixed(0)}%
                     </p>
                   </div>
                   <Target className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground shrink-0" />

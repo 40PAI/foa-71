@@ -70,7 +70,7 @@ export function StageFinancialSection({ data }: StageFinancialSectionProps) {
                 <tr key={idx} className="border-b hover:bg-muted/50">
                   <td className="p-2">{etapa.nome}</td>
                   <td className="p-2 text-right font-semibold">{formatCurrency(etapa.valor)}</td>
-                  <td className="p-2 text-right">{etapa.percentual.toFixed(1)}%</td>
+                  <td className="p-2 text-right">{(etapa.percentual ?? 0).toFixed(1)}%</td>
                 </tr>
               ))}
             </tbody>
