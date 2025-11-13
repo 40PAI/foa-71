@@ -56,6 +56,8 @@ export function useCreateReembolso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
       toast.success("Reembolso registrado com sucesso!");
     },
     onError: (error: Error) => {
@@ -82,6 +84,8 @@ export function useUpdateReembolso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
       toast.success("Reembolso atualizado com sucesso!");
     },
     onError: (error: Error) => {
@@ -105,6 +109,8 @@ export function useDeleteReembolso() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
+      queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
       toast.success("Reembolso removido com sucesso!");
     },
     onError: (error: Error) => {
