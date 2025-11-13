@@ -1,3 +1,4 @@
+import { usePrefetchPage } from "@/hooks/usePrefetchPage";
 import { NavLink, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -114,6 +115,7 @@ const financasItems = [
   },
 ];
 export function AppSidebar() {
+  const prefetch = usePrefetchPage();
   const { state, setOpenMobile, open: sidebarOpen, toggleSidebar } = useSidebar();
   const { profile, canAccessModule, isDirector, signOut } = useAuth();
   const location = useLocation();
@@ -203,6 +205,7 @@ export function AppSidebar() {
                 asChild
                 isActive={currentPath === dashboardItem.path}
                 className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+                onMouseEnter={() => prefetch.prefetchDashboard()}
               >
                 <NavLink
                   to={dashboardItem.path}
@@ -223,6 +226,7 @@ export function AppSidebar() {
                 asChild
                 isActive={currentPath === projetosItem.path}
                 className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+                onMouseEnter={() => prefetch.prefetchProjetos()}
               >
                 <NavLink
                   to={projetosItem.path}
@@ -243,6 +247,7 @@ export function AppSidebar() {
                   asChild
                   isActive={currentPath === "/financas"}
                   className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+                  onMouseEnter={() => prefetch.prefetchFinancas()}
                 >
                   <NavLink
                     to="/financas"
@@ -268,47 +273,69 @@ export function AppSidebar() {
               </SidebarMenuItem>
 
               <CollapsibleContent className="ml-2 border-l-2 border-sidebar-accent/30">
-                {filteredFinancasItems.map((item) => (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={currentPath === item.path}
-                      className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[36px] sm:min-h-[40px] px-2 sm:px-3 pl-6 sm:pl-8 ml-1"
-                    >
-                      <NavLink
-                        to={item.path}
-                        className="flex items-center gap-2 p-1 sm:p-2 text-xs"
-                        onClick={handleNavClick}
+                {filteredFinancasItems.map((item) => {
+                  // Map prefetch functions based on path
+                  const prefetchFn = () => {
+                    if (item.path === "/centros-custo") prefetch.prefetchCentrosCusto();
+                    else if (item.path === "/compras") prefetch.prefetchCompras();
+                    else if (item.path === "/divida-foa-fof") prefetch.prefetchDividaFOA();
+                    else if (item.path === "/contas-fornecedores") prefetch.prefetchContasFornecedores();
+                  };
+
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={currentPath === item.path}
+                        className="w-full justify-start text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[36px] sm:min-h-[40px] px-2 sm:px-3 pl-6 sm:pl-8 ml-1"
+                        onMouseEnter={prefetchFn}
                       >
-                        <item.icon className="h-3.5 w-3.5 shrink-0 opacity-80" />
-                        <span className="truncate text-xs sm:text-sm">{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                        <NavLink
+                          to={item.path}
+                          className="flex items-center gap-2 p-1 sm:p-2 text-xs"
+                          onClick={handleNavClick}
+                        >
+                          <item.icon className="h-3.5 w-3.5 shrink-0 opacity-80" />
+                          <span className="truncate text-xs sm:text-sm">{item.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </CollapsibleContent>
             </Collapsible>
           )}
 
           {/* Remaining items (Armazém, RH & Ponto, Segurança & Higiene, Tarefas) */}
-          {remainingItems.map((item) => (
-            <SidebarMenuItem key={item.path}>
-              <SidebarMenuButton
-                asChild
-                isActive={currentPath === item.path}
-                className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
-              >
-                <NavLink
-                  to={item.path}
-                  className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
-                  onClick={handleNavClick}
+          {remainingItems.map((item) => {
+            // Map prefetch functions based on path
+            const prefetchFn = () => {
+              if (item.path === "/armazem") prefetch.prefetchArmazem();
+              else if (item.path === "/rh") prefetch.prefetchRH();
+              else if (item.path === "/seguranca") prefetch.prefetchSeguranca();
+              else if (item.path === "/tarefas") prefetch.prefetchTarefas();
+            };
+
+            return (
+              <SidebarMenuItem key={item.path}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={currentPath === item.path}
+                  className="w-full justify-start text-sidebar-foreground/80 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground min-h-[40px] sm:min-h-[48px] px-2 sm:px-3"
+                  onMouseEnter={prefetchFn}
                 >
-                  <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                  <span className="truncate">{item.title}</span>
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+                  <NavLink
+                    to={item.path}
+                    className="flex items-center gap-2 sm:gap-3 p-1 sm:p-2 text-xs sm:text-sm"
+                    onClick={handleNavClick}
+                  >
+                    <item.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                    <span className="truncate">{item.title}</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
 
           {isDirector() && (
             <SidebarMenuItem>
