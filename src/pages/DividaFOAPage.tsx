@@ -72,7 +72,7 @@ export function DividaFOAPage() {
               {formatCurrency(totaisGerais?.fof_financiamento || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total recebido de FOF em todos os projetos
+              Total de custos financiados pela FOF (saídas)
             </p>
           </CardContent>
         </Card>

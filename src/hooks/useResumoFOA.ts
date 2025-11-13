@@ -5,10 +5,9 @@ import { useEffect } from "react";
 export interface ResumoFOA {
   projeto_id: number;
   projeto_nome: string;
-  fof_financiamento: number;
+  fof_financiamento: number; // Agora representa SAÍDAS FOF_FIN (financiamento utilizado)
   amortizacao: number;
-  custos_suportados: number;
-  divida_foa_com_fof: number;
+  divida_foa_com_fof: number; // = fof_financiamento - amortizacao
 }
 
 export function useResumoFOA(projectId?: number) {
@@ -83,7 +82,6 @@ export function useResumoFOAGeral() {
         return {
           fof_financiamento: 0,
           amortizacao: 0,
-          custos_suportados: 0,
           divida_foa_com_fof: 0,
         };
       }
@@ -93,13 +91,11 @@ export function useResumoFOAGeral() {
         (acc, curr) => ({
           fof_financiamento: acc.fof_financiamento + Number(curr.fof_financiamento),
           amortizacao: acc.amortizacao + Number(curr.amortizacao),
-          custos_suportados: acc.custos_suportados + Number(curr.custos_suportados),
           divida_foa_com_fof: acc.divida_foa_com_fof + Number(curr.divida_foa_com_fof),
         }),
         {
           fof_financiamento: 0,
           amortizacao: 0,
-          custos_suportados: 0,
           divida_foa_com_fof: 0,
         }
       );
