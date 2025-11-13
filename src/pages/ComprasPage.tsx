@@ -176,10 +176,10 @@ export function ComprasPage() {
         />
         <KPICard
           title="Lead-time Médio"
-          value={`${leadTimeMedio.toFixed(1)} dias`}
+          value={`${(leadTimeMedio ?? 0).toFixed(1)} dias`}
           subtitle="Tempo médio aprovação"
           icon={<Clock className="h-4 w-4" />}
-          alert={leadTimeMedio > 7 ? "red" : leadTimeMedio > 5 ? "yellow" : "green"}
+          alert={(leadTimeMedio ?? 0) > 7 ? "red" : (leadTimeMedio ?? 0) > 5 ? "yellow" : "green"}
         />
       </div>
       

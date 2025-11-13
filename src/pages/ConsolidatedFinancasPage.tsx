@@ -281,9 +281,9 @@ export function ConsolidatedFinancasPage() {
           title="Custos e Performance por Tarefas" 
           icon={Target} 
           badge={consolidatedData?.task_analytics ? {
-            text: `Score: ${consolidatedData.task_analytics.efficiency_score.toFixed(0)}%`,
-            variant: consolidatedData.task_analytics.efficiency_score >= 80 ? "default" : 
-                     consolidatedData.task_analytics.efficiency_score >= 60 ? "secondary" : "destructive"
+            text: `Score: ${(consolidatedData.task_analytics.efficiency_score ?? 0).toFixed(0)}%`,
+            variant: (consolidatedData.task_analytics.efficiency_score ?? 0) >= 80 ? "default" : 
+                     (consolidatedData.task_analytics.efficiency_score ?? 0) >= 60 ? "secondary" : "destructive"
           } : undefined}
         >
           <div className="space-y-6">

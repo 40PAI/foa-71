@@ -181,10 +181,10 @@ export function TarefasPage() {
         />
         <KPICard
           title="Taxa de Conclusão"
-          value={`${percentualConclusao.toFixed(0)}%`}
+          value={`${(percentualConclusao ?? 0).toFixed(0)}%`}
           subtitle={`${tarefasConcluidas} de ${totalTarefas} concluídas`}
           icon={<CheckCircle className="h-4 w-4" />}
-          alert={percentualConclusao >= 80 ? "green" : percentualConclusao >= 60 ? "yellow" : "red"}
+          alert={(percentualConclusao ?? 0) >= 80 ? "green" : (percentualConclusao ?? 0) >= 60 ? "yellow" : "red"}
         />
         <KPICard
           title="Tarefas Atrasadas"
@@ -370,7 +370,7 @@ export function TarefasPage() {
                       <div className="text-lg sm:text-xl lg:text-2xl font-bold">{tarefasTipo.length}</div>
                       <div className="text-xs sm:text-sm text-muted-foreground truncate">{tipo}</div>
                       <div className="text-xs text-muted-foreground mt-1">
-                        {percentual.toFixed(0)}% concluídas
+                        {(percentual ?? 0).toFixed(0)}% concluídas
                       </div>
                     </div>
                   );
