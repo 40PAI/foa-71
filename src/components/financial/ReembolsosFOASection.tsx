@@ -41,7 +41,7 @@ export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
               {formatCurrency(resumo?.fof_financiamento || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              Total recebido de FOF (Centro de Custos)
+              Total de custos financiados pela FOF (saídas)
             </p>
           </CardContent>
         </Card>
