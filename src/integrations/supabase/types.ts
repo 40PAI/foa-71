@@ -2929,11 +2929,13 @@ export type Database = {
           id: string | null
           observacoes: string | null
           projeto_id: number | null
-          projeto_nome: string | null
           recebimento_foa: number | null
           responsavel_id: string | null
           responsavel_nome: string | null
           saida: number | null
+          subtipo_entrada:
+            | Database["public"]["Enums"]["subtipo_entrada_enum"]
+            | null
           tipo_movimento: string | null
         }
         Relationships: [

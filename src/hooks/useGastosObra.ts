@@ -32,6 +32,13 @@ export interface GastoObraSummary {
   total_custos: number;
   saldo_atual: number;
   total_movimentos: number;
+  // Breakdown por subtipo de entrada
+  entradas_por_subtipo: {
+    valor_inicial: number;
+    recebimento_cliente: number;
+    financiamento_adicional: number;
+    reembolso: number;
+  };
 }
 
 export function useGastosObra(projectId: number, centroCustoId?: string) {
@@ -63,7 +70,7 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
       // Calcular sempre do movimentos_financeiros para garantir totais corretos por fonte
       let query = supabase
         .from("movimentos_financeiros")
-        .select("tipo_movimento, fonte_financiamento, valor, projeto_id, centro_custo_id, data_movimento")
+        .select("tipo_movimento, fonte_financiamento, subtipo_entrada, valor, projeto_id, centro_custo_id, data_movimento")
         .eq("projeto_id", projectId);
 
       if (centroCustoId) {
@@ -83,11 +90,30 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
         (acc, mov: any) => {
           const tipo = mov.tipo_movimento as string | null;
           const fonte = mov.fonte_financiamento as string | null;
+          const subtipo = mov.subtipo_entrada as string | null;
           const valor = Number(mov.valor) || 0;
 
           // REC_FOA is only entrada
           if (tipo === "entrada" && fonte === "REC_FOA") {
             acc.total_recebimento_foa += valor;
+          }
+
+          // Contar entradas por subtipo
+          if (tipo === "entrada" && subtipo) {
+            switch (subtipo) {
+              case 'valor_inicial':
+                acc.entradas_por_subtipo.valor_inicial += valor;
+                break;
+              case 'recebimento_cliente':
+                acc.entradas_por_subtipo.recebimento_cliente += valor;
+                break;
+              case 'financiamento_adicional':
+                acc.entradas_por_subtipo.financiamento_adicional += valor;
+                break;
+              case 'reembolso':
+                acc.entradas_por_subtipo.reembolso += valor;
+                break;
+            }
           }
 
           if (tipo === "saida") {
@@ -115,6 +141,12 @@ export function useGastosObraSummary(projectId: number, mes?: number, ano?: numb
           total_custos: 0,              // ALL saidas
           saldo_atual: 0,
           total_movimentos: 0,
+          entradas_por_subtipo: {
+            valor_inicial: 0,
+            recebimento_cliente: 0,
+            financiamento_adicional: 0,
+            reembolso: 0,
+          },
         } as GastoObraSummary
       );
 

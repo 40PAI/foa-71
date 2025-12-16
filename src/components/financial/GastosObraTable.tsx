@@ -94,6 +94,7 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead>Descrição</TableHead>
+              <TableHead>Tipo Entrada</TableHead>
               <TableHead className="text-right text-green-600">Rec. FOA</TableHead>
               <TableHead className="text-right">FOF Financ.</TableHead>
               <TableHead className="text-right">FOA Auto</TableHead>
@@ -106,12 +107,24 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
           <TableBody>
             {gastosComSaldo.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                   {searchTerm ? "Nenhum gasto encontrado" : "Nenhum gasto registrado"}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedGastos.map((gasto) => (
+              paginatedGastos.map((gasto) => {
+                const getSubtipoLabel = (subtipo?: string) => {
+                  switch (subtipo) {
+                    case 'valor_inicial': return { label: 'Capital Inicial', variant: 'default' as const, className: 'bg-emerald-600 text-white' };
+                    case 'recebimento_cliente': return { label: 'Recebimento', variant: 'secondary' as const, className: 'bg-blue-500 text-white' };
+                    case 'financiamento_adicional': return { label: 'Financ. Adicional', variant: 'secondary' as const, className: 'bg-purple-500 text-white' };
+                    case 'reembolso': return { label: 'Reembolso', variant: 'outline' as const, className: '' };
+                    default: return null;
+                  }
+                };
+                const subtipoInfo = getSubtipoLabel(gasto.subtipo_entrada);
+                
+                return (
                 <TableRow key={gasto.id}>
                   <TableCell className="font-medium whitespace-nowrap">
                     {format(new Date(gasto.data_movimento), "dd/MM/yyyy", { locale: ptBR })}
@@ -123,6 +136,15 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
                         <div className="text-xs text-muted-foreground mt-1">{gasto.observacoes}</div>
                       )}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    {subtipoInfo ? (
+                      <Badge variant={subtipoInfo.variant} className={`text-xs ${subtipoInfo.className}`}>
+                        {subtipoInfo.label}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right text-green-600 font-semibold">
                     {gasto.recebimento_foa > 0 ? formatCurrency(gasto.recebimento_foa) : "-"}
@@ -189,7 +211,8 @@ export function GastosObraTable({ gastos, onEdit }: GastosObraTableProps) {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
