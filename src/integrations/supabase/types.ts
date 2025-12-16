@@ -1731,6 +1731,7 @@ export type Database = {
           descricao_tecnica: string | null
           fornecedor: string | null
           id: string
+          imagem_url: string | null
           localizacao_fisica: string | null
           nome_material: string
           projeto_alocado_id: number | null
@@ -1750,6 +1751,7 @@ export type Database = {
           descricao_tecnica?: string | null
           fornecedor?: string | null
           id?: string
+          imagem_url?: string | null
           localizacao_fisica?: string | null
           nome_material: string
           projeto_alocado_id?: number | null
@@ -1769,6 +1771,7 @@ export type Database = {
           descricao_tecnica?: string | null
           fornecedor?: string | null
           id?: string
+          imagem_url?: string | null
           localizacao_fisica?: string | null
           nome_material?: string
           projeto_alocado_id?: number | null
