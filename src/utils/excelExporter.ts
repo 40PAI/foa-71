@@ -9,7 +9,7 @@ export async function generateFOAExcel(projectId: number) {
     .eq('id', projectId)
     .single();
 
-  if (!projeto) throw new Error('Projeto não encontrado');
+  if (!projeto) throw new Error('Projeto nao encontrado');
 
   // Buscar centros de custo
   const { data: centros } = await supabase
@@ -39,13 +39,13 @@ export async function generateFOAExcel(projectId: number) {
 
       rows.push({
         DATA: mov.data_movimento,
-        DESCRIÇÃO: mov.descricao,
+        DESCRICAO: mov.descricao,
         'REC. FOA': mov.fonte_financiamento === 'REC_FOA' ? entrada : '',
-        'FOF FINANCIAMENTO': mov.fonte_financiamento === 'FOF_FIN' ? entrada : '',
-        'FOA AUTO': mov.fonte_financiamento === 'FOA_AUTO' ? entrada : '',
-        SAÍDA: saida || '',
+        'FOF FINANCIAMENTO': mov.fonte_financiamento === 'FOF_FIN' ? (mov.tipo_movimento === 'saida' ? saida : entrada) : '',
+        'FOA AUTO': mov.fonte_financiamento === 'FOA_AUTO' ? (mov.tipo_movimento === 'saida' ? saida : entrada) : '',
+        SAIDA: saida || '',
         SALDO: saldoAcumulado,
-        OBSERVAÇÕES: mov.observacoes || '',
+        OBSERVACOES: mov.observacoes || '',
       });
     });
 
@@ -55,31 +55,31 @@ export async function generateFOAExcel(projectId: number) {
     
     rows.push({
       DATA: 'TOTAL',
-      DESCRIÇÃO: '',
+      DESCRICAO: '',
       'REC. FOA': '',
       'FOF FINANCIAMENTO': '',
       'FOA AUTO': '',
-      SAÍDA: totalSaidas,
+      SAIDA: totalSaidas,
       SALDO: saldoAcumulado,
-      OBSERVAÇÕES: '',
+      OBSERVACOES: '',
     });
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
     XLSX.utils.book_append_sheet(workbook, worksheet, centro.nome.substring(0, 31)); // Nome limitado a 31 chars
   }
 
-  // Aba RESUMO
-  const { data: resumo } = await supabase
-    .from('vw_resumo_foa')
-    .select('*')
-    .eq('projeto_id', projectId)
-    .single();
+  // Aba RESUMO - Usar a RPC para consistência com o PDF
+  const { data: resumoData, error: resumoError } = await supabase
+    .rpc('calcular_resumo_foa', { p_projeto_id: projectId });
+  
+  console.log('Resumo FOA para Excel:', resumoData, resumoError);
+  
+  const resumo = resumoData && resumoData.length > 0 ? resumoData[0] : null;
   
   const resumoRows = [{
     'FOF FINANCIAMENTO': resumo?.fof_financiamento || 0,
-    'AMORTIZAÇÃO': resumo?.amortizacao || 0,
-    'CUSTOS SUPORTADOS FOA': resumo?.custos_suportados || 0,
-    'DÍVIDA FOA ↔ FOF': resumo?.divida_foa_com_fof || 0,
+    'AMORTIZACAO': resumo?.amortizacao || 0,
+    'DIVIDA FOA - FOF': resumo?.divida_foa_com_fof || 0,
   }];
 
   const resumoSheet = XLSX.utils.json_to_sheet(resumoRows);
@@ -113,12 +113,12 @@ export async function generateFOAExcel(projectId: number) {
 
   const reembolsosRows = reembolsos?.map(r => ({
     DATA: r.data_reembolso,
-    DESCRIÇÃO: r.descricao,
+    DESCRICAO: r.descricao,
     TIPO: r.tipo,
     VALOR: r.valor,
     'META TOTAL': r.meta_total || '',
     '% CUMPRIDO': r.percentual_cumprido || '',
-    OBSERVAÇÕES: r.observacoes || '',
+    OBSERVACOES: r.observacoes || '',
   })) || [];
 
   const reembolsosSheet = XLSX.utils.json_to_sheet(reembolsosRows);
