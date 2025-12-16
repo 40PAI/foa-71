@@ -1,5 +1,6 @@
 /**
  * Alert boxes, status indicators, and progress bars for FOA PDF reports
+ * Note: Avoids Unicode characters incompatible with jsPDF default fonts
  */
 
 import { colors, fonts, setColor, drawRoundedRect, formatCurrencyPDF } from './pdfStyles';
@@ -10,7 +11,6 @@ export interface AlertOptions {
   type: AlertType;
   title: string;
   message: string;
-  icon?: string;
 }
 
 const alertColors = {
@@ -20,20 +20,12 @@ const alertColors = {
   info: colors.primary,
 };
 
-const alertIcons = {
-  success: '✓',
-  warning: '⚠',
-  danger: '✕',
-  info: 'ℹ',
-};
-
 /**
- * Draw an alert box with icon
+ * Draw an alert box with colored bar (no Unicode icons)
  */
 export function drawAlert(doc: any, x: number, y: number, width: number, options: AlertOptions): number {
-  const { type, title, message, icon } = options;
+  const { type, title, message } = options;
   const color = alertColors[type];
-  const displayIcon = icon || alertIcons[type];
   const height = 25;
 
   // Light background based on alert type
@@ -44,26 +36,21 @@ export function drawAlert(doc: any, x: number, y: number, width: number, options
   };
   drawRoundedRect(doc, x, y, width, height, 3, bgColor);
   
-  // Left color bar
+  // Left color bar (visual indicator instead of emoji)
   doc.setFillColor(color.r, color.g, color.b);
-  doc.rect(x, y, 4, height, 'F');
-
-  // Icon
-  doc.setFontSize(14);
-  setColor(doc, color);
-  doc.text(displayIcon, x + 10, y + height / 2 + 2);
+  doc.rect(x, y, 5, height, 'F');
 
   // Title
   doc.setFontSize(fonts.body.size);
   doc.setFont('helvetica', 'bold');
   setColor(doc, color);
-  doc.text(title, x + 25, y + 10);
+  doc.text(title, x + 12, y + 10);
 
   // Message
   doc.setFontSize(fonts.small.size);
   doc.setFont('helvetica', 'normal');
   setColor(doc, colors.dark);
-  doc.text(message, x + 25, y + 18);
+  doc.text(message, x + 12, y + 18);
 
   return y + height + 5;
 }
@@ -155,7 +142,7 @@ export function drawProgressBar(
 }
 
 /**
- * Generate financial alerts based on data
+ * Generate financial alerts based on data (no Unicode characters)
  */
 export function generateFinancialAlerts(resumo: any): AlertOptions[] {
   const alerts: AlertOptions[] = [];
@@ -164,14 +151,14 @@ export function generateFinancialAlerts(resumo: any): AlertOptions[] {
   if (resumo?.divida_foa_com_fof > 100000000) {
     alerts.push({
       type: 'danger',
-      title: 'ALERTA: Dívida Elevada',
-      message: `Dívida FOA ↔ FOF acima de 100M Kz: ${formatCurrencyPDF(resumo.divida_foa_com_fof)}`,
+      title: 'ALERTA: Divida Elevada',
+      message: `Divida FOA - FOF acima de 100M Kz: ${formatCurrencyPDF(resumo.divida_foa_com_fof)}`,
     });
   } else if (resumo?.divida_foa_com_fof > 50000000) {
     alerts.push({
       type: 'warning',
-      title: 'Atenção: Dívida Significativa',
-      message: `Dívida FOA ↔ FOF: ${formatCurrencyPDF(resumo.divida_foa_com_fof)}`,
+      title: 'Atencao: Divida Significativa',
+      message: `Divida FOA - FOF: ${formatCurrencyPDF(resumo.divida_foa_com_fof)}`,
     });
   }
 
@@ -179,8 +166,8 @@ export function generateFinancialAlerts(resumo: any): AlertOptions[] {
   if (resumo?.divida_foa_com_fof === 0 || resumo?.divida_foa_com_fof < 0) {
     alerts.push({
       type: 'success',
-      title: 'Situação Financeira Saudável',
-      message: 'Sem dívida pendente com FOF',
+      title: 'Situacao Financeira Saudavel',
+      message: 'Sem divida pendente com FOF',
     });
   }
 
@@ -188,14 +175,14 @@ export function generateFinancialAlerts(resumo: any): AlertOptions[] {
   if (resumo?.percentual_orcamento > 100) {
     alerts.push({
       type: 'danger',
-      title: 'Orçamento Excedido',
-      message: `Gastos ultrapassaram ${(resumo.percentual_orcamento - 100).toFixed(1)}% do orçamento`,
+      title: 'Orcamento Excedido',
+      message: `Gastos ultrapassaram ${(resumo.percentual_orcamento - 100).toFixed(1)}% do orcamento`,
     });
   } else if (resumo?.percentual_orcamento > 80) {
     alerts.push({
       type: 'warning',
-      title: 'Orçamento em Alerta',
-      message: `${resumo.percentual_orcamento.toFixed(1)}% do orçamento já utilizado`,
+      title: 'Orcamento em Alerta',
+      message: `${resumo.percentual_orcamento.toFixed(1)}% do orcamento ja utilizado`,
     });
   }
 
