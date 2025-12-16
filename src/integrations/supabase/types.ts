@@ -3421,12 +3421,21 @@ export type Database = {
         Returns: boolean
       }
       is_director: { Args: never; Returns: boolean }
-      map_categoria_principal_to_financas: {
-        Args: {
-          categoria: Database["public"]["Enums"]["categoria_principal_enum"]
-        }
-        Returns: string
-      }
+      map_categoria_principal_to_financas:
+        | {
+            Args: {
+              categoria: Database["public"]["Enums"]["categoria_principal_enum"]
+            }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.map_categoria_principal_to_financas(categoria => text), public.map_categoria_principal_to_financas(categoria => categoria_principal_enum). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { categoria: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.map_categoria_principal_to_financas(categoria => text), public.map_categoria_principal_to_financas(categoria => categoria_principal_enum). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
       map_categoria_to_financas: {
         Args: {
           categoria_principal: Database["public"]["Enums"]["categoria_principal_enum"]
