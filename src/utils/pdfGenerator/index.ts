@@ -1,5 +1,6 @@
 /**
  * PDF Generator Module Exports
+ * FOA Official Document Formatting
  */
 
 export * from './pdfStyles';
