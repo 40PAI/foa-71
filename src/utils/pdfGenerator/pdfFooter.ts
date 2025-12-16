@@ -1,55 +1,60 @@
 /**
  * PDF Footer component for FOA reports
+ * Based on official FOA document formatting
  */
 
-import { colors, fonts, setColor, drawLine } from './pdfStyles';
+import { colors, fonts, setColor, drawLine, drawRect, foaCompanyInfo } from './pdfStyles';
 
 export interface FooterOptions {
   showConfidential?: boolean;
   customText?: string;
 }
 
+/**
+ * Draw the official FOA document footer
+ * Includes contact information and page number
+ */
 export function drawFooter(
   doc: any,
   pageNumber: number,
   totalPages: number,
   options: FooterOptions = {}
 ): void {
-  const { showConfidential = false, customText } = options;
+  const { showConfidential = false } = options;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const y = pageHeight - 15;
+  const y = pageHeight - 20;
 
-  // Line above footer
-  drawLine(doc, 10, y, pageWidth - 10, y, colors.light, 0.5);
+  // Blue footer bar
+  drawRect(doc, 15, y, pageWidth - 30, 12, colors.primary);
 
-  // Footer text
+  // Contact info centered in footer
   doc.setFontSize(fonts.tiny.size);
   doc.setFont('helvetica', 'normal');
+  setColor(doc, colors.white);
+  
+  // Line 1: Address
+  doc.text(foaCompanyInfo.shortAddress, pageWidth / 2, y + 4, { align: 'center' });
+  
+  // Line 2: Email and Phone
+  doc.text(`${foaCompanyInfo.email} | ${foaCompanyInfo.phone}`, pageWidth / 2, y + 8, { align: 'center' });
 
-  // Left: Auto-generated text
+  // Page number below footer bar
+  doc.setFontSize(fonts.tiny.size);
   setColor(doc, colors.medium);
-  doc.text(customText || 'Documento gerado automaticamente pelo Sistema FOA', 10, y + 5);
-
-  // Center: Page number
   const pageText = `Página ${pageNumber} de ${totalPages}`;
-  const pageTextWidth = doc.getTextWidth(pageText);
-  doc.text(pageText, (pageWidth - pageTextWidth) / 2, y + 5);
+  doc.text(pageText, pageWidth / 2, y + 16, { align: 'center' });
 
-  // Right: Confidential or company name
+  // Confidential marker (if enabled)
   if (showConfidential) {
     setColor(doc, colors.danger);
-    const confText = 'CONFIDENCIAL';
-    const confWidth = doc.getTextWidth(confText);
-    doc.text(confText, pageWidth - confWidth - 10, y + 5);
-  } else {
-    setColor(doc, colors.medium);
-    const companyText = 'FOA - Gestão de Projetos';
-    const companyWidth = doc.getTextWidth(companyText);
-    doc.text(companyText, pageWidth - companyWidth - 10, y + 5);
+    doc.text('CONFIDENCIAL', pageWidth - 15, y + 16, { align: 'right' });
   }
 }
 
+/**
+ * Add page numbers and footers to all pages
+ */
 export function addPageNumbers(doc: any, options: FooterOptions = {}): void {
   const totalPages = doc.internal.getNumberOfPages();
   
@@ -57,4 +62,15 @@ export function addPageNumbers(doc: any, options: FooterOptions = {}): void {
     doc.setPage(i);
     drawFooter(doc, i, totalPages, options);
   }
+}
+
+/**
+ * Draw simple footer without contact info (for cover pages)
+ */
+export function drawSimpleFooter(doc: any): void {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  
+  // Just a thin blue line
+  drawLine(doc, 15, pageHeight - 15, pageWidth - 15, pageHeight - 15, colors.primary, 1);
 }

@@ -1,48 +1,64 @@
 /**
  * Corporate styles for FOA PDF reports
+ * Based on official FOA document formatting
  */
 
 export const colors = {
-  // Primary corporate colors
-  primary: { r: 41, g: 128, b: 185 },      // FOA Blue
-  primaryDark: { r: 26, g: 82, b: 118 },   // Dark Blue
+  // FOA Corporate colors (from official documents)
+  primary: { r: 0, g: 112, b: 192 },        // FOA Blue (header bars)
+  primaryDark: { r: 0, g: 76, b: 153 },     // Dark Blue
+  accent: { r: 139, g: 90, b: 43 },         // FOA Brown (logo accent)
   
   // Status colors
-  success: { r: 39, g: 174, b: 96 },       // Green
-  warning: { r: 243, g: 156, b: 18 },      // Orange/Amber
-  danger: { r: 231, g: 76, b: 60 },        // Red
+  success: { r: 39, g: 174, b: 96 },        // Green
+  warning: { r: 243, g: 156, b: 18 },       // Orange/Amber
+  danger: { r: 231, g: 76, b: 60 },         // Red
   
   // Neutral colors
-  dark: { r: 44, g: 62, b: 80 },           // Dark gray
-  medium: { r: 127, g: 140, b: 141 },      // Medium gray
-  light: { r: 236, g: 240, b: 241 },       // Light gray
-  white: { r: 255, g: 255, b: 255 },       // White
+  dark: { r: 44, g: 62, b: 80 },            // Dark gray
+  medium: { r: 127, g: 140, b: 141 },       // Medium gray
+  light: { r: 236, g: 240, b: 241 },        // Light gray
+  white: { r: 255, g: 255, b: 255 },        // White
+  black: { r: 0, g: 0, b: 0 },              // Black
   
   // Table colors
-  tableHeader: { r: 41, g: 128, b: 185 },
-  tableRowAlt: { r: 245, g: 248, b: 250 },
+  tableHeader: { r: 0, g: 112, b: 192 },    // Blue header
+  tableRowAlt: { r: 217, g: 217, b: 217 },  // Gray alternating rows
   tableBorder: { r: 189, g: 195, b: 199 },
   tableTotal: { r: 236, g: 240, b: 241 },
+  
+  // Watermark color (subtle)
+  watermark: { r: 200, g: 190, b: 180 },    // Beige/tan
 };
 
 export const fonts = {
-  title: { size: 24, style: 'bold' as const },
-  subtitle: { size: 16, style: 'bold' as const },
-  sectionTitle: { size: 14, style: 'bold' as const },
-  body: { size: 11, style: 'normal' as const },
+  title: { size: 14, style: 'bold' as const },
+  subtitle: { size: 11, style: 'bold' as const },
+  sectionTitle: { size: 11, style: 'bold' as const },
+  body: { size: 10, style: 'normal' as const },
   small: { size: 9, style: 'normal' as const },
   tiny: { size: 8, style: 'normal' as const },
 };
 
 export const margins = {
-  page: { top: 20, right: 15, bottom: 25, left: 15 },
-  section: 10,
-  paragraph: 5,
+  page: { top: 45, right: 15, bottom: 30, left: 15 },
+  section: 8,
+  paragraph: 4,
 };
 
 export const pageSize = {
   width: 210,  // A4 width in mm
   height: 297, // A4 height in mm
+};
+
+// FOA Company Information
+export const foaCompanyInfo = {
+  name: 'FOA – INOVAÇÃO E NEGÓCIOS, (SU) S.A.',
+  address: 'Morada: Golfe 2, defronte ao Tribunal – Luanda • Angola',
+  nif: 'NIF: Fiscal 5000933497',
+  phone: 'Tel: 941 654 173',
+  email: 'E-mail: geral@foa-ao.com',
+  shortAddress: 'Morada: Golfe 2 defronte ao Tribunal – Luanda • Angola',
 };
 
 // Helper to set color
