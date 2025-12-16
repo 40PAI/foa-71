@@ -1881,6 +1881,9 @@ export type Database = {
           responsavel_id: string | null
           status_aprovacao: string | null
           subcategoria: string | null
+          subtipo_entrada:
+            | Database["public"]["Enums"]["subtipo_entrada_enum"]
+            | null
           tags: Json | null
           tarefa_id: number | null
           tipo_movimento: string
@@ -1916,6 +1919,9 @@ export type Database = {
           responsavel_id?: string | null
           status_aprovacao?: string | null
           subcategoria?: string | null
+          subtipo_entrada?:
+            | Database["public"]["Enums"]["subtipo_entrada_enum"]
+            | null
           tags?: Json | null
           tarefa_id?: number | null
           tipo_movimento: string
@@ -1951,6 +1957,9 @@ export type Database = {
           responsavel_id?: string | null
           status_aprovacao?: string | null
           subcategoria?: string | null
+          subtipo_entrada?:
+            | Database["public"]["Enums"]["subtipo_entrada_enum"]
+            | null
           tags?: Json | null
           tarefa_id?: number | null
           tipo_movimento?: string
@@ -3509,6 +3518,11 @@ export type Database = {
         | "Manutenção"
         | "Transferência"
       status_tarefa: "Pendente" | "Em Andamento" | "Concluído"
+      subtipo_entrada_enum:
+        | "valor_inicial"
+        | "recebimento_cliente"
+        | "financiamento_adicional"
+        | "reembolso"
       tipo_etapa_enum:
         | "Fundação"
         | "Estrutura"
@@ -3737,6 +3751,12 @@ export const Constants = {
         "Transferência",
       ],
       status_tarefa: ["Pendente", "Em Andamento", "Concluído"],
+      subtipo_entrada_enum: [
+        "valor_inicial",
+        "recebimento_cliente",
+        "financiamento_adicional",
+        "reembolso",
+      ],
       tipo_etapa_enum: [
         "Fundação",
         "Estrutura",

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useCentrosCusto } from "@/hooks/useCentrosCusto";
 import { useProfiles } from "@/hooks/useProfiles";
-import { useCreateGastoObra, useUpdateGastoObra, GastoObra } from "@/hooks/useGastosObra";
+import { useCreateGastoObra, useUpdateGastoObra, GastoObra, SubtipoEntrada } from "@/hooks/useGastosObra";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface GastoObraModalProps {
@@ -38,6 +38,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
                           gasto?.fof_financiamento ? "FOF_FIN" : 
                           gasto?.foa_auto ? "FOA_AUTO" : 
                           tipoMovimento === "entrada" ? "REC_FOA" : "FOF_FIN") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
+    subtipo_entrada: (gasto?.subtipo_entrada || "recebimento_cliente") as SubtipoEntrada,
     valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
     observacoes: gasto?.observacoes || "",
     categoria: gasto?.categoria || "",
@@ -58,6 +59,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
                               gasto?.fof_financiamento ? "FOF_FIN" : 
                               gasto?.foa_auto ? "FOA_AUTO" : 
                               tipoMovimento === "entrada" ? "REC_FOA" : "FOF_FIN") as "REC_FOA" | "FOF_FIN" | "FOA_AUTO",
+        subtipo_entrada: (gasto?.subtipo_entrada || "recebimento_cliente") as SubtipoEntrada,
         valor: gasto?.recebimento_foa || gasto?.fof_financiamento || gasto?.foa_auto || gasto?.saida || 0,
         observacoes: gasto?.observacoes || "",
         categoria: gasto?.categoria || "",
@@ -83,6 +85,11 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
       // Adicionar fonte_financiamento para ambos tipos de movimento
       if (formData.fonte_financiamento) {
         gastoData.fonte_financiamento = formData.fonte_financiamento;
+      }
+
+      // Adicionar subtipo_entrada apenas para movimentos de entrada
+      if (formData.tipo_movimento === "entrada" && formData.subtipo_entrada) {
+        gastoData.subtipo_entrada = formData.subtipo_entrada;
       }
 
       // Adicionar campos opcionais apenas se tiverem valor
@@ -185,6 +192,50 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
             </SelectContent>
           </Select>
         </div>
+
+        {/* Campo Subtipo de Entrada - apenas para movimentos de entrada */}
+        {formData.tipo_movimento === "entrada" && (
+          <div className="space-y-2">
+            <Label htmlFor="subtipo_entrada">Tipo de Entrada *</Label>
+            <Select
+              value={formData.subtipo_entrada}
+              onValueChange={(value: SubtipoEntrada) => 
+                setFormData({ ...formData, subtipo_entrada: value })
+              }
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo de entrada..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="valor_inicial">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Valor Inicial</span>
+                    <span className="text-xs text-muted-foreground">Capital de arranque do projeto</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="recebimento_cliente">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Recebimento de Cliente</span>
+                    <span className="text-xs text-muted-foreground">Pagamento durante execução</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="financiamento_adicional">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Financiamento Adicional</span>
+                    <span className="text-xs text-muted-foreground">Injeção de capital extra</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="reembolso">
+                  <div className="flex flex-col">
+                    <span className="font-medium">Reembolso</span>
+                    <span className="text-xs text-muted-foreground">Devolução/estorno</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label htmlFor="descricao">Descrição *</Label>
