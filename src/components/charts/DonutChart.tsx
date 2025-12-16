@@ -1,14 +1,34 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 
 interface DonutChartProps {
   data: Array<{
     name: string;
     value: number;
+    fill?: string;
     status?: 'pendente' | 'cotacoes' | 'aprovado' | 'oc-gerada' | 'liquidado';
   }>;
   title: string;
 }
+
+// Cores fixas do design system para cada índice
+const FIXED_COLORS = [
+  'hsl(var(--warning))',      // Laranja/Amarelo - Pendentes
+  'hsl(var(--chart-2))',      // Azul - Em Aprovação
+  'hsl(var(--chart-1))',      // Verde - Aprovadas
+  'hsl(var(--chart-3))',      // Roxo
+  'hsl(var(--chart-4))',      // Vermelho
+  'hsl(var(--chart-5))',      // Outra cor
+];
+
+// Mapa de status para cores fixas
+const STATUS_COLOR_MAP: Record<string, string> = {
+  'pendente': 'hsl(var(--warning))',
+  'cotacoes': 'hsl(var(--chart-2))',
+  'aprovado': 'hsl(var(--chart-1))',
+  'oc-gerada': 'hsl(var(--chart-3))',
+  'liquidado': 'hsl(var(--chart-4))',
+};
 
 const chartConfig = {
   value: {
@@ -20,16 +40,23 @@ const chartConfig = {
 export function DonutChart({ data, title }: DonutChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
-  const getStatusColor = (status?: string) => {
-    switch (status) {
-      case 'pendente': return 'hsl(var(--color-pendente))';
-      case 'cotacoes': return 'hsl(var(--color-cotacoes))';
-      case 'aprovado': return 'hsl(var(--color-aprovado))';
-      case 'oc-gerada': return 'hsl(var(--color-oc-gerada))';
-      case 'liquidado': return 'hsl(var(--color-liquidado))';
-      default: return `hsl(var(--chart-${Math.floor(Math.random() * 6) + 1}))`;
+  // Função determinística para obter cor - sem random!
+  const getColor = (entry: typeof data[0], index: number): string => {
+    // Prioridade 1: usar fill se fornecido
+    if (entry.fill) return entry.fill;
+    // Prioridade 2: usar cor baseada no status
+    if (entry.status && STATUS_COLOR_MAP[entry.status]) {
+      return STATUS_COLOR_MAP[entry.status];
     }
+    // Prioridade 3: usar cor fixa baseada no índice
+    return FIXED_COLORS[index % FIXED_COLORS.length];
   };
+
+  // Preparar dados com cores fixas para a legenda
+  const dataWithColors = data.map((entry, index) => ({
+    ...entry,
+    fill: getColor(entry, index),
+  }));
 
   return (
     <div className="space-y-2">
@@ -38,7 +65,7 @@ export function DonutChart({ data, title }: DonutChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={dataWithColors}
               cx="50%"
               cy="50%"
               innerRadius="40%"
@@ -46,8 +73,8 @@ export function DonutChart({ data, title }: DonutChartProps) {
               paddingAngle={3}
               dataKey="value"
             >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={getStatusColor(entry.status)} />
+              {dataWithColors.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.fill} />
               ))}
             </Pie>
             <ChartTooltip 
@@ -70,6 +97,9 @@ export function DonutChart({ data, title }: DonutChartProps) {
             <Legend 
               wrapperStyle={{ fontSize: '12px' }}
               iconType="circle"
+              formatter={(value, entry) => (
+                <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>
+              )}
             />
           </PieChart>
         </ResponsiveContainer>
