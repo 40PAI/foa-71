@@ -391,10 +391,10 @@ export function ArmazemPage() {
   }
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Gestão de Armazém</h1>
-        <div className="flex gap-2">
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">Gestão de Armazém</h1>
+        <div className="flex flex-wrap gap-2">
           <WarehouseImportModal />
           <MaterialArmazemModal />
           <MaterialMovementModal />

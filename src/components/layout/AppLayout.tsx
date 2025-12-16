@@ -22,7 +22,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         isCollapsed ? "md:ml-14" : "md:ml-64"
       )}>
         <Header />
-        <main className="flex-1 min-w-0 w-full px-2 py-1">
+        <main className="flex-1 min-w-0 w-full">
           <ErrorBoundary>
             {children}
           </ErrorBoundary>

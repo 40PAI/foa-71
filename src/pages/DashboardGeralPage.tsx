@@ -104,7 +104,7 @@ function DashboardGeralContent() {
   const { kpis_gerais, top_projetos_gasto, tarefas_resumo, top_projetos_tarefas, requisicoes_resumo, projetos_lista } = dashboardData;
 
   return (
-    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       <PageHeader
         title="Dashboard Geral FOA"
         description={`Bem-vindo, ${profile?.nome || 'Usuário'} - ${permissions.roleLabel}`}

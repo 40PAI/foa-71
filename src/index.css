@@ -584,6 +584,21 @@ All colors MUST be HSL.
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
 
+  /* Page layout tokens */
+  --page-padding-mobile: 0.75rem;
+  --page-padding-tablet: 1rem;
+  --page-padding-desktop: 1.5rem;
+  --card-padding-compact: 0.5rem;
+  --card-padding-default: 1rem;
+  --card-padding-large: 1.5rem;
+  --grid-gap-mobile: 0.75rem;
+  --grid-gap-tablet: 1rem;
+  --grid-gap-desktop: 1.5rem;
+
+  /* KPI Card constraints */
+  --kpi-max-height: 7rem;
+  --card-max-height: 24rem;
+
   /* Animation tokens */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);

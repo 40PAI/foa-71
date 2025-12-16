@@ -47,52 +47,52 @@ export default function ContasFornecedoresPage() {
   });
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Contas Correntes - Fornecedores</h1>
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Contas Correntes - Fornecedores</h1>
         {projectData ? (
-          <p className="text-muted-foreground">Projeto: {projectData.nome}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Projeto: {projectData.nome}</p>
         ) : (
-          <p className="text-muted-foreground">Visualizando todas as contas</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">Visualizando todas as contas</p>
         )}
       </div>
 
       {/* KPIs */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Contas</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Contas</CardTitle>
+            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.totalContas}</div>
+          <CardContent size="sm">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold">{kpis.totalContas}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Crédito Total</CardTitle>
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Crédito Total</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(kpis.totalCredito)}</div>
+          <CardContent size="sm">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-green-600 truncate">{formatCurrency(kpis.totalCredito)}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Débito Total</CardTitle>
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Débito Total</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(kpis.totalDebito)}</div>
+          <CardContent size="sm">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-red-600 truncate">{formatCurrency(kpis.totalDebito)}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo Líquido</CardTitle>
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Saldo Líquido</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${kpis.saldoLiquido >= 0 ? "text-green-600" : "text-red-600"}`}>
+          <CardContent size="sm">
+            <div className={`text-base sm:text-lg lg:text-xl font-bold truncate ${kpis.saldoLiquido >= 0 ? "text-green-600" : "text-red-600"}`}>
               {formatCurrency(kpis.saldoLiquido)}
             </div>
           </CardContent>
