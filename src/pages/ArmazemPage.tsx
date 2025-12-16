@@ -28,9 +28,9 @@ export function ArmazemPage() {
   const { data: movements } = useMaterialMovements(selectedProjectId || undefined);
   const { data: consumptionGuides } = useConsumptionGuides(selectedProjectId || undefined);
   
-  // View states
-  const [viewType, setViewType] = useState<'grid' | 'table' | 'list'>('grid');
-  const [movementsViewType, setMovementsViewType] = useState<'grid' | 'table' | 'list'>('grid');
+  // View states - padrão é 'table'
+  const [viewType, setViewType] = useState<'grid' | 'table' | 'list'>('table');
+  const [movementsViewType, setMovementsViewType] = useState<'grid' | 'table' | 'list'>('table');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
