@@ -28,7 +28,7 @@ export function useProjectTasks(projectId?: number, etapaId?: number) {
       
       let query = supabase
         .from("tarefas_lean")
-        .select("id, descricao, responsavel, tipo, status")
+        .select("id, descricao, responsavel, tipo, status, id_etapa")
         .eq("id_projeto", projectId)
         .order("id");
       
@@ -41,6 +41,7 @@ export function useProjectTasks(projectId?: number, etapaId?: number) {
       if (error) throw error;
       return data || [];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && (etapaId !== undefined ? !!etapaId : true),
+    staleTime: 30 * 1000, // 30 segundos
   });
 }

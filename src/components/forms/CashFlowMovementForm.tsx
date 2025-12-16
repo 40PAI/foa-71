@@ -5,12 +5,19 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileUpload } from "@/components/ui/file-upload";
 import { CashFlowMovement, CASHFLOW_CATEGORIES } from "@/types/cashflow";
-import { useProjectStages } from "@/hooks/useProjectStages";
-import { useTasks } from "@/hooks/useTasks";
+import { useProjectStages, useProjectTasks } from "@/hooks/useProjectStagesAndTasks";
 import { FormActions } from "@/components/shared/FormActions";
+import { Separator } from "@/components/ui/separator";
+
+// Categorias de tipo de gasto
+const TIPO_GASTO_CATEGORIAS = [
+  'Material',
+  'Mão de Obra',
+  'Patrimônio',
+  'Custos Indiretos',
+];
 
 const cashFlowSchema = z.object({
   tipo_movimento: z.enum(['entrada', 'saida']),
@@ -45,8 +52,6 @@ export function CashFlowMovementForm({
   onCancel,
   isSubmitting,
 }: CashFlowMovementFormProps) {
-  console.log('🔵 CashFlowMovementForm render', { projectId, movement });
-  
   if (!projectId) {
     return (
       <div className="p-4 text-center text-destructive">
@@ -56,8 +61,7 @@ export function CashFlowMovementForm({
   }
   
   const { data: stages = [] } = useProjectStages(projectId);
-  const { data: tasks = [] } = useTasks();
-
+  
   const form = useForm<CashFlowFormData>({
     resolver: zodResolver(cashFlowSchema),
     defaultValues: movement ? {
@@ -84,250 +88,177 @@ export function CashFlowMovementForm({
   });
 
   const tipoMovimento = form.watch('tipo_movimento');
+  const selectedEtapaId = form.watch('etapa_id');
+  
+  // Buscar tarefas filtradas por etapa selecionada
+  const { data: tasks = [] } = useProjectTasks(projectId, selectedEtapaId);
+  
   const categorias = tipoMovimento === 'entrada' ? CASHFLOW_CATEGORIES.entrada : CASHFLOW_CATEGORIES.saida;
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <Tabs defaultValue="basic" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="basic">Básico</TabsTrigger>
-            <TabsTrigger value="details">Detalhes</TabsTrigger>
-            <TabsTrigger value="docs">Documentação</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="basic" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="tipo_movimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Movimento *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="entrada">Entrada</SelectItem>
-                        <SelectItem value="saida">Saída</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="valor"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Valor *</FormLabel>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Seção: Informações Básicas */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Informações Básicas</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="tipo_movimento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Movimento *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value="entrada">Entrada</SelectItem>
+                      <SelectItem value="saida">Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="data_movimento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Data *</FormLabel>
+            <FormField
+              control={form.control}
+              name="valor"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Valor *</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="data_movimento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data *</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="categoria"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Gasto *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo de gasto" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="categoria"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Categoria *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a categoria" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categorias.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name="descricao"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Descrição *</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Descreva o movimento de caixa..."
-                      className="min-h-[80px]"
-                      {...field}
-                    />
-                  </FormControl>
+                    <SelectContent>
+                      {TIPO_GASTO_CATEGORIAS.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </TabsContent>
+          </div>
 
-          <TabsContent value="details" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="etapa_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Etapa (Opcional)</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                      value={field.value?.toString() || undefined}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a etapa (opcional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {stages.map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id.toString()}>
-                            {stage.nome_etapa}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="subcategoria"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Categoria Específica</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a categoria (opcional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-              <FormField
-                control={form.control}
-                name="tarefa_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tarefa (Opcional)</FormLabel>
-                    <Select 
-                      onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
-                      value={field.value?.toString() || undefined}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione a tarefa (opcional)" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {tasks.filter(t => t.id_projeto === projectId).map((task) => (
-                          <SelectItem key={task.id} value={task.id.toString()}>
-                            {task.descricao}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+          <FormField
+            control={form.control}
+            name="descricao"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Descrição *</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Descreva o movimento de caixa..."
+                    className="min-h-[80px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
+        <Separator />
+
+        {/* Seção: Detalhes */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Detalhes</h3>
+          
+          <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="fornecedor_beneficiario"
+              name="etapa_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Fornecedor/Beneficiário</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do fornecedor ou beneficiário" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="forma_pagamento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Forma de Pagamento</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                        <SelectItem value="transferencia">Transferência</SelectItem>
-                        <SelectItem value="cheque">Cheque</SelectItem>
-                        <SelectItem value="cartao">Cartão</SelectItem>
-                        <SelectItem value="boleto">Boleto</SelectItem>
-                        <SelectItem value="pix">PIX</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="numero_documento"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número do Documento</FormLabel>
+                  <FormLabel>Etapa</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value ? Number(value) : undefined);
+                      // Limpar tarefa quando mudar etapa
+                      form.setValue('tarefa_id', undefined);
+                    }}
+                    value={field.value?.toString() || ''}
+                  >
                     <FormControl>
-                      <Input placeholder="NF, recibo, etc." {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a etapa" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="docs" className="space-y-4 mt-4">
-            <FormField
-              control={form.control}
-              name="comprovante_url"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Comprovante (PDF ou Imagem)</FormLabel>
-                  <FormControl>
-                    <FileUpload
-                      value={field.value}
-                      onValueChange={field.onChange}
-                      accept="application/pdf,image/*"
-                      maxSize={5 * 1024 * 1024}
-                      bucket="comprovantes-caixa"
-                      placeholder="Arraste ou clique para fazer upload do comprovante"
-                    />
-                  </FormControl>
+                    <SelectContent>
+                      {stages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id.toString()}>
+                          {stage.numero_etapa}. {stage.nome_etapa}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -335,23 +266,136 @@ export function CashFlowMovementForm({
 
             <FormField
               control={form.control}
-              name="observacoes"
+              name="tarefa_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Observações</FormLabel>
+                  <FormLabel>Tarefa</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value ? Number(value) : undefined)}
+                    value={field.value?.toString() || ''}
+                    disabled={!selectedEtapaId}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedEtapaId ? "Selecione a tarefa" : "Selecione uma etapa primeiro"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tasks.map((task) => (
+                        <SelectItem key={task.id} value={task.id.toString()}>
+                          {task.descricao}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="fornecedor_beneficiario"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Fornecedor/Beneficiário</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nome do fornecedor ou beneficiário" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="forma_pagamento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Forma de Pagamento</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                      <SelectItem value="cheque">Cheque</SelectItem>
+                      <SelectItem value="cartao">Cartão</SelectItem>
+                      <SelectItem value="boleto">Boleto</SelectItem>
+                      <SelectItem value="pix">PIX</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="numero_documento"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Número do Documento</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Informações adicionais sobre o movimento..."
-                      className="min-h-[100px]"
-                      {...field}
-                    />
+                    <Input placeholder="NF, recibo, etc." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Seção: Documentação */}
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Documentação</h3>
+          
+          <FormField
+            control={form.control}
+            name="comprovante_url"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Comprovante (PDF ou Imagem)</FormLabel>
+                <FormControl>
+                  <FileUpload
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    accept="application/pdf,image/*"
+                    maxSize={5 * 1024 * 1024}
+                    bucket="comprovantes-caixa"
+                    placeholder="Arraste ou clique para fazer upload do comprovante"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="observacoes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Observações</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Informações adicionais sobre o movimento..."
+                    className="min-h-[80px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <FormActions
           onCancel={onCancel}
