@@ -27,8 +27,8 @@ export const colors = {
   tableBorder: { r: 189, g: 195, b: 199 },
   tableTotal: { r: 236, g: 240, b: 241 },
   
-  // Watermark color (subtle)
-  watermark: { r: 200, g: 190, b: 180 },    // Beige/tan
+  // Watermark color (subtle beige/tan for FOA logo)
+  watermark: { r: 220, g: 210, b: 195 },
 };
 
 export const fonts = {
@@ -38,6 +38,7 @@ export const fonts = {
   body: { size: 10, style: 'normal' as const },
   small: { size: 9, style: 'normal' as const },
   tiny: { size: 8, style: 'normal' as const },
+  header: { size: 8, style: 'normal' as const },
 };
 
 export const margins = {
@@ -51,14 +52,18 @@ export const pageSize = {
   height: 297, // A4 height in mm
 };
 
-// FOA Company Information
+// FOA Company Information (from official document)
 export const foaCompanyInfo = {
-  name: 'FOA – INOVAÇÃO E NEGÓCIOS, (SU) S.A.',
-  address: 'Morada: Golfe 2, defronte ao Tribunal – Luanda • Angola',
-  nif: 'NIF: Fiscal 5000933497',
-  phone: 'Tel: 941 654 173',
+  name: 'FOA – INOVAÇÃO E NEGÓCIOS, (SU) S.A',
+  address: 'Morada: Golfe 2, defronte ao Tribunal',
+  nif: 'Nº Id. Fiscal: 5001942697',
+  phone: 'Telefones: (+244) 941 654 173',
   email: 'E-mail: geral@foa-ao.com',
-  shortAddress: 'Morada: Golfe 2 defronte ao Tribunal – Luanda • Angola',
+  location: 'Luanda - Angola',
+  // Footer format
+  footerAddress: 'Morada: Golfe 2 defronte ao Tribunal – Luanda - Angola',
+  footerEmail: 'E-mail: geral@foa-ao.com',
+  footerPhone: 'Tel: 941 654 173',
 };
 
 // Helper to set color
@@ -150,4 +155,27 @@ export function formatDatePDF(date: Date | string): string {
 // Format percentage
 export function formatPercentagePDF(value: number): string {
   return `${value.toFixed(1)}%`;
+}
+
+// Draw watermark pattern (centered FOA logo)
+export function drawWatermark(doc: any, logoBase64?: string) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+  
+  // Draw subtle watermark in center of page
+  if (logoBase64) {
+    try {
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.08 }));
+      doc.addImage(logoBase64, 'PNG', centerX - 40, centerY - 40, 80, 80);
+      doc.restoreGraphicsState();
+    } catch (e) {
+      // Fallback: draw text watermark
+      doc.setFontSize(60);
+      doc.setTextColor(230, 220, 210);
+      doc.text('FOA', centerX, centerY, { align: 'center', angle: 45 });
+    }
+  }
 }

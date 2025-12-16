@@ -1,5 +1,5 @@
 /**
- * Alert boxes and status indicators for FOA PDF reports
+ * Alert boxes, status indicators, and progress bars for FOA PDF reports
  */
 
 import { colors, fonts, setColor, drawRoundedRect, formatCurrencyPDF } from './pdfStyles';
@@ -27,17 +27,20 @@ const alertIcons = {
   info: 'ℹ',
 };
 
+/**
+ * Draw an alert box with icon
+ */
 export function drawAlert(doc: any, x: number, y: number, width: number, options: AlertOptions): number {
   const { type, title, message, icon } = options;
   const color = alertColors[type];
   const displayIcon = icon || alertIcons[type];
   const height = 25;
 
-  // Background
+  // Light background based on alert type
   const bgColor = {
-    r: Math.min(255, color.r + 180),
-    g: Math.min(255, color.g + 180),
-    b: Math.min(255, color.b + 180),
+    r: Math.min(255, color.r + 200),
+    g: Math.min(255, color.g + 200),
+    b: Math.min(255, color.b + 200),
   };
   drawRoundedRect(doc, x, y, width, height, 3, bgColor);
   
@@ -65,6 +68,9 @@ export function drawAlert(doc: any, x: number, y: number, width: number, options
   return y + height + 5;
 }
 
+/**
+ * Draw a colored status indicator (circle + label)
+ */
 export function drawStatusIndicator(
   doc: any,
   x: number,
@@ -92,6 +98,9 @@ export function drawStatusIndicator(
   return y + 12;
 }
 
+/**
+ * Draw a progress bar
+ */
 export function drawProgressBar(
   doc: any,
   x: number,
@@ -117,7 +126,7 @@ export function drawProgressBar(
   doc.text(label, x, y - 2);
 
   // Background bar
-  doc.setFillColor(colors.light.r, colors.light.g, colors.light.b);
+  doc.setFillColor(230, 230, 230);
   doc.roundedRect(x, y, width, height, 2, 2, 'F');
 
   // Progress bar
@@ -131,12 +140,11 @@ export function drawProgressBar(
   if (showValue) {
     doc.setFontSize(fonts.tiny.size);
     doc.setFont('helvetica', 'bold');
-    setColor(doc, colors.white);
     const percentText = `${cappedPercentage.toFixed(0)}%`;
-    const textWidth = doc.getTextWidth(percentText);
-    const textX = x + progressWidth / 2 - textWidth / 2;
     if (progressWidth > 25) {
-      doc.text(percentText, textX, y + height - 2);
+      setColor(doc, colors.white);
+      const textWidth = doc.getTextWidth(percentText);
+      doc.text(percentText, x + progressWidth / 2 - textWidth / 2, y + height - 2);
     } else {
       setColor(doc, colors.dark);
       doc.text(percentText, x + width + 3, y + height - 2);
@@ -146,6 +154,9 @@ export function drawProgressBar(
   return y + height + 8;
 }
 
+/**
+ * Generate financial alerts based on data
+ */
 export function generateFinancialAlerts(resumo: any): AlertOptions[] {
   const alerts: AlertOptions[] = [];
 
@@ -190,3 +201,4 @@ export function generateFinancialAlerts(resumo: any): AlertOptions[] {
 
   return alerts;
 }
+

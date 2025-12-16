@@ -1,11 +1,13 @@
 /**
  * Cover page for FOA PDF reports
+ * Professional cover with FOA branding
  */
 
-import { colors, fonts, setColor, drawRect, formatDatePDF } from './pdfStyles';
+import { colors, fonts, setColor, drawRect, formatDatePDF, foaCompanyInfo } from './pdfStyles';
 
-// FOA Logo as base64
-const FOA_LOGO_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAABmJLR0QA/wD/AP+gvaeTAAAHH0lEQVR4nO2dW4hVVRjHf3NmPDpjpXYxSzMrKSstMy1KK+0CZUYPRUHQBYLooYugT0FQUBD0EBRB9BBBDxH0UEQvFRUVFZVFaWmZZZrXcZzRmZk+1jrOPnuvtfY6e+9z9uw5/+HjzJy91l7r/6211/rW5Rs4ceKkzqRdfQMnToIckBInDkhJEgekJIkDUpLEASlJonNAbkL5CPhNw3IWcBHwA/AbcBbwNHAhMAT4FngKOB14HFgK/AGMBp4FLgb+BB4DLgH+Bh4GLgP+AR4ELgdOAA8AVwIngfuBK4BTwL3AVcBpYA9wNXAGuAe4BjgL3A1cC5wD7gSuA84HdwDXAxeAHcANwIVgO3AjcBHYBtwEXAy2AjcDF4MtwC3AJWA8uBW4FLgYbAJuAy4DG4HbgcvBBuAO4AqwHrgTuBKsA+4CrgLrgLuBq8Fa4B7gGrAGuBe4FqwG7gOuA6uA+4HrwUrgAeBG8E/gQeAm8A/gIeBm8HfgYeAW8DfgEeBW8FfgUeA2MAgMAY8Bt4PfgceB+eAw8ARwB/gtcBT4DLgL/Ab4AvgcuA/4CfgKOAjcD/wAfAN8A9wP/AD8ANwNPAD8BDwI3A38CjwI3A38AjwE3A2cBB4G7gFOAQ8D9wCngYeBe4AzwMPAvcBZ4GHgXuAccAa4F7gPOA88ANwPXATuBx4ALgIPAA8CYeCBh4FHgH+BB4HHgEvAg8DjwGXgIeAJ4ArwEPAkcBV4CHgKuAY8DDwNXAceAZ4BbgCPAM8CN4GHgeeAW8EjwPPAbeAR4AXgdvBY+AR4FTwGvATcC54AXgHuB08DrwH3gyHgdeABMAS8ATwIDAPDwIPAo2AE+B84CDwGRoGdwHzgWTAGvAcsBJ4H48CHwCLgBTABfAwsAV4CU8CnwFLgFTANfA4sB14D08AXwArgdTADfAmsAt4EU8BY8BbwBzAWvA0cB8aCd4ATwDjwLnASGA/eA04B44EPgNPABPAhcAaYCD4CzgKTwMfAOWAy+AQ4D0wBnwIXgCngM+AiMBV8DlwCpoHPgcvAdPAFcAWYAb4ErgIzwVfANWAW+Bq4DswG3wA3gDngW+AmMBd8B9wC5oHvgdvAfPADcAeYD34E7gYLwE/APWAh+Bm4FywCvwD3gUXgV+B+sBj8BjwAFoNB4EGwBPwOPASWgEPAw2ApOAw8ApaC48CjYCk4ATwGloKTwONgKTgFPAGWgdPAk2AZOAMcBJaBs8BTYBk4BzwNloNzwDNgOTgPPAuWgwvAc2AFuAg8D1aAy8ALYAVIgD3ASmAxOAasBhaD48BaYDH4B1gHLAZ3A+uBJeAfYAOwBCwH14PNwFKwH9gMLAUHgS3AMnAI2AosA4eBbcBycATYDiwHR4EdwApwDNgJrADHgd3ACnAS+AVYAc4AvwIrQQLsBlaClWAI2AusBKvAMHAQWAlWg1HgELASrAFjwOFgFVgLxoHDwSqwDkwAR4BVYAOYBFaDjWAKWA02gcfAGrAZPA6sAVvAE8AasBU8CawF28BTwFqwHTwNrAPPgOeAdeAQ8BywDjwPvACsBYeBF4G14AjwErAOHAVeBdaBY8BrwDpwHHgdWAdOAG8A68BJ4E1gPTgFvAWsB6eBt4F1IAHeBTaA1WAv8B6wAawBB4D3gQ1gHfgA2AjWg4+AjeBQMAR8DGwCh4OR4BNgM1gORoNPga1gBRgLPgO2g5VgHPgc2AlWgfHgC2A3WA0mgC+BPWANmAi+AvaCNWASGA72gTVgChgBDgBrwTTwLXAIWAemg++A34E14AwwCBwF1oKzwHFgOFgLzgEngRPAWnAOOAWcBNaCf4CfgNPAWnAR+Bk4A6wFF4FfgLPAWnAZOA8cA9aChNgDnAfWg9XgInAAWA8OBUPAJeBQsBaMAZeBw8FaMAFcAY4Aa8EkcBU4CqwF08A14GiwFswA14FjwVpwDrgBHA/WgvPATeAEsBZcAG4Bp4C14CJwGzgNrAWXgdvBWWAtSIDfgXPAWrAa3AUuAGvBWnAvuAisBevB/eASsBZsBB8AS8FasAl8CCwDa8Fm8BGwHKwFW8DHwAqwFmwDnwArwVqwHXwKrAJrwQ7wGbAarAU7wefAGrAW7AJfAGvBWrAbfAmsA2vBHvAVsB4cCgbB18AGsBpMBN8Am8AasAlsBlvAOrAFbAXbwHqwDWwHO8AGsAPsBLvARrAL7Aa7wSawG+wB+8BmsAfsBwfAFrAfHARbwQFwCGwHB8ERsBMcAkfBLnAYHAN7wRFwHOwDR8EJcAAcA6fASXAQHAenwSlwGBwHZ8BpcBQcB+fAGXAMnAD/AqfBcXAWXABnwQlwEfwHnAUnQQLOgrPgIjgLzoJL4Cw4C66As+AsGAJnwVkQBmfBWRABZ0FyHJAN/g9kKLqRmW+V2wAAAABJRU5ErkJggg==';
+// Import watermark image
+import foaWatermarkUrl from '@/assets/foa-watermark.png';
+import foaLogoUrl from '@/assets/foa-logo-official.png';
 
 export interface CoverOptions {
   titulo: string;
@@ -18,94 +20,215 @@ export interface CoverOptions {
   };
   periodo?: string;
   geradoPor?: string;
+  logoBase64?: string;
+  watermarkBase64?: string;
 }
 
+// Function to convert image to base64
+export async function loadImageBase64(url: string): Promise<string> {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn('Could not load image:', e);
+    return '';
+  }
+}
+
+// Load both images
+export async function loadCoverImages(): Promise<{ logo: string; watermark: string }> {
+  const [logo, watermark] = await Promise.all([
+    loadImageBase64(foaLogoUrl),
+    loadImageBase64(foaWatermarkUrl),
+  ]);
+  return { logo, watermark };
+}
+
+/**
+ * Draw professional cover page with FOA branding
+ */
 export function drawCoverPage(doc: any, options: CoverOptions): void {
-  const { titulo, subtitulo, projeto, periodo, geradoPor } = options;
+  const { titulo, subtitulo, projeto, periodo, geradoPor, logoBase64, watermarkBase64 } = options;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const centerX = pageWidth / 2;
 
-  // Background gradient effect (top section)
-  drawRect(doc, 0, 0, pageWidth, pageHeight * 0.4, colors.primary);
-  
-  // Diagonal decorative element
-  doc.setFillColor(colors.primaryDark.r, colors.primaryDark.g, colors.primaryDark.b);
-  doc.triangle(0, pageHeight * 0.35, pageWidth, pageHeight * 0.25, pageWidth, pageHeight * 0.4, 'F');
-
-  // Logo
-  try {
-    doc.addImage(FOA_LOGO_BASE64, 'PNG', centerX - 30, 40, 60, 60);
-  } catch (e) {
-    // Placeholder if logo fails
-    doc.setFontSize(40);
-    setColor(doc, colors.white);
-    doc.text('FOA', centerX, 80, { align: 'center' });
+  // Draw subtle watermark in center (if available)
+  if (watermarkBase64) {
+    try {
+      // Draw watermark with low opacity in center
+      doc.saveGraphicsState();
+      doc.setGState(new doc.GState({ opacity: 0.06 }));
+      doc.addImage(watermarkBase64, 'PNG', centerX - 50, pageHeight / 2 - 50, 100, 100);
+      doc.restoreGraphicsState();
+    } catch (e) {
+      // Silently fail if watermark can't be drawn
+    }
   }
 
-  // Main title
-  doc.setFontSize(fonts.title.size + 8);
+  // Top blue bar
+  drawRect(doc, 0, 0, pageWidth, 60, colors.primary);
+  
+  // Company info in header bar
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
   setColor(doc, colors.white);
-  doc.text(titulo, centerX, 130, { align: 'center' });
+  doc.text(foaCompanyInfo.name, centerX, 15, { align: 'center' });
+  
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.text(foaCompanyInfo.address, centerX, 22, { align: 'center' });
+  doc.text(`${foaCompanyInfo.nif} | ${foaCompanyInfo.phone}`, centerX, 28, { align: 'center' });
+  doc.text(`${foaCompanyInfo.email} | ${foaCompanyInfo.location}`, centerX, 34, { align: 'center' });
+
+  // Logo below header bar
+  let logoY = 75;
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', centerX - 30, logoY, 60, 60);
+      logoY = 145;
+    } catch (e) {
+      // Fallback text logo
+      doc.setFontSize(36);
+      doc.setFont('helvetica', 'bold');
+      setColor(doc, colors.primary);
+      doc.text('FOA', centerX, logoY + 30, { align: 'center' });
+      logoY = 120;
+    }
+  } else {
+    doc.setFontSize(36);
+    doc.setFont('helvetica', 'bold');
+    setColor(doc, colors.primary);
+    doc.text('FOA', centerX, logoY + 30, { align: 'center' });
+    logoY = 120;
+  }
+
+  // Main document title
+  let y = logoY + 20;
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  setColor(doc, colors.dark);
+  
+  // Split title if too long
+  const titleLines = doc.splitTextToSize(titulo, pageWidth - 40);
+  doc.text(titleLines, centerX, y, { align: 'center' });
+  y += (titleLines.length * 8) + 10;
 
   // Subtitle
   if (subtitulo) {
-    doc.setFontSize(fonts.subtitle.size);
+    doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text(subtitulo, centerX, 145, { align: 'center' });
+    setColor(doc, colors.medium);
+    doc.text(subtitulo, centerX, y, { align: 'center' });
+    y += 15;
   }
 
-  // Project info section (below colored area)
-  let y = pageHeight * 0.5;
+  // Decorative line
+  doc.setDrawColor(colors.primary.r, colors.primary.g, colors.primary.b);
+  doc.setLineWidth(1);
+  doc.line(centerX - 40, y, centerX + 40, y);
+  y += 20;
 
+  // Project details section
   if (projeto) {
     // Project name
     if (projeto.nome) {
-      doc.setFontSize(fonts.title.size);
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      setColor(doc, colors.dark);
-      doc.text(projeto.nome, centerX, y, { align: 'center' });
-      y += 15;
+      setColor(doc, colors.primary);
+      doc.text(`Projeto: ${projeto.nome}`, centerX, y, { align: 'center' });
+      y += 12;
     }
 
     // Client
     if (projeto.cliente) {
-      doc.setFontSize(fonts.subtitle.size);
+      doc.setFontSize(11);
       doc.setFont('helvetica', 'normal');
-      setColor(doc, colors.medium);
+      setColor(doc, colors.dark);
       doc.text(`Cliente: ${projeto.cliente}`, centerX, y, { align: 'center' });
-      y += 10;
+      y += 8;
     }
 
     // Location
     if (projeto.localizacao) {
       doc.text(`Localização: ${projeto.localizacao}`, centerX, y, { align: 'center' });
-      y += 10;
+      y += 8;
+    }
+
+    // Responsible
+    if (projeto.responsavel) {
+      doc.text(`Responsável: ${projeto.responsavel}`, centerX, y, { align: 'center' });
+      y += 8;
     }
   }
 
   // Period
   if (periodo) {
-    y += 10;
-    doc.setFontSize(fonts.body.size);
-    setColor(doc, colors.dark);
+    y += 5;
+    doc.setFontSize(10);
+    setColor(doc, colors.medium);
     doc.text(`Período: ${periodo}`, centerX, y, { align: 'center' });
+    y += 8;
   }
 
-  // Footer info
-  const footerY = pageHeight - 40;
+  // Bottom section with generation info
+  const bottomY = pageHeight - 50;
   
   // Generation date
-  doc.setFontSize(fonts.small.size);
+  doc.setFontSize(10);
   setColor(doc, colors.medium);
-  doc.text(`Data de Geração: ${formatDatePDF(new Date())}`, centerX, footerY, { align: 'center' });
+  doc.text(`Data de Geração: ${formatDatePDF(new Date())}`, centerX, bottomY, { align: 'center' });
 
   // Generated by
   if (geradoPor) {
-    doc.text(`Gerado por: ${geradoPor}`, centerX, footerY + 8, { align: 'center' });
+    doc.text(`Gerado por: ${geradoPor}`, centerX, bottomY + 8, { align: 'center' });
   }
 
-  // Decorative bottom line
-  drawRect(doc, 0, pageHeight - 10, pageWidth, 10, colors.primary);
+  // Bottom blue bar
+  drawRect(doc, 0, pageHeight - 15, pageWidth, 15, colors.primary);
+  
+  // Footer text in bottom bar
+  doc.setFontSize(8);
+  setColor(doc, colors.white);
+  doc.text(foaCompanyInfo.footerAddress, centerX, pageHeight - 8, { align: 'center' });
+}
+
+/**
+ * Draw a simple inner page header (for non-cover pages)
+ */
+export function drawInnerPageHeader(doc: any, titulo: string, logoBase64?: string): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let y = 15;
+  
+  // Small logo on left
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', 15, 8, 20, 20);
+    } catch (e) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      setColor(doc, colors.primary);
+      doc.text('FOA', 15, 20);
+    }
+  }
+  
+  // Title on right of logo
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  setColor(doc, colors.dark);
+  doc.text(titulo, 40, 20);
+  
+  // Blue line separator
+  y = 32;
+  doc.setDrawColor(colors.primary.r, colors.primary.g, colors.primary.b);
+  doc.setLineWidth(0.5);
+  doc.line(15, y, pageWidth - 15, y);
+  
+  return y + 8;
 }
