@@ -145,40 +145,40 @@ export function ComprasPage() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Compras & Aprovações</h1>
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Compras & Aprovações</h1>
         <RequisitionModal projectId={selectedProjectId} />
       </div>
 
       {/* KPIs de Compras */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <KPICard
           title="Total Requisições"
           value={totalRequisicoes}
           subtitle="Ativas no projeto"
-          icon={<FileText className="h-4 w-4" />}
+          icon={<FileText className="h-3 w-3" />}
           alert="green"
         />
         <KPICard
-          title="Pendentes Aprovação"
+          title="Pendentes"
           value={pendentesAprovacao}
-          subtitle={totalRequisicoes > 0 ? `${((pendentesAprovacao / totalRequisicoes) * 100).toFixed(0)}% do total` : "0% do total"}
-          icon={<Clock className="h-4 w-4" />}
+          subtitle={totalRequisicoes > 0 ? `${((pendentesAprovacao / totalRequisicoes) * 100).toFixed(0)}% do total` : "0%"}
+          icon={<Clock className="h-3 w-3" />}
           alert={pendentesAprovacao > 2 ? "red" : pendentesAprovacao > 0 ? "yellow" : "green"}
         />
         <KPICard
           title="Valor Total"
           value={formatCurrency(valorTotal)}
           subtitle="Requisições ativas"
-          icon={<AlertTriangle className="h-4 w-4" />}
+          icon={<AlertTriangle className="h-3 w-3" />}
           alert="green"
         />
         <KPICard
-          title="Lead-time Médio"
+          title="Lead-time"
           value={`${(leadTimeMedio ?? 0).toFixed(1)} dias`}
-          subtitle="Tempo médio aprovação"
-          icon={<Clock className="h-4 w-4" />}
+          subtitle="Tempo médio"
+          icon={<Clock className="h-3 w-3" />}
           alert={(leadTimeMedio ?? 0) > 7 ? "red" : (leadTimeMedio ?? 0) > 5 ? "yellow" : "green"}
         />
       </div>

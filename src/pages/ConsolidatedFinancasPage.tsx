@@ -103,7 +103,7 @@ export function ConsolidatedFinancasPage() {
         </div>
       </div>;
   }
-  return <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
+  return <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análise Financeira</h1>
         <div className="flex gap-2">

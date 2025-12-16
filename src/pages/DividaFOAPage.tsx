@@ -46,62 +46,62 @@ export function DividaFOAPage() {
   const dividaTotal = totaisGerais?.divida_foa_com_fof || 0;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <ArrowRight className="h-6 w-6 text-primary" />
+      <div className="flex items-center gap-2 sm:gap-3">
+        <ArrowRight className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
             Controle de Dívida FOA ↔ FOF
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Acompanhamento automático consolidado de todos os projetos
           </p>
         </div>
       </div>
 
       {/* KPIs Consolidados */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">FOF Financiamento Total</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">FOF Financiamento</CardTitle>
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent size="sm">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-green-600 truncate">
               {formatCurrency(totaisGerais?.fof_financiamento || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Total de custos financiados pela FOF (saídas)
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              Custos financiados pela FOF
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Amortização Total</CardTitle>
-            <TrendingDown className="h-4 w-4 text-orange-600" />
+        <Card className="max-h-28">
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Amortização</CardTitle>
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
+          <CardContent size="sm">
+            <div className="text-base sm:text-lg lg:text-xl font-bold text-orange-600 truncate">
               {formatCurrency(totaisGerais?.amortizacao || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Total amortizado em todos os projetos
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              Total amortizado
             </p>
           </CardContent>
         </Card>
 
-        <Card className={dividaTotal > 0 ? "border-destructive" : "border-green-600"}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Dívida Total FOA ↔ FOF</CardTitle>
+        <Card className={`max-h-28 ${dividaTotal > 0 ? "border-destructive" : "border-green-600"}`}>
+          <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs sm:text-sm font-medium">Dívida FOA ↔ FOF</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${dividaTotal > 0 ? "text-destructive" : "text-green-600"}`}>
+          <CardContent size="sm">
+            <div className={`text-base sm:text-lg lg:text-xl font-bold truncate ${dividaTotal > 0 ? "text-destructive" : "text-green-600"}`}>
               {formatCurrency(dividaTotal)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {dividaTotal > 0 ? '⚠️ Saldo a reembolsar' : '✅ Sem dívida'}
+            <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+              {dividaTotal > 0 ? '⚠️ A reembolsar' : '✅ Sem dívida'}
             </p>
           </CardContent>
         </Card>

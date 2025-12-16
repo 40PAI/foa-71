@@ -113,20 +113,21 @@ const RhPage = () => {
   if (error) return <div>Erro ao carregar colaboradores</div>;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Recursos Humanos & Ponto</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Recursos Humanos & Ponto</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Gestão de colaboradores, alocação por projeto e controle de ponto
           </p>
         </div>
         <div className="flex gap-2">
           <EmployeeImportModal />
-          <Button onClick={() => setIsEmployeeModalOpen(true)}>
+          <Button size="sm" onClick={() => setIsEmployeeModalOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Novo Colaborador
+            <span className="hidden sm:inline">Novo Colaborador</span>
+            <span className="sm:hidden">Novo</span>
           </Button>
         </div>
       </div>
@@ -180,51 +181,51 @@ const RhPage = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total de Colaboradores</CardTitle>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+            <Card className="max-h-28">
+              <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{employees?.length || 0}</div>
+              <CardContent size="sm">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold">{employees?.length || 0}</div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Fixos</CardTitle>
+            <Card className="max-h-28">
+              <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs sm:text-sm font-medium">Fixos</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent size="sm">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold">
                   {employees?.filter(e => e.tipo_colaborador === "Fixo").length || 0}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Temporários</CardTitle>
+            <Card className="max-h-28">
+              <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs sm:text-sm font-medium">Temporários</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent size="sm">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold">
                   {employees?.filter(e => e.tipo_colaborador === "Temporário").length || 0}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Oficiais</CardTitle>
+            <Card className="max-h-28">
+              <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs sm:text-sm font-medium">Oficiais</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent size="sm">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold">
                   {employees?.filter(e => e.categoria === "Oficial").length || 0}
                 </div>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Técnicos Superiores</CardTitle>
+            <Card className="max-h-28">
+              <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs sm:text-sm font-medium">Técnicos Sup.</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
+              <CardContent size="sm">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold">
                   {employees?.filter(e => e.categoria === "Técnico Superior").length || 0}
                 </div>
               </CardContent>

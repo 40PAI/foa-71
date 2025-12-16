@@ -59,33 +59,35 @@ export default function CentrosCustoPage() {
 
   return (
     <ProjectGuard projectId={selectedProjectId}>
-      <div className="space-y-6 p-6">
+      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
             <div>
-              <h1 className="text-3xl font-bold">Centros de Custo</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Centros de Custo</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 💡 Os Centros de Custo são criados durante a criação/edição do projeto
               </p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setImportModalOpen(true)}>
                 <Upload className="h-4 w-4 mr-2" />
-                Importar Movimentos
+                <span className="hidden sm:inline">Importar Movimentos</span>
+                <span className="sm:hidden">Importar</span>
               </Button>
               <Button variant="outline" size="sm" onClick={handleExportExcel}>
                 <Download className="h-4 w-4 mr-2" />
-                Exportar Excel
+                <span className="hidden sm:inline">Exportar Excel</span>
+                <span className="sm:hidden">Exportar</span>
               </Button>
             </div>
           </div>
 
           {/* Seletor de Centro de Custo */}
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <label className="text-sm font-medium">Filtrar por Centro:</label>
             <Select value={selectedCentroCustoId} onValueChange={setSelectedCentroCustoId}>
-              <SelectTrigger className="w-[350px]">
+              <SelectTrigger className="w-full sm:w-[350px]">
                 <SelectValue placeholder="Selecione um centro de custo" />
               </SelectTrigger>
               <SelectContent>
@@ -106,53 +108,53 @@ export default function CentrosCustoPage() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <Card className="max-h-28">
+            <CardHeader size="sm" className="pb-1">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Orçamento Total
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalOrcamento)}</div>
+            <CardContent size="sm">
+              <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalOrcamento)}</div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card className="max-h-28">
+            <CardHeader size="sm" className="pb-1">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Total Custo
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalGasto)}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+            <CardContent size="sm">
+              <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalGasto)}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 {totalOrcamento > 0 ? Math.round((totalGasto / totalOrcamento) * 100) : 0}% do orçamento
               </p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+          <Card className="max-h-28">
+            <CardHeader size="sm" className="pb-1">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Saldo Disponível
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{formatCurrencyInput(totalSaldo)}</div>
+            <CardContent size="sm">
+              <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalSaldo)}</div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                Centros em Alerta
+          <Card className="max-h-28">
+            <CardHeader size="sm" className="pb-1">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 text-amber-500" />
+                Em Alerta
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{centrosEmAlerta}</div>
-              <p className="text-xs text-muted-foreground mt-1">
+            <CardContent size="sm">
+              <div className="text-base sm:text-lg lg:text-xl font-bold">{centrosEmAlerta}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 ≥80% do orçamento
               </p>
             </CardContent>
@@ -161,7 +163,7 @@ export default function CentrosCustoPage() {
 
         {/* Gráficos */}
         {movimentos && movimentos.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
             <GraficoLinhaMovimentos movimentos={movimentos} />
             <GraficoBarrasCategorias movimentos={movimentos} />
           </div>
