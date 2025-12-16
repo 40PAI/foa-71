@@ -157,6 +157,39 @@ export function formatPercentagePDF(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
+/**
+ * Sanitize text for PDF - removes emojis and problematic Unicode characters
+ * jsPDF's default Helvetica font doesn't support Unicode emojis or special symbols
+ */
+export function sanitizeForPDF(text: string): string {
+  if (!text) return '';
+  
+  return text
+    // Replace Unicode arrows
+    .replace(/↔/g, '-')
+    .replace(/→/g, '->')
+    .replace(/←/g, '<-')
+    .replace(/↑/g, '^')
+    .replace(/↓/g, 'v')
+    // Replace triangles/indicators
+    .replace(/▲/g, '')
+    .replace(/▼/g, '')
+    // Remove common emojis
+    .replace(/💰|💵|💲|💴|💶|💷/g, '')
+    .replace(/✓|✔|☑/g, '')
+    .replace(/⚠|⚡|⛔|🚫/g, '')
+    .replace(/✅|❌|❎/g, '')
+    .replace(/📊|📈|📉|📋|📁|📂/g, '')
+    .replace(/🔴|🟢|🟡|🟠|⚪|⚫/g, '')
+    // Remove any remaining emoji characters (most common ranges)
+    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '')
+    .replace(/[\u{2600}-\u{26FF}]/gu, '')
+    .replace(/[\u{2700}-\u{27BF}]/gu, '')
+    // Clean up any double spaces left behind
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 // Draw watermark pattern (centered FOA logo)
 export function drawWatermark(doc: any, logoBase64?: string) {
   const pageWidth = doc.internal.pageSize.getWidth();

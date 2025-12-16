@@ -126,7 +126,7 @@ export function drawSubsectionTitle(doc: any, title: string, y: number, bullet: 
 }
 
 /**
- * Draw a KPI card with color bar
+ * Draw a KPI card with color bar (no emoji icons - use color bar as visual indicator)
  */
 export function drawKPICard(
   doc: any,
@@ -136,8 +136,7 @@ export function drawKPICard(
   height: number,
   label: string,
   value: string,
-  color: { r: number; g: number; b: number },
-  icon?: string
+  color: { r: number; g: number; b: number }
 ): void {
   // Card background
   doc.setFillColor(255, 255, 255);
@@ -145,28 +144,21 @@ export function drawKPICard(
   doc.setLineWidth(0.3);
   doc.roundedRect(x, y, width, height, 2, 2, 'FD');
   
-  // Left color bar
+  // Left color bar (visual indicator instead of emoji)
   doc.setFillColor(color.r, color.g, color.b);
-  doc.rect(x, y, 3, height, 'F');
-  
-  // Icon (emoji or text)
-  if (icon) {
-    doc.setFontSize(12);
-    setColor(doc, color);
-    doc.text(icon, x + 8, y + height / 2 + 1);
-  }
+  doc.rect(x, y, 4, height, 'F');
   
   // Label
   doc.setFontSize(fonts.small.size);
   doc.setFont('helvetica', 'normal');
   setColor(doc, colors.medium);
-  doc.text(label, x + (icon ? 18 : 8), y + 8);
+  doc.text(label, x + 10, y + 10);
   
   // Value
   doc.setFontSize(fonts.subtitle.size);
   doc.setFont('helvetica', 'bold');
   setColor(doc, colors.dark);
-  doc.text(value, x + (icon ? 18 : 8), y + height - 6);
+  doc.text(value, x + 10, y + height - 6);
 }
 
 /**
