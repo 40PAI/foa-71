@@ -8,6 +8,7 @@ import { colors, fonts, setColor, drawLine, drawRect, foaCompanyInfo } from './p
 export interface FooterOptions {
   showConfidential?: boolean;
   customText?: string;
+  excludeFirstPage?: boolean;
 }
 
 /**
@@ -34,10 +35,10 @@ export function drawFooter(
   setColor(doc, colors.white);
   
   // Line 1: Address
-  doc.text(foaCompanyInfo.shortAddress, pageWidth / 2, y + 4, { align: 'center' });
+  doc.text(foaCompanyInfo.footerAddress, pageWidth / 2, y + 4, { align: 'center' });
   
   // Line 2: Email and Phone
-  doc.text(`${foaCompanyInfo.email} | ${foaCompanyInfo.phone}`, pageWidth / 2, y + 8, { align: 'center' });
+  doc.text(`${foaCompanyInfo.footerEmail} | ${foaCompanyInfo.footerPhone}`, pageWidth / 2, y + 8, { align: 'center' });
 
   // Page number below footer bar
   doc.setFontSize(fonts.tiny.size);
@@ -55,13 +56,49 @@ export function drawFooter(
 /**
  * Add page numbers and footers to all pages
  */
-export function addPageNumbers(doc: any, options: FooterOptions = {}): void {
+export function addPageNumbers(doc: any, excludeFirstPage: boolean = false): void {
   const totalPages = doc.internal.getNumberOfPages();
+  const actualTotalPages = excludeFirstPage ? totalPages - 1 : totalPages;
   
   for (let i = 1; i <= totalPages; i++) {
     doc.setPage(i);
-    drawFooter(doc, i, totalPages, options);
+    
+    // Skip first page if it's a cover
+    if (excludeFirstPage && i === 1) continue;
+    
+    const displayNumber = excludeFirstPage ? i - 1 : i;
+    drawFooter(doc, displayNumber, actualTotalPages);
   }
+}
+
+/**
+ * Draw "Considerações Finais" section (as in official FOA docs)
+ */
+export function drawConsideracoesFinais(doc: any, y: number, text?: string): number {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Section title
+  doc.setFontSize(fonts.sectionTitle.size);
+  doc.setFont('helvetica', 'bold');
+  setColor(doc, colors.dark);
+  doc.text('Considerações Finais', 15, y);
+  
+  y += 8;
+  
+  // Default text if not provided
+  const finalText = text || 
+    'Este relatório apresenta uma visão consolidada da situação financeira do projeto, ' +
+    'permitindo uma melhor rastreabilidade das operações, aumento da produtividade ' +
+    'e maior controle de materiais, tarefas e custos.';
+  
+  doc.setFontSize(fonts.body.size);
+  doc.setFont('helvetica', 'normal');
+  setColor(doc, colors.dark);
+  
+  const lines = doc.splitTextToSize(finalText, pageWidth - 30);
+  doc.text(lines, 15, y);
+  
+  return y + (lines.length * 5) + 10;
 }
 
 /**
