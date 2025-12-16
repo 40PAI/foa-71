@@ -2045,35 +2045,53 @@ export type Database = {
       }
       notificacoes: {
         Row: {
+          acao_url: string | null
           centro_custo_id: string | null
           created_at: string | null
+          destinatario_role: string[] | null
+          destinatario_user_id: string | null
+          entidade_id: string | null
+          entidade_tipo: string | null
           id: string
           lida: boolean | null
           mensagem: string
           projeto_id: number | null
           severidade: string | null
+          som_ativado: boolean | null
           tipo: string
           titulo: string
         }
         Insert: {
+          acao_url?: string | null
           centro_custo_id?: string | null
           created_at?: string | null
+          destinatario_role?: string[] | null
+          destinatario_user_id?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
           id?: string
           lida?: boolean | null
           mensagem: string
           projeto_id?: number | null
           severidade?: string | null
+          som_ativado?: boolean | null
           tipo: string
           titulo: string
         }
         Update: {
+          acao_url?: string | null
           centro_custo_id?: string | null
           created_at?: string | null
+          destinatario_role?: string[] | null
+          destinatario_user_id?: string | null
+          entidade_id?: string | null
+          entidade_tipo?: string | null
           id?: string
           lida?: boolean | null
           mensagem?: string
           projeto_id?: number | null
           severidade?: string | null
+          som_ativado?: boolean | null
           tipo?: string
           titulo?: string
         }
@@ -3478,6 +3496,7 @@ export type Database = {
         Args: { new_amount: number; project_id: number }
         Returns: boolean
       }
+      verificar_notificacoes_periodicas: { Args: never; Returns: Json }
       zerar_custos_projeto: { Args: { p_projeto_id: number }; Returns: Json }
     }
     Enums: {

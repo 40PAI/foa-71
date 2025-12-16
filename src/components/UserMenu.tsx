@@ -1,4 +1,4 @@
-import { Bell, User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,20 +9,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { UserProfileModal } from "@/components/modals/UserProfileModal";
 import { SettingsModal } from "@/components/modals/SettingsModal";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { useState } from "react";
 
 export function UserMenu() {
   const { user, profile, signOut } = useAuth();
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
-
-  // Mock notification count - você pode implementar um hook para notificações reais
-  const notificationCount = 3;
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,20 +30,8 @@ export function UserMenu() {
 
   return (
     <div className="flex items-center gap-2">
-      {/* Notification Bell */}
-      <div className="relative">
-        <Button variant="ghost" size="sm" className="relative">
-          <Bell className="h-5 w-5" />
-          {notificationCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-            >
-              {notificationCount}
-            </Badge>
-          )}
-        </Button>
-      </div>
+      {/* Notification Panel with Realtime + Sound */}
+      <NotificationPanel />
 
       {/* Theme Toggle */}
       <ThemeToggle />
