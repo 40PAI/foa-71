@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export type SubtipoEntrada = 'valor_inicial' | 'recebimento_cliente' | 'financiamento_adicional' | 'reembolso';
+
 export interface GastoObra {
   id: string;
   data_movimento: string;
@@ -18,6 +20,7 @@ export interface GastoObra {
   centro_custo_nome?: string;
   responsavel_id?: string;
   responsavel_nome?: string;
+  subtipo_entrada?: SubtipoEntrada;
   created_at: string;
 }
 
@@ -134,6 +137,7 @@ export function useCreateGastoObra() {
       descricao: string;
       tipo_movimento: "entrada" | "saida";
       fonte_financiamento?: "REC_FOA" | "FOF_FIN" | "FOA_AUTO";
+      subtipo_entrada?: SubtipoEntrada;
       valor: number;
       observacoes?: string;
       categoria?: string;
@@ -158,6 +162,10 @@ export function useCreateGastoObra() {
       } else if (gasto.tipo_movimento === "entrada") {
         // Se não especificou fonte, usar REC_FOA como padrão para entradas
         insertData.fonte_financiamento = "REC_FOA";
+      }
+      // Adicionar subtipo de entrada apenas para movimentos de entrada
+      if (gasto.tipo_movimento === "entrada" && gasto.subtipo_entrada) {
+        insertData.subtipo_entrada = gasto.subtipo_entrada;
       }
       if (gasto.observacoes) {
         insertData.observacoes = gasto.observacoes;
