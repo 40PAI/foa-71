@@ -3137,7 +3137,6 @@ export type Database = {
         Args: { p_projeto_id?: number }
         Returns: {
           amortizacao: number
-          custos_suportados: number
           divida_foa_com_fof: number
           fof_financiamento: number
           projeto_id: number
@@ -3238,6 +3237,10 @@ export type Database = {
           total_contratado: number
           total_recebido: number
         }[]
+      }
+      get_consolidated_financial_data: {
+        Args: { p_projeto_id: number }
+        Returns: Json
       }
       get_current_project_week: {
         Args: { project_id: number }

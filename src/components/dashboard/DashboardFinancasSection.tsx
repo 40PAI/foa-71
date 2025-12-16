@@ -35,10 +35,16 @@ export function DashboardFinancasSection({
           </div>
         </div>
 
-        {topProjetosGasto.length > 0 ? <div>
+        {topProjetosGasto.length > 0 ? (
+          <div className="w-full">
             <h3 className="text-sm font-semibold mb-3">Top 5 Projetos por Gasto</h3>
-            <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
-          </div> : <p className="text-center text-muted-foreground py-8">Nenhum dado financeiro disponível</p>}
+            <div className="w-full">
+              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-muted-foreground py-8">Nenhum dado financeiro disponível</p>
+        )}
       </CardContent>
     </Card>;
 }
