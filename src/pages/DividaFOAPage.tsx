@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowRight, TrendingUp, TrendingDown, Plus, Building2 } from "lucide-react";
-import { useResumoFOAGeral, useResumoFOA } from "@/hooks/useResumoFOA";
+import { useResumoFOA } from "@/hooks/useResumoFOA";
 import { useReembolsosFOA } from "@/hooks/useReembolsosFOA";
 import { ReembolsoFOAModal } from "@/components/modals/ReembolsoFOAModal";
 import { formatCurrency } from "@/utils/currency";
@@ -14,9 +14,6 @@ import { format } from "date-fns";
 export function DividaFOAPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedProjectForModal, setSelectedProjectForModal] = useState<number | undefined>();
-  
-  // Dados consolidados de todos os projetos
-  const { data: totaisGerais, isLoading: loadingTotais } = useResumoFOAGeral();
   
   // Dados detalhados por projeto (chama RPC com null para pegar todos)
   const { data: projetosList, isLoading: loadingProjetos } = useResumoFOA(undefined);
@@ -29,7 +26,22 @@ export function DividaFOAPage() {
     setModalOpen(true);
   };
 
-  if (loadingTotais || loadingProjetos) {
+  // Calcular totais directamente dos dados da tabela para garantir consistência
+  const totaisGerais = useMemo(() => {
+    if (!projetosList || projetosList.length === 0) {
+      return { fof_financiamento: 0, amortizacao: 0, divida_foa_com_fof: 0 };
+    }
+    return projetosList.reduce(
+      (acc, curr) => ({
+        fof_financiamento: acc.fof_financiamento + (Number(curr.fof_financiamento) || 0),
+        amortizacao: acc.amortizacao + (Number(curr.amortizacao) || 0),
+        divida_foa_com_fof: acc.divida_foa_com_fof + (Number(curr.divida_foa_com_fof) || 0),
+      }),
+      { fof_financiamento: 0, amortizacao: 0, divida_foa_com_fof: 0 }
+    );
+  }, [projetosList]);
+
+  if (loadingProjetos) {
     return (
       <div className="p-4 sm:p-6 lg:p-8 space-y-6">
         <Skeleton className="h-20 w-full" />
@@ -43,7 +55,7 @@ export function DividaFOAPage() {
     );
   }
 
-  const dividaTotal = totaisGerais?.divida_foa_com_fof || 0;
+  const dividaTotal = totaisGerais.divida_foa_com_fof;
 
   return (
     <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
@@ -124,7 +136,6 @@ export function DividaFOAPage() {
                     <TableHead>Projeto</TableHead>
                     <TableHead className="text-right">FOF Financiamento</TableHead>
                     <TableHead className="text-right">Amortização</TableHead>
-                    <TableHead className="text-right">Custos Suportados</TableHead>
                     <TableHead className="text-right">Dívida</TableHead>
                     <TableHead className="text-center">Status</TableHead>
                   </TableRow>
