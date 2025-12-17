@@ -1720,6 +1720,84 @@ export type Database = {
         }
         Relationships: []
       }
+      materiais_alocados: {
+        Row: {
+          created_at: string | null
+          etapa_id: number | null
+          id: string
+          material_id: string
+          movimentacao_saida_id: string | null
+          projeto_id: number
+          quantidade_alocada: number
+          quantidade_consumida: number
+          quantidade_devolvida: number
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          etapa_id?: number | null
+          id?: string
+          material_id: string
+          movimentacao_saida_id?: string | null
+          projeto_id: number
+          quantidade_alocada?: number
+          quantidade_consumida?: number
+          quantidade_devolvida?: number
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          etapa_id?: number | null
+          id?: string
+          material_id?: string
+          movimentacao_saida_id?: string | null
+          projeto_id?: number
+          quantidade_alocada?: number
+          quantidade_consumida?: number
+          quantidade_devolvida?: number
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materiais_alocados_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "etapas_projeto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_alocados_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materiais_armazem"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_alocados_movimentacao_saida_id_fkey"
+            columns: ["movimentacao_saida_id"]
+            isOneToOne: false
+            referencedRelation: "materiais_movimentacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_alocados_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_alocados_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_resumo_foa"
+            referencedColumns: ["projeto_id"]
+          },
+        ]
+      }
       materiais_armazem: {
         Row: {
           categoria_principal:
@@ -1801,9 +1879,15 @@ export type Database = {
       materiais_movimentacoes: {
         Row: {
           created_at: string
+          custo_unitario: number | null
           data_movimentacao: string
+          documento_referencia: string | null
+          estado_material: string | null
+          guia_consumo_id: string | null
           id: string
           material_id: string
+          motivo_devolucao: string | null
+          movimentacao_origem_id: string | null
           observacoes: string | null
           projeto_destino_id: number | null
           projeto_origem_id: number | null
@@ -1814,9 +1898,15 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          custo_unitario?: number | null
           data_movimentacao?: string
+          documento_referencia?: string | null
+          estado_material?: string | null
+          guia_consumo_id?: string | null
           id?: string
           material_id: string
+          motivo_devolucao?: string | null
+          movimentacao_origem_id?: string | null
           observacoes?: string | null
           projeto_destino_id?: number | null
           projeto_origem_id?: number | null
@@ -1827,9 +1917,15 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          custo_unitario?: number | null
           data_movimentacao?: string
+          documento_referencia?: string | null
+          estado_material?: string | null
+          guia_consumo_id?: string | null
           id?: string
           material_id?: string
+          motivo_devolucao?: string | null
+          movimentacao_origem_id?: string | null
           observacoes?: string | null
           projeto_destino_id?: number | null
           projeto_origem_id?: number | null
@@ -1851,6 +1947,20 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "materiais_armazem"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_movimentacoes_guia_consumo_id_fkey"
+            columns: ["guia_consumo_id"]
+            isOneToOne: false
+            referencedRelation: "guias_consumo"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "materiais_movimentacoes_movimentacao_origem_id_fkey"
+            columns: ["movimentacao_origem_id"]
+            isOneToOne: false
+            referencedRelation: "materiais_movimentacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -3375,6 +3485,12 @@ export type Database = {
           valor_aprovado: number
           valor_pendente: number
         }[]
+      }
+      get_quantidade_pendente: {
+        Args: {
+          alocacao: Database["public"]["Tables"]["materiais_alocados"]["Row"]
+        }
+        Returns: number
       }
       get_task_financial_analytics: {
         Args: { project_id: number }
