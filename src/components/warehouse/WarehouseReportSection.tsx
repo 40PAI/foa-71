@@ -12,19 +12,30 @@ import {
   PackageMinus, 
   Hammer, 
   RotateCcw,
-  TrendingUp,
-  TrendingDown,
   BarChart3
 } from "lucide-react";
 import { useWarehouseReport, PeriodType, getPeriodDates } from "@/hooks/useWarehouseReport";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import * as XLSX from "xlsx";
+
+const MOVEMENT_TYPE_LABELS: Record<string, string> = {
+  entrada: "Entrada",
+  saida: "Saída",
+  consumo: "Consumo",
+  devolucao: "Devolução",
+  transferencia_entrada: "Transferência (Entrada)",
+  transferencia_saida: "Transferência (Saída)",
+};
 
 export function WarehouseReportSection() {
   const [periodType, setPeriodType] = useState<PeriodType>("month");
   const [customStart, setCustomStart] = useState<string>("");
   const [customEnd, setCustomEnd] = useState<string>("");
+  const [isExporting, setIsExporting] = useState(false);
 
   const { start, end } = getPeriodDates(
     periodType, 
@@ -46,6 +57,95 @@ export function WarehouseReportSection() {
       case "semester": return `${new Date().getMonth() < 6 ? "1º" : "2º"} Semestre ${new Date().getFullYear()}`;
       case "custom": return data?.periodo?.label || "Personalizado";
       default: return "";
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const startStr = format(start, "yyyy-MM-dd");
+      const endStr = format(end, "yyyy-MM-dd");
+
+      // Fetch detailed movements for export
+      const { data: movements, error } = await supabase
+        .from("materiais_movimentacoes")
+        .select(`
+          *,
+          materiais_armazem!fk_material_movimentacoes_material(id, nome_material, codigo_interno, unidade_medida),
+          projeto_origem:projetos!materiais_movimentacoes_projeto_origem_id_fkey(nome),
+          projeto_destino:projetos!materiais_movimentacoes_projeto_destino_id_fkey(nome)
+        `)
+        .gte("data_movimentacao", startStr)
+        .lte("data_movimentacao", endStr)
+        .order("data_movimentacao", { ascending: true });
+
+      if (error) throw error;
+
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+
+      // Sheet 1: Resumo por Material
+      const resumoRows = data?.por_material?.map((m) => ({
+        "Material": m.material_nome,
+        "Código": m.material_codigo,
+        "Unidade": m.unidade,
+        "Entradas": m.entradas,
+        "Saídas": m.saidas,
+        "Consumos": m.consumos,
+        "Devoluções": m.devolucoes,
+        "Saldo": m.saldo,
+      })) || [];
+
+      const resumoSheet = XLSX.utils.json_to_sheet(resumoRows);
+      XLSX.utils.book_append_sheet(workbook, resumoSheet, "Resumo por Material");
+
+      // Sheet 2: Movimentações Detalhadas
+      const detailRows = movements?.map((mov: any) => ({
+        "Data": format(new Date(mov.data_movimentacao), "dd/MM/yyyy"),
+        "Tipo": MOVEMENT_TYPE_LABELS[mov.tipo_movimentacao] || mov.tipo_movimentacao,
+        "Material": mov.materiais_armazem?.nome_material || "-",
+        "Código": mov.materiais_armazem?.codigo_interno || "-",
+        "Quantidade": mov.quantidade,
+        "Unidade": mov.materiais_armazem?.unidade_medida || "-",
+        "Projecto Origem": mov.projeto_origem?.nome || "-",
+        "Projecto Destino": mov.projeto_destino?.nome || "-",
+        "Responsável": mov.responsavel || "-",
+        "Documento": mov.numero_documento || "-",
+        "Observações": mov.observacoes || "-",
+      })) || [];
+
+      const detailSheet = XLSX.utils.json_to_sheet(detailRows);
+      XLSX.utils.book_append_sheet(workbook, detailSheet, "Movimentações Detalhadas");
+
+      // Generate filename based on period
+      let fileName = "relatorio_armazem_";
+      switch (periodType) {
+        case "week":
+          fileName += `semana_${format(start, "dd-MM-yyyy")}`;
+          break;
+        case "month":
+          fileName += format(start, "MMMM_yyyy", { locale: pt });
+          break;
+        case "quarter":
+          fileName += `trimestre_${Math.ceil((start.getMonth() + 1) / 3)}_${start.getFullYear()}`;
+          break;
+        case "semester":
+          fileName += `semestre_${start.getMonth() < 6 ? "1" : "2"}_${start.getFullYear()}`;
+          break;
+        case "custom":
+          fileName += `${format(start, "dd-MM-yyyy")}_a_${format(end, "dd-MM-yyyy")}`;
+          break;
+      }
+      fileName += ".xlsx";
+
+      // Download file
+      XLSX.writeFile(workbook, fileName);
+      toast.success("Relatório exportado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao exportar:", error);
+      toast.error("Erro ao exportar relatório");
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -202,9 +302,15 @@ export function WarehouseReportSection() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">Detalhamento por Material</CardTitle>
-                <Button variant="outline" size="sm" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={handleExport}
+                  disabled={isExporting || !data?.por_material?.length}
+                >
                   <Download className="h-4 w-4" />
-                  Exportar
+                  {isExporting ? "A exportar..." : "Exportar"}
                 </Button>
               </div>
             </CardHeader>
