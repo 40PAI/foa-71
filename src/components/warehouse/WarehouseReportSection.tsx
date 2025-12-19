@@ -111,9 +111,9 @@ export function WarehouseReportSection() {
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
         </div>
-      ) : data ? (
+      ) : (
         <>
-          {/* Summary KPIs */}
+          {/* Summary KPIs - Always show */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="p-3">
               <div className="flex items-center gap-3">
@@ -122,8 +122,8 @@ export function WarehouseReportSection() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Entradas</p>
-                  <p className="text-xl font-bold text-green-600">+{data.resumo.entradas_quantidade}</p>
-                  <p className="text-xs text-muted-foreground">{data.resumo.entradas} movim.</p>
+                  <p className="text-xl font-bold text-green-600">+{data?.resumo?.entradas_quantidade || 0}</p>
+                  <p className="text-xs text-muted-foreground">{data?.resumo?.entradas || 0} movim.</p>
                 </div>
               </div>
             </Card>
@@ -134,8 +134,8 @@ export function WarehouseReportSection() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Saídas</p>
-                  <p className="text-xl font-bold text-orange-600">-{data.resumo.saidas_quantidade}</p>
-                  <p className="text-xs text-muted-foreground">{data.resumo.saidas} movim.</p>
+                  <p className="text-xl font-bold text-orange-600">-{data?.resumo?.saidas_quantidade || 0}</p>
+                  <p className="text-xs text-muted-foreground">{data?.resumo?.saidas || 0} movim.</p>
                 </div>
               </div>
             </Card>
@@ -146,8 +146,8 @@ export function WarehouseReportSection() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Consumos</p>
-                  <p className="text-xl font-bold text-red-600">-{data.resumo.consumos_quantidade}</p>
-                  <p className="text-xs text-muted-foreground">{data.resumo.consumos} movim.</p>
+                  <p className="text-xl font-bold text-red-600">-{data?.resumo?.consumos_quantidade || 0}</p>
+                  <p className="text-xs text-muted-foreground">{data?.resumo?.consumos || 0} movim.</p>
                 </div>
               </div>
             </Card>
@@ -158,15 +158,15 @@ export function WarehouseReportSection() {
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Devoluções</p>
-                  <p className="text-xl font-bold text-blue-600">+{data.resumo.devolucoes_quantidade}</p>
-                  <p className="text-xs text-muted-foreground">{data.resumo.devolucoes} movim.</p>
+                  <p className="text-xl font-bold text-blue-600">+{data?.resumo?.devolucoes_quantidade || 0}</p>
+                  <p className="text-xs text-muted-foreground">{data?.resumo?.devolucoes || 0} movim.</p>
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Chart */}
-          {data.serie_temporal.length > 0 && (
+          {/* Chart - Only show if there's data */}
+          {data?.serie_temporal && data.serie_temporal.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -209,7 +209,7 @@ export function WarehouseReportSection() {
               </div>
             </CardHeader>
             <CardContent>
-              {data.por_material.length === 0 ? (
+              {!data?.por_material || data.por_material.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
                   Sem movimentações no período seleccionado
                 </p>
@@ -261,7 +261,7 @@ export function WarehouseReportSection() {
             </CardContent>
           </Card>
         </>
-      ) : null}
+      )}
     </div>
   );
 }
