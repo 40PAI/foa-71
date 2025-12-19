@@ -101,10 +101,10 @@ export function useWarehouseReport(
       const startStr = format(start, "yyyy-MM-dd");
       const endStr = format(end, "yyyy-MM-dd");
 
-      // Fetch movements in period
+      // Fetch movements in period - use specific FK to avoid ambiguity (300 error)
       const { data: movements, error } = await supabase
         .from("materiais_movimentacoes")
-        .select("*, materiais_armazem(id, nome_material, codigo_interno, unidade_medida)")
+        .select("*, materiais_armazem!fk_material_movimentacoes_material(id, nome_material, codigo_interno, unidade_medida)")
         .gte("data_movimentacao", startStr)
         .lte("data_movimentacao", endStr)
         .order("data_movimentacao", { ascending: true });
