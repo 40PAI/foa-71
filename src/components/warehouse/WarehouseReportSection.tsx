@@ -71,13 +71,27 @@ export function WarehouseReportSection() {
         .from("materiais_movimentacoes")
         .select(`
           *,
-          materiais_armazem!fk_material_movimentacoes_material(id, nome_material, codigo_interno, unidade_medida),
-          projeto_origem:projetos!materiais_movimentacoes_projeto_origem_id_fkey(nome),
-          projeto_destino:projetos!materiais_movimentacoes_projeto_destino_id_fkey(nome)
+          materiais_armazem!fk_material_movimentacoes_material(id, nome_material, codigo_interno, unidade_medida)
         `)
         .gte("data_movimentacao", startStr)
         .lte("data_movimentacao", endStr)
         .order("data_movimentacao", { ascending: true });
+
+      if (error) throw error;
+
+      // Fetch project names for the movements
+      const projectIds = new Set<number>();
+      movements?.forEach((mov: any) => {
+        if (mov.projeto_origem_id) projectIds.add(mov.projeto_origem_id);
+        if (mov.projeto_destino_id) projectIds.add(mov.projeto_destino_id);
+      });
+
+      const { data: projects } = await supabase
+        .from("projetos")
+        .select("id, nome")
+        .in("id", Array.from(projectIds));
+
+      const projectMap = new Map(projects?.map(p => [p.id, p.nome]) || []);
 
       if (error) throw error;
 
@@ -107,10 +121,10 @@ export function WarehouseReportSection() {
         "Código": mov.materiais_armazem?.codigo_interno || "-",
         "Quantidade": mov.quantidade,
         "Unidade": mov.materiais_armazem?.unidade_medida || "-",
-        "Projecto Origem": mov.projeto_origem?.nome || "-",
-        "Projecto Destino": mov.projeto_destino?.nome || "-",
+        "Projecto Origem": mov.projeto_origem_id ? (projectMap.get(mov.projeto_origem_id) || "-") : "-",
+        "Projecto Destino": mov.projeto_destino_id ? (projectMap.get(mov.projeto_destino_id) || "-") : "-",
         "Responsável": mov.responsavel || "-",
-        "Documento": mov.numero_documento || "-",
+        "Documento": mov.documento_referencia || "-",
         "Observações": mov.observacoes || "-",
       })) || [];
 
