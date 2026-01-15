@@ -10,13 +10,22 @@ interface ProjectsKPISectionProps {
 
 export function ProjectsKPISection({ projects }: ProjectsKPISectionProps) {
   const kpiData = useMemo(() => {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
     // Filtrar apenas projetos ativos (excluir concluídos e cancelados)
     const projetosAtivos = projects.filter(p => 
       p.status !== 'Concluído' && p.status !== 'Cancelado'
     );
     const projetosConcluidos = projects.filter(p => p.status === 'Concluído').length;
     const projetosCancelados = projects.filter(p => p.status === 'Cancelado').length;
-    const projetosAtrasados = projetosAtivos.filter(p => p.status === 'Atrasado').length;
+    
+    // Calcular projetos atrasados baseado na data_fim_prevista, não apenas no status
+    const projetosAtrasados = projetosAtivos.filter(p => {
+      const dataFim = new Date(p.data_fim_prevista);
+      dataFim.setHours(0, 0, 0, 0);
+      return dataFim < hoje;
+    }).length;
     
     const mediaAvanco = projetosAtivos.length > 0 
       ? projetosAtivos.reduce((acc, p) => acc + (p.avanco_fisico || 0), 0) / projetosAtivos.length

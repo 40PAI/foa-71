@@ -27,6 +27,19 @@ export function RefactoredProjetosPage() {
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     if (statusFilter === "todos") return projects;
+    
+    // Para "Atrasado", verificar pela data, não pelo status
+    if (statusFilter === "Atrasado") {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      return projects.filter(p => {
+        if (p.status === 'Concluído' || p.status === 'Cancelado') return false;
+        const dataFim = new Date(p.data_fim_prevista);
+        dataFim.setHours(0, 0, 0, 0);
+        return dataFim < hoje;
+      });
+    }
+    
     return projects.filter(p => p.status === statusFilter);
   }, [projects, statusFilter]);
 
@@ -95,7 +108,16 @@ export function RefactoredProjetosPage() {
             Em Andamento ({projects.filter(p => p.status === "Em Andamento").length})
           </TabsTrigger>
           <TabsTrigger value="Atrasado">
-            Atrasados ({projects.filter(p => p.status === "Atrasado").length})
+            Atrasados ({(() => {
+              const hoje = new Date();
+              hoje.setHours(0, 0, 0, 0);
+              return projects.filter(p => {
+                if (p.status === 'Concluído' || p.status === 'Cancelado') return false;
+                const dataFim = new Date(p.data_fim_prevista);
+                dataFim.setHours(0, 0, 0, 0);
+                return dataFim < hoje;
+              }).length;
+            })()})
           </TabsTrigger>
           <TabsTrigger value="Pausado">
             Pausados ({projects.filter(p => p.status === "Pausado").length})
