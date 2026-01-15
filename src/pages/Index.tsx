@@ -5,8 +5,10 @@ import { MainContent } from "@/components/MainContent";
 import { Header } from "@/components/Header";
 import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileLayout } from "@/components/layout/MobileLayout";
 
-const ResponsiveLayout = () => {
+const DesktopLayout = () => {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
   
@@ -27,9 +29,21 @@ const ResponsiveLayout = () => {
 };
 
 const Index = () => {
+  const isMobile = useIsMobile();
+
+  // Mobile: Use dedicated mobile layout with bottom navigation
+  if (isMobile) {
+    return (
+      <MobileLayout>
+        <MainContent />
+      </MobileLayout>
+    );
+  }
+
+  // Desktop/Tablet: Use sidebar layout
   return (
     <SidebarProvider defaultOpen={false}>
-      <ResponsiveLayout />
+      <DesktopLayout />
     </SidebarProvider>
   );
 };
