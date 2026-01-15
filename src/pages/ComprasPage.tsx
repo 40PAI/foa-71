@@ -1,23 +1,75 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/formatters";
-import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, User, AlertCircle, Edit, Eye, Trash2 } from "lucide-react";
+import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, User, AlertCircle, Edit, Eye, Trash2, ShoppingCart, Building2 } from "lucide-react";
 import { KPICard } from "@/components/KPICard";
 import { useRequisitions, useDeleteRequisition } from "@/hooks/useRequisitions";
 import { useDashboardKpis } from "@/hooks/useDashboardKpis";
 import { useProjectContext } from "@/contexts/ProjectContext";
+import { useProjects } from "@/hooks/useProjects";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { RequisitionModal } from "@/components/modals/RequisitionModal";
 import { RequisitionDetailsModal } from "@/components/modals/RequisitionDetailsModal";
+import { MobileKPIGrid } from "@/components/mobile/MobileKPIGrid";
+import { MobileDataCard } from "@/components/mobile/MobileDataCard";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Mobile quick select for projects
+function MobileProjectQuickSelect({ onSelect }: { onSelect: (id: number) => void }) {
+  const { data: projects = [], isLoading } = useProjects();
+  const activeProjects = projects.filter(p => p.status === "Em Andamento");
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 p-4">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-lg" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      <div className="text-center space-y-2">
+        <ShoppingCart className="h-12 w-12 text-primary/50 mx-auto" />
+        <h2 className="text-lg font-semibold">Selecione um Projeto</h2>
+        <p className="text-sm text-muted-foreground">
+          Escolha um projeto para ver as requisições de compras
+        </p>
+      </div>
+      
+      <div className="space-y-2">
+        {activeProjects.map((project) => (
+          <button
+            key={project.id}
+            onClick={() => onSelect(project.id!)}
+            className="w-full p-3 rounded-lg border bg-card text-left transition-all active:scale-[0.98] hover:border-primary/50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{project.nome}</p>
+                <p className="text-xs text-muted-foreground truncate">{project.cliente}</p>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function ComprasPage() {
-  const { selectedProjectId, projectData } = useProjectContext();
+  const { selectedProjectId, setSelectedProjectId, projectData } = useProjectContext();
+  const isMobile = useIsMobile();
   const { data: allRequisitions = [], isLoading: loadingRequisitions } = useRequisitions();
   const { data: kpis = [], isLoading: loadingKpis } = useDashboardKpis();
   const deleteRequisitionMutation = useDeleteRequisition();
@@ -33,16 +85,21 @@ export function ComprasPage() {
 
   if ((loadingRequisitions && !allRequisitions.length) || (loadingKpis && !kpis.length)) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 p-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Compras & Aprovações</h1>
+          <h1 className="text-xl sm:text-3xl font-bold">Compras & Aprovações</h1>
         </div>
         <LoadingSpinner />
       </div>
     );
   }
 
-  // Mostrar aviso se nenhum projeto estiver selecionado
+  // Mobile: Mostrar seleção de projeto
+  if (!selectedProjectId && isMobile) {
+    return <MobileProjectQuickSelect onSelect={setSelectedProjectId} />;
+  }
+
+  // Desktop: Mostrar aviso se nenhum projeto estiver selecionado
   if (!selectedProjectId) {
     return (
       <div className="space-y-6">
