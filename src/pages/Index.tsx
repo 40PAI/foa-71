@@ -1,4 +1,3 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MainContent } from "@/components/MainContent";
@@ -33,11 +32,7 @@ const Index = () => {
 
   // Mobile: Use dedicated mobile layout with bottom navigation
   if (isMobile) {
-    return (
-      <MobileLayout>
-        <MainContent />
-      </MobileLayout>
-    );
+    return <MobileLayout />;
   }
 
   // Desktop/Tablet: Use sidebar layout
