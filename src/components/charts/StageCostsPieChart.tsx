@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useStageComparison } from '@/hooks/useStageComparison';
 import { formatCurrency } from '@/utils/formatters';
-import { Download } from 'lucide-react';
+import { Download, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSonnerToast } from '@/hooks/use-sonner-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StageCostsPieChartProps {
   projectId: number | null;
@@ -22,6 +25,7 @@ const COLORS = [
 ];
 
 export function StageCostsPieChart({ projectId }: StageCostsPieChartProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading, totals } = useStageComparison(projectId);
   const toast = useSonnerToast();
 
@@ -117,73 +121,113 @@ export function StageCostsPieChart({ projectId }: StageCostsPieChartProps) {
     );
   };
 
-  return (
-    <Card className="animate-fade-in">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Custos por Etapa</CardTitle>
-            <CardDescription>
-              Distribuição percentual dos custos planejados
-            </CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={CustomLabel}
-              outerRadius={140}
-              fill="#8884d8"
-              dataKey="value"
-              animationDuration={800}
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              verticalAlign="bottom"
-              height={36}
-              iconType="circle"
-              formatter={(value, entry: any) => (
-                <span className="text-sm">
-                  {value} ({entry.payload.percentage.toFixed(1)}%)
-                </span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+  const ChartContent = ({ expanded }: { expanded: boolean }) => (
+    <ResponsiveContainer width="100%" height={expanded ? 500 : 400}>
+      <PieChart>
+        <Pie
+          data={pieData}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={CustomLabel}
+          outerRadius={expanded ? 180 : 140}
+          fill="#8884d8"
+          dataKey="value"
+          animationDuration={800}
+        >
+          {pieData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+        <Tooltip content={<CustomTooltip />} />
+        <Legend
+          verticalAlign="bottom"
+          height={36}
+          iconType="circle"
+          formatter={(value, entry: any) => (
+            <span className="text-sm">
+              {value} ({entry.payload.percentage.toFixed(1)}%)
+            </span>
+          )}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  );
 
-        {totals && (
-          <div className="mt-6 p-4 bg-accent/50 rounded-lg">
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Orçado</p>
-                <p className="text-lg font-bold">{formatCurrency(totals.total)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Material</p>
-                <p className="text-lg font-bold">{formatCurrency(totals.subtotal_material)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Mão de Obra</p>
-                <p className="text-lg font-bold">{formatCurrency(totals.subtotal_mao_obra)}</p>
-              </div>
+  const Summary = () => (
+    totals ? (
+      <div className="mt-6 p-4 bg-accent/50 rounded-lg">
+        <div className="grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Total Orçado</p>
+            <p className="text-lg font-bold">{formatCurrency(totals.total)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Total Material</p>
+            <p className="text-lg font-bold">{formatCurrency(totals.subtotal_material)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Total Mão de Obra</p>
+            <p className="text-lg font-bold">{formatCurrency(totals.subtotal_mao_obra)}</p>
+          </div>
+        </div>
+      </div>
+    ) : null
+  );
+
+  return (
+    <>
+      <Card className="animate-fade-in">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Custos por Etapa</CardTitle>
+              <CardDescription>
+                Distribuição percentual dos custos planejados
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
+              <TooltipProvider>
+                <UITooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setIsExpanded(true)}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expandir gráfico</p>
+                  </TooltipContent>
+                </UITooltip>
+              </TooltipProvider>
             </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <ChartContent expanded={false} />
+          <Summary />
+        </CardContent>
+      </Card>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Custos por Etapa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ChartContent expanded={true} />
+            <Summary />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

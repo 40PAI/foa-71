@@ -1,6 +1,11 @@
-
+import { useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GaugeChartProps {
   value: number;
@@ -20,6 +25,8 @@ const chartConfig = {
 };
 
 export function GaugeChart({ value, title, unit = "%" }: GaugeChartProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
   const data = [
     { name: "value", value: Math.min(value, 100) },
     { name: "remaining", value: Math.max(100 - value, 0) }
@@ -38,46 +45,91 @@ export function GaugeChart({ value, title, unit = "%" }: GaugeChartProps) {
     return "var(--gradient-danger)";
   };
 
-  return (
-    <div className="space-y-2">
-      <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
-      <ChartContainer config={chartConfig} className="h-[180px] sm:h-[200px] lg:h-[220px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="70%"
-              startAngle={180}
-              endAngle={0}
-              innerRadius={50}
-              outerRadius={70}
-              dataKey="value"
-            >
-              <Cell fill={getColor(value)} />
-              <Cell fill="hsl(var(--muted))" />
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent />} />
-          </PieChart>
-        </ResponsiveContainer>
-      </ChartContainer>
-      <div className="text-center">
-        <div 
-          className="text-xl sm:text-2xl font-bold animate-pulse" 
-          style={{ 
-            color: getColor(value),
-            background: getGradient(value),
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}
-        >
-          {value.toFixed(1)}{unit}
-        </div>
-        <div className="text-xs sm:text-sm text-muted-foreground">
-          {value >= 85 ? "Excelente" : value >= 70 ? "Bom" : "Precisa Melhorar"}
-        </div>
+  const ChartContent = ({ expanded }: { expanded: boolean }) => (
+    <ChartContainer config={chartConfig} className={expanded ? "h-[300px]" : "h-[180px] sm:h-[200px] lg:h-[220px]"}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={data}
+            cx="50%"
+            cy="70%"
+            startAngle={180}
+            endAngle={0}
+            innerRadius={expanded ? 80 : 50}
+            outerRadius={expanded ? 120 : 70}
+            dataKey="value"
+          >
+            <Cell fill={getColor(value)} />
+            <Cell fill="hsl(var(--muted))" />
+          </Pie>
+          <ChartTooltip content={<ChartTooltipContent />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  );
+
+  const ValueDisplay = ({ expanded }: { expanded: boolean }) => (
+    <div className="text-center">
+      <div 
+        className={`${expanded ? 'text-3xl' : 'text-xl sm:text-2xl'} font-bold animate-pulse`}
+        style={{ 
+          color: getColor(value),
+          background: getGradient(value),
+          backgroundClip: 'text',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}
+      >
+        {value.toFixed(1)}{unit}
+      </div>
+      <div className={`${expanded ? 'text-base' : 'text-xs sm:text-sm'} text-muted-foreground`}>
+        {value >= 85 ? "Excelente" : value >= 70 ? "Bom" : "Precisa Melhorar"}
       </div>
     </div>
+  );
+
+  return (
+    <>
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsExpanded(true)}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Expandir gráfico</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <ChartContent expanded={false} />
+          <ValueDisplay expanded={false} />
+        </CardContent>
+      </Card>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-3xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ChartContent expanded={true} />
+            <ValueDisplay expanded={true} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

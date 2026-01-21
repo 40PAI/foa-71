@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from "recharts";
-import { PieChart as PieChartIcon, AlertTriangle, AlertCircle } from "lucide-react";
+import { PieChart as PieChartIcon, AlertTriangle, AlertCircle, Maximize2 } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import { useCostCenterUtilization } from "@/hooks/useFinancialChartData";
 import { clampPercentage, formatPercentageWithExcess } from "@/lib/helpers";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CostCenterUtilizationChartProps {
   projectId?: number;
@@ -26,6 +30,7 @@ const getBarColor = (percentual: number) => {
 };
 
 export function CostCenterUtilizationChart({ projectId, title = "Utilização por Centro de Custo" }: CostCenterUtilizationChartProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useCostCenterUtilization(projectId);
 
   if (isLoading) {
@@ -81,119 +86,161 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
     excedido: d.percentual >= 100,
   }));
 
+  const ChartContent = ({ expanded }: { expanded: boolean }) => (
+    <ChartContainer config={chartConfig} className={expanded ? "h-[500px] w-full" : "h-80 w-full"}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 5, right: 60, left: expanded ? 30 : 20, bottom: 5 }}
+        >
+          <XAxis 
+            type="number" 
+            domain={[0, 100]}
+            tickFormatter={(value) => `${value}%`}
+            tick={{ fontSize: expanded ? 12 : 11 }}
+          />
+          <YAxis 
+            type="category" 
+            dataKey="nome" 
+            width={expanded ? 120 : 100}
+            tick={{ fontSize: expanded ? 12 : 11 }}
+          />
+          <ChartTooltip
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              const data = payload[0].payload;
+              return (
+                <div className="bg-background border rounded-lg shadow-lg p-3">
+                  <p className="font-semibold">{data.nomeCompleto}</p>
+                  <p className="text-sm">Orçamento: {formatCurrency(data.orcamento)}</p>
+                  <p className="text-sm">Gasto: {formatCurrency(data.gasto)}</p>
+                  <p className={`text-sm font-bold ${data.excedido ? 'text-destructive' : ''}`}>
+                    Utilização: {formatPercentageWithExcess(data.percentualReal, 1)}
+                  </p>
+                  {data.excedido && (
+                    <p className="text-xs text-destructive mt-1">
+                      ⚠️ Orçamento excedido em {formatCurrency(data.gasto - data.orcamento)}
+                    </p>
+                  )}
+                </div>
+              );
+            }}
+          />
+          <Bar dataKey="percentualVisual" radius={[0, 4, 4, 0]}>
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={getBarColor(entry.percentualReal)} />
+            ))}
+            <LabelList 
+              dataKey="percentualReal" 
+              position="right" 
+              formatter={(value: number) => value >= 100 ? `${clampPercentage(value)}%+` : `${value.toFixed(0)}%`}
+              style={{ fontSize: expanded ? 12 : 11 }}
+            />
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  );
+
+  const Legend = () => (
+    <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 justify-center text-sm">
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(142, 76%, 36%)" }} />
+        <span>Normal (&lt;70%)</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(45, 93%, 47%)" }} />
+        <span>Atenção (70-90%)</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 60%)" }} />
+        <span>Crítico (90-100%)</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 50%)" }} />
+        <span>Excedido (&gt;100%)</span>
+      </div>
+    </div>
+  );
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5" />
-              {title}
-            </CardTitle>
-            <CardDescription className="flex flex-wrap gap-2 mt-1">
-              {exceededCount > 0 && (
-                <span className="text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {exceededCount} excedido(s)
-                </span>
-              )}
-              {criticalCount > 0 && criticalCount !== exceededCount && (
-                <span className="text-red-600 flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3" />
-                  {criticalCount - exceededCount} crítico(s)
-                </span>
-              )}
-              {warningCount > 0 && (
-                <span className="text-yellow-600">
-                  {warningCount} em atenção
-                </span>
-              )}
-            </CardDescription>
-          </div>
-          <div className="text-right text-sm">
-            <div className="text-muted-foreground">Utilização Total</div>
-            <div className={`font-bold ${totalUtilizacao >= 100 ? 'text-destructive' : totalUtilizacao >= 90 ? 'text-red-600' : ''}`}>
-              {formatPercentageWithExcess(totalUtilizacao, 1)}
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <PieChartIcon className="h-5 w-5" />
+                {title}
+              </CardTitle>
+              <CardDescription className="flex flex-wrap gap-2 mt-1">
+                {exceededCount > 0 && (
+                  <span className="text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {exceededCount} excedido(s)
+                  </span>
+                )}
+                {criticalCount > 0 && criticalCount !== exceededCount && (
+                  <span className="text-red-600 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    {criticalCount - exceededCount} crítico(s)
+                  </span>
+                )}
+                {warningCount > 0 && (
+                  <span className="text-yellow-600">
+                    {warningCount} em atenção
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-right text-sm">
+                <div className="text-muted-foreground">Utilização Total</div>
+                <div className={`font-bold ${totalUtilizacao >= 100 ? 'text-destructive' : totalUtilizacao >= 90 ? 'text-red-600' : ''}`}>
+                  {formatPercentageWithExcess(totalUtilizacao, 1)}
+                </div>
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setIsExpanded(true)}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expandir gráfico</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-80 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              layout="vertical"
-              margin={{ top: 5, right: 60, left: 20, bottom: 5 }}
-            >
-              <XAxis 
-                type="number" 
-                domain={[0, 100]}
-                tickFormatter={(value) => `${value}%`}
-                tick={{ fontSize: 11 }}
-              />
-              <YAxis 
-                type="category" 
-                dataKey="nome" 
-                width={100}
-                tick={{ fontSize: 11 }}
-              />
-              <ChartTooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const data = payload[0].payload;
-                  return (
-                    <div className="bg-background border rounded-lg shadow-lg p-3">
-                      <p className="font-semibold">{data.nomeCompleto}</p>
-                      <p className="text-sm">Orçamento: {formatCurrency(data.orcamento)}</p>
-                      <p className="text-sm">Gasto: {formatCurrency(data.gasto)}</p>
-                      <p className={`text-sm font-bold ${data.excedido ? 'text-destructive' : ''}`}>
-                        Utilização: {formatPercentageWithExcess(data.percentualReal, 1)}
-                      </p>
-                      {data.excedido && (
-                        <p className="text-xs text-destructive mt-1">
-                          ⚠️ Orçamento excedido em {formatCurrency(data.gasto - data.orcamento)}
-                        </p>
-                      )}
-                    </div>
-                  );
-                }}
-              />
-              <Bar dataKey="percentualVisual" radius={[0, 4, 4, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.percentualReal)} />
-                ))}
-                <LabelList 
-                  dataKey="percentualReal" 
-                  position="right" 
-                  formatter={(value: number) => value >= 100 ? `${clampPercentage(value)}%+` : `${value.toFixed(0)}%`}
-                  style={{ fontSize: 11 }}
-                />
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
+        </CardHeader>
+        <CardContent>
+          <ChartContent expanded={false} />
+          <Legend />
+        </CardContent>
+      </Card>
 
-        {/* Legend */}
-        <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 justify-center text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(142, 76%, 36%)" }} />
-            <span>Normal (&lt;70%)</span>
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5" />
+              {title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ChartContent expanded={true} />
+            <Legend />
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(45, 93%, 47%)" }} />
-            <span>Atenção (70-90%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 60%)" }} />
-            <span>Crítico (90-100%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 50%)" }} />
-            <span>Excedido (&gt;100%)</span>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

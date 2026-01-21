@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { AlertTriangle, Package, AlertCircle } from "lucide-react";
+import { AlertTriangle, Package, AlertCircle, Maximize2 } from "lucide-react";
 import { useCriticalStock } from "@/hooks/useMaterialChartData";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CriticalStockChartProps {
   title?: string;
@@ -26,6 +30,7 @@ const getProgressColor = (status: string) => {
 };
 
 export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockChartProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useCriticalStock();
 
   if (isLoading) {
@@ -71,54 +76,29 @@ export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockCh
   const criticalCount = data.filter(d => d.status === 'critico').length;
   const lowCount = data.filter(d => d.status === 'baixo').length;
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              {title}
-            </CardTitle>
-            <CardDescription>Materiais abaixo do nível mínimo</CardDescription>
-          </div>
-          <div className="flex gap-2">
-            {criticalCount > 0 && (
-              <Badge variant="destructive">
-                <AlertCircle className="h-3 w-3 mr-1" />
-                {criticalCount} Crítico{criticalCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-            {lowCount > 0 && (
-              <Badge variant="outline" className="text-yellow-600 border-yellow-300">
-                {lowCount} Baixo{lowCount > 1 ? 's' : ''}
-              </Badge>
-            )}
-          </div>
+  const Content = ({ expanded }: { expanded: boolean }) => (
+    <>
+      {/* Summary gauges */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="text-center p-3 rounded-lg bg-red-50 border border-red-200">
+          <div className="text-2xl font-bold text-red-600">{criticalCount}</div>
+          <div className="text-xs text-red-600">Crítico (&lt;25%)</div>
         </div>
-      </CardHeader>
-      <CardContent>
-        {/* Summary gauges */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="text-center p-3 rounded-lg bg-red-50 border border-red-200">
-            <div className="text-2xl font-bold text-red-600">{criticalCount}</div>
-            <div className="text-xs text-red-600">Crítico (&lt;25%)</div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-yellow-50 border border-yellow-200">
-            <div className="text-2xl font-bold text-yellow-600">{lowCount}</div>
-            <div className="text-xs text-yellow-600">Baixo (25-50%)</div>
-          </div>
-          <div className="text-center p-3 rounded-lg bg-muted">
-            <div className="text-2xl font-bold">{criticalCount + lowCount}</div>
-            <div className="text-xs text-muted-foreground">Total Alertas</div>
-          </div>
+        <div className="text-center p-3 rounded-lg bg-yellow-50 border border-yellow-200">
+          <div className="text-2xl font-bold text-yellow-600">{lowCount}</div>
+          <div className="text-xs text-yellow-600">Baixo (25-50%)</div>
         </div>
+        <div className="text-center p-3 rounded-lg bg-muted">
+          <div className="text-2xl font-bold">{criticalCount + lowCount}</div>
+          <div className="text-xs text-muted-foreground">Total Alertas</div>
+        </div>
+      </div>
 
-        {/* Materials list with proper scroll */}
-        <ScrollArea className="h-[350px] pr-4">
-          <div className="space-y-3">
-            {data.map((material) => (
-              <div
+      {/* Materials list with proper scroll */}
+      <ScrollArea className={expanded ? "h-[450px] pr-4" : "h-[350px] pr-4"}>
+        <div className="space-y-3">
+          {data.map((material) => (
+            <div
               key={material.material_id} 
               className={cn(
                 "p-3 rounded-lg border",
@@ -150,16 +130,78 @@ export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockCh
                     style={{ width: `${Math.min(material.percentual, 100)}%` }}
                   />
                 </div>
-                </div>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
+            </div>
+          ))}
+        </div>
+      </ScrollArea>
 
-        <p className="text-center text-xs text-muted-foreground mt-4 pt-2 border-t">
-          Total: {data.length} materiais em alerta
-        </p>
-      </CardContent>
-    </Card>
+      <p className="text-center text-xs text-muted-foreground mt-4 pt-2 border-t">
+        Total: {data.length} materiais em alerta
+      </p>
+    </>
+  );
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+                {title}
+              </CardTitle>
+              <CardDescription>Materiais abaixo do nível mínimo</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {criticalCount > 0 && (
+                <Badge variant="destructive">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {criticalCount} Crítico{criticalCount > 1 ? 's' : ''}
+                </Badge>
+              )}
+              {lowCount > 0 && (
+                <Badge variant="outline" className="text-yellow-600 border-yellow-300">
+                  {lowCount} Baixo{lowCount > 1 ? 's' : ''}
+                </Badge>
+              )}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setIsExpanded(true)}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expandir</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Content expanded={false} />
+        </CardContent>
+      </Card>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+              {title}
+            </DialogTitle>
+          </DialogHeader>
+          <Content expanded={true} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
