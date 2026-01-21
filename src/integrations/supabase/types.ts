@@ -2657,47 +2657,75 @@ export type Database = {
       reembolsos_foa_fof: {
         Row: {
           created_at: string | null
+          credor_nome: string | null
           data_reembolso: string
+          data_vencimento: string | null
           descricao: string
+          fonte_credito: string | null
+          fornecedor_id: string | null
           id: string
           meta_total: number | null
+          numero_contrato: string | null
           observacoes: string | null
           percentual_cumprido: number | null
           projeto_id: number | null
           responsavel_id: string | null
+          status_divida: string | null
+          taxa_juro: number | null
           tipo: string | null
           updated_at: string | null
           valor: number
         }
         Insert: {
           created_at?: string | null
+          credor_nome?: string | null
           data_reembolso: string
+          data_vencimento?: string | null
           descricao: string
+          fonte_credito?: string | null
+          fornecedor_id?: string | null
           id?: string
           meta_total?: number | null
+          numero_contrato?: string | null
           observacoes?: string | null
           percentual_cumprido?: number | null
           projeto_id?: number | null
           responsavel_id?: string | null
+          status_divida?: string | null
+          taxa_juro?: number | null
           tipo?: string | null
           updated_at?: string | null
           valor: number
         }
         Update: {
           created_at?: string | null
+          credor_nome?: string | null
           data_reembolso?: string
+          data_vencimento?: string | null
           descricao?: string
+          fonte_credito?: string | null
+          fornecedor_id?: string | null
           id?: string
           meta_total?: number | null
+          numero_contrato?: string | null
           observacoes?: string | null
           percentual_cumprido?: number | null
           projeto_id?: number | null
           responsavel_id?: string | null
+          status_divida?: string | null
+          taxa_juro?: number | null
           tipo?: string | null
           updated_at?: string | null
           valor?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "reembolsos_foa_fof_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reembolsos_foa_fof_projeto_id_fkey"
             columns: ["projeto_id"]
