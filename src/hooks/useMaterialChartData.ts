@@ -49,7 +49,7 @@ export interface MovementTimelineData {
 }
 
 // Hook for material flow over time (stacked area chart)
-export function useMaterialFlow(projectId?: number, days: number = 30) {
+export function useMaterialFlow(projectId?: number, days: number = 90) {
   return useQuery({
     queryKey: ["material-flow", projectId, days],
     queryFn: async (): Promise<MaterialFlowData[]> => {
@@ -201,39 +201,64 @@ export function useCriticalStock() {
 }
 
 // Hook for consumption by project (donut chart)
+// Uses separate queries to avoid JOIN ambiguity issues
 export function useConsumptionByProject() {
   return useQuery({
     queryKey: ["consumption-by-project"],
     queryFn: async (): Promise<ConsumptionByProjectData[]> => {
-      const { data, error } = await supabase
+      // Step 1: Fetch movements (consumo + saida) without problematic JOINs
+      const { data: movements, error: movError } = await supabase
         .from("materiais_movimentacoes")
-        .select(`
-          projeto_destino_id,
-          quantidade,
-          material_id,
-          projetos!materiais_movimentacoes_projeto_destino_id_fkey(nome)
-        `)
-        .eq("tipo_movimentacao", "consumo")
+        .select("projeto_destino_id, quantidade, material_id, tipo_movimentacao")
+        .in("tipo_movimentacao", ["consumo", "saida"])
         .not("projeto_destino_id", "is", null);
 
-      if (error) throw error;
+      if (movError) {
+        console.error("Error fetching movements:", movError);
+        throw movError;
+      }
 
-      // Aggregate by project
+      if (!movements || movements.length === 0) {
+        return [];
+      }
+
+      // Step 2: Get unique project IDs
+      const projectIds = [...new Set(movements.map(m => m.projeto_destino_id).filter(Boolean))] as number[];
+
+      // Step 3: Fetch project names separately
+      const { data: projects, error: projError } = await supabase
+        .from("projetos")
+        .select("id, nome")
+        .in("id", projectIds);
+
+      if (projError) {
+        console.error("Error fetching projects:", projError);
+      }
+
+      // Step 4: Create project name map
+      const projectMap: Record<number, string> = {};
+      projects?.forEach(p => {
+        projectMap[p.id] = p.nome;
+      });
+
+      // Step 5: Aggregate by project
       const projectTotals: Record<number, { nome: string; total: number; materiais: Set<string> }> = {};
 
-      data?.forEach((mov: any) => {
+      movements.forEach((mov) => {
         const projId = mov.projeto_destino_id;
         if (!projId) return;
 
         if (!projectTotals[projId]) {
           projectTotals[projId] = {
-            nome: mov.projetos?.nome || `Projeto ${projId}`,
+            nome: projectMap[projId] || `Projeto ${projId}`,
             total: 0,
             materiais: new Set(),
           };
         }
         projectTotals[projId].total += mov.quantidade || 0;
-        projectTotals[projId].materiais.add(mov.material_id);
+        if (mov.material_id) {
+          projectTotals[projId].materiais.add(mov.material_id);
+        }
       });
 
       const totalGeral = Object.values(projectTotals).reduce((sum, p) => sum + p.total, 0);

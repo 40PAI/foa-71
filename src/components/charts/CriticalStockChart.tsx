@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { AlertTriangle, Package, AlertCircle } from "lucide-react";
 import { useCriticalStock } from "@/hooks/useMaterialChartData";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 interface CriticalStockChartProps {
@@ -114,10 +114,11 @@ export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockCh
           </div>
         </div>
 
-        {/* Materials list */}
-        <div className="space-y-3 max-h-64 overflow-y-auto">
-          {data.map((material) => (
-            <div 
+        {/* Materials list with proper scroll */}
+        <ScrollArea className="h-[350px] pr-4">
+          <div className="space-y-3">
+            {data.map((material) => (
+              <div
               key={material.material_id} 
               className={cn(
                 "p-3 rounded-lg border",
@@ -149,16 +150,15 @@ export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockCh
                     style={{ width: `${Math.min(material.percentual, 100)}%` }}
                   />
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollArea>
 
-        {data.length > 5 && (
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Mostrando {Math.min(data.length, 15)} de {data.length} materiais em alerta
-          </p>
-        )}
+        <p className="text-center text-xs text-muted-foreground mt-4 pt-2 border-t">
+          Total: {data.length} materiais em alerta
+        </p>
       </CardContent>
     </Card>
   );
