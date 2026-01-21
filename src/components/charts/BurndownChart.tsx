@@ -80,10 +80,10 @@ export function BurndownChart({ data }: BurndownChartProps) {
           </p>
         )}
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[220px] sm:h-[280px] lg:h-[300px]">
+      <CardContent className="flex justify-center">
+        <ChartContainer config={chartConfig} className="h-[220px] sm:h-[280px] lg:h-[300px] w-full max-w-4xl">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
               <defs>
                 <linearGradient id="burndownIdeal" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.2}/>
@@ -143,7 +143,7 @@ export function BurndownChart({ data }: BurndownChartProps) {
         
         {/* Resumo */}
         {isTemporalData && (
-          <div className="mt-3 pt-3 border-t text-xs text-muted-foreground grid grid-cols-3 gap-2">
+          <div className="mt-3 pt-3 border-t text-xs text-muted-foreground grid grid-cols-3 gap-2 max-w-md mx-auto">
             <div className="text-center">
               <span className="font-medium text-foreground">{totalTasks}</span>
               <p>Total Tarefas</p>
