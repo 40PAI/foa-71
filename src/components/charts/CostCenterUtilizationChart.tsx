@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from "recharts";
-import { PieChart as PieChartIcon, AlertTriangle } from "lucide-react";
+import { PieChart as PieChartIcon, AlertTriangle, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import { useCostCenterUtilization } from "@/hooks/useFinancialChartData";
-import { Badge } from "@/components/ui/badge";
+import { clampPercentage, formatPercentageWithExcess } from "@/lib/helpers";
 
 interface CostCenterUtilizationChartProps {
   projectId?: number;
@@ -18,10 +18,11 @@ const chartConfig = {
   },
 };
 
-const getBarColor = (status: string, percentual: number) => {
-  if (status === 'critico' || percentual >= 90) return "hsl(0, 84%, 60%)";
-  if (status === 'atencao' || percentual >= 70) return "hsl(45, 93%, 47%)";
-  return "hsl(142, 76%, 36%)";
+const getBarColor = (percentual: number) => {
+  if (percentual >= 100) return "hsl(0, 84%, 50%)"; // Exceeded - darker red
+  if (percentual >= 90) return "hsl(0, 84%, 60%)"; // Critical
+  if (percentual >= 70) return "hsl(45, 93%, 47%)"; // Warning
+  return "hsl(142, 76%, 36%)"; // Normal
 };
 
 export function CostCenterUtilizationChart({ projectId, title = "Utilização por Centro de Custo" }: CostCenterUtilizationChartProps) {
@@ -63,16 +64,21 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
     );
   }
 
-  const criticalCount = data.filter(d => d.status === 'critico').length;
-  const warningCount = data.filter(d => d.status === 'atencao').length;
+  const criticalCount = data.filter(d => d.percentual >= 90).length;
+  const exceededCount = data.filter(d => d.percentual >= 100).length;
+  const warningCount = data.filter(d => d.percentual >= 70 && d.percentual < 90).length;
   const totalOrcamento = data.reduce((sum, d) => sum + d.orcamento, 0);
   const totalGasto = data.reduce((sum, d) => sum + d.gasto, 0);
+  const totalUtilizacao = totalOrcamento > 0 ? (totalGasto / totalOrcamento) * 100 : 0;
 
-  // Take top 8 for visualization
+  // Take top 8 for visualization, with clamped percentages for the bar
   const chartData = data.slice(0, 8).map(d => ({
     ...d,
     nome: d.nome.length > 15 ? d.nome.substring(0, 15) + '...' : d.nome,
     nomeCompleto: d.nome,
+    percentualVisual: clampPercentage(d.percentual), // Clamped for bar width
+    percentualReal: d.percentual, // Real value for display
+    excedido: d.percentual >= 100,
   }));
 
   return (
@@ -84,15 +90,21 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
               <PieChartIcon className="h-5 w-5" />
               {title}
             </CardTitle>
-            <CardDescription>
-              {criticalCount > 0 && (
-                <span className="text-red-600">
-                  <AlertTriangle className="h-3 w-3 inline mr-1" />
-                  {criticalCount} centro(s) crítico(s)
+            <CardDescription className="flex flex-wrap gap-2 mt-1">
+              {exceededCount > 0 && (
+                <span className="text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {exceededCount} excedido(s)
+                </span>
+              )}
+              {criticalCount > 0 && criticalCount !== exceededCount && (
+                <span className="text-red-600 flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {criticalCount - exceededCount} crítico(s)
                 </span>
               )}
               {warningCount > 0 && (
-                <span className="text-yellow-600 ml-2">
+                <span className="text-yellow-600">
                   {warningCount} em atenção
                 </span>
               )}
@@ -100,8 +112,8 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
           </div>
           <div className="text-right text-sm">
             <div className="text-muted-foreground">Utilização Total</div>
-            <div className="font-bold">
-              {totalOrcamento > 0 ? ((totalGasto / totalOrcamento) * 100).toFixed(1) : 0}%
+            <div className={`font-bold ${totalUtilizacao >= 100 ? 'text-destructive' : totalUtilizacao >= 90 ? 'text-red-600' : ''}`}>
+              {formatPercentageWithExcess(totalUtilizacao, 1)}
             </div>
           </div>
         </div>
@@ -112,7 +124,7 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
             <BarChart
               data={chartData}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 5, right: 60, left: 20, bottom: 5 }}
             >
               <XAxis 
                 type="number" 
@@ -135,19 +147,26 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
                       <p className="font-semibold">{data.nomeCompleto}</p>
                       <p className="text-sm">Orçamento: {formatCurrency(data.orcamento)}</p>
                       <p className="text-sm">Gasto: {formatCurrency(data.gasto)}</p>
-                      <p className="text-sm font-bold">Utilização: {data.percentual.toFixed(1)}%</p>
+                      <p className={`text-sm font-bold ${data.excedido ? 'text-destructive' : ''}`}>
+                        Utilização: {formatPercentageWithExcess(data.percentualReal, 1)}
+                      </p>
+                      {data.excedido && (
+                        <p className="text-xs text-destructive mt-1">
+                          ⚠️ Orçamento excedido em {formatCurrency(data.gasto - data.orcamento)}
+                        </p>
+                      )}
                     </div>
                   );
                 }}
               />
-              <Bar dataKey="percentual" radius={[0, 4, 4, 0]}>
+              <Bar dataKey="percentualVisual" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={getBarColor(entry.status, entry.percentual)} />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.percentualReal)} />
                 ))}
                 <LabelList 
-                  dataKey="percentual" 
+                  dataKey="percentualReal" 
                   position="right" 
-                  formatter={(value: number) => `${value.toFixed(0)}%`}
+                  formatter={(value: number) => value >= 100 ? `${clampPercentage(value)}%+` : `${value.toFixed(0)}%`}
                   style={{ fontSize: 11 }}
                 />
               </Bar>
@@ -158,16 +177,20 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
         {/* Legend */}
         <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 justify-center text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(142, 76%, 36%)" }} />
             <span>Normal (&lt;70%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(45, 93%, 47%)" }} />
             <span>Atenção (70-90%)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span>Crítico (&gt;90%)</span>
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 60%)" }} />
+            <span>Crítico (90-100%)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "hsl(0, 84%, 50%)" }} />
+            <span>Excedido (&gt;100%)</span>
           </div>
         </div>
       </CardContent>
