@@ -7,6 +7,7 @@ import { MaterialEntryModal } from "@/components/modals/MaterialEntryModal";
 import { MaterialExitModal } from "@/components/modals/MaterialExitModal";
 import { MaterialHistoryModal } from "@/components/modals/MaterialHistoryModal";
 import { useMaterialsArmazem } from "@/hooks/useMaterialsArmazem";
+import { useCriticalStock } from "@/hooks/useCriticalStock";
 import { useProjectContext } from "@/contexts/ProjectContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Grid3X3, Table as TableIcon, List, Search, History, MapPin, BarChart3, PackagePlus, PackageMinus } from "lucide-react";
+import { Package, Grid3X3, Table as TableIcon, List, Search, History, MapPin, BarChart3, PackagePlus, PackageMinus, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { MaterialAllocationsSection } from "@/components/warehouse/MaterialAllocationsSection";
 import { MovementHistorySection } from "@/components/warehouse/MovementHistorySection";
@@ -24,6 +25,9 @@ import { WarehouseReportSection } from "@/components/warehouse/WarehouseReportSe
 export function ArmazemPage() {
   const { selectedProjectId } = useProjectContext();
   const { data: materials, isLoading } = useMaterialsArmazem();
+  
+  // Hook para verificar stock crítico e mostrar alertas
+  const { criticalCount, criticalItems, hasWarehouseAccess } = useCriticalStock();
   
   const [viewType, setViewType] = useState<'grid' | 'table' | 'list'>('table');
   const [searchTerm, setSearchTerm] = useState('');
@@ -78,6 +82,25 @@ export function ArmazemPage() {
           <MaterialExitModal />
         </div>
       </div>
+
+      {/* Critical Stock Alert Banner */}
+      {criticalCount > 0 && hasWarehouseAccess && (
+        <Card className="border-destructive bg-destructive/10">
+          <CardContent className="py-3 flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
+            <div className="flex-1">
+              <p className="font-medium text-destructive">
+                {criticalCount} material(s) com stock crítico
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {criticalItems.slice(0, 3).map(i => i.nome).join(', ')}
+                {criticalCount > 3 && ` e mais ${criticalCount - 3}...`}
+              </p>
+            </div>
+            <Badge variant="destructive">&lt; 10 unidades</Badge>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="materials" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 h-auto">

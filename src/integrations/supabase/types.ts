@@ -3640,7 +3640,7 @@ export type Database = {
         Args: { new_amount: number; project_id: number }
         Returns: boolean
       }
-      verificar_notificacoes_periodicas: { Args: never; Returns: Json }
+      verificar_notificacoes_periodicas: { Args: never; Returns: undefined }
       zerar_custos_projeto: { Args: { p_projeto_id: number }; Returns: Json }
     }
     Enums: {
