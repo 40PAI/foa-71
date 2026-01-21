@@ -152,12 +152,32 @@ const ProjectChartsContent = ({ projectId }: { projectId: number }) => {
     );
   }
 
+  // Verificar se há dados suficientes para gráficos temporais
+  const hasTimelineData = chartData?.hasEnoughTimelineData && chartData?.timelineMonths >= 2;
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Gauge sempre disponível com métricas atuais */}
       <GaugeChart 
         value={chartData?.metrics.physicalProgress || 0} 
         title="Avanço Físico" 
       />
+      
+      {/* Aviso se não houver dados temporais suficientes */}
+      {!hasTimelineData && (
+        <Card className="border-dashed border-muted-foreground/30">
+          <CardContent className="py-6 text-center">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-sm font-medium">Dados temporais limitados</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Os gráficos abaixo mostram dados simplificados. Para visualização completa com evolução mensal, 
+              certifique-se de que o projeto possui datas de início/fim configuradas e tarefas com prazos definidos.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Gráficos temporais - agora com dados reais mensais */}
       <TimelineChart 
         data={chartData?.chartData.sCurve?.map(item => ({
           periodo: item.periodo,
