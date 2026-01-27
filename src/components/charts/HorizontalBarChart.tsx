@@ -41,36 +41,42 @@ export function HorizontalBarChart({
   title, 
   valueFormatter = formatCurrency 
 }: HorizontalBarChartProps) {
+  // Fixed compact height - max 5 items at 28px each + padding
+  const chartHeight = Math.min(data.length, 5) * 28 + 20;
+  
   return (
     <div className="w-full">
-      {title && <h3 className="text-lg font-semibold mb-2">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[280px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(280, data.length * 50)}>
+      {title && <h3 className="text-sm font-semibold mb-2">{title}</h3>}
+      <ChartContainer config={chartConfig} className="w-full" style={{ height: chartHeight }}>
+        <ResponsiveContainer width="100%" height="100%">
           <BarChart 
-            data={data} 
+            data={data.slice(0, 5)} 
             layout="vertical" 
-            margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
+            margin={{ left: 0, right: 10, top: 5, bottom: 5 }}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
               className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={120}
+              width={90}
               className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
             />
             <ChartTooltip 
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
-              {data.map((entry, index) => (
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+              {data.slice(0, 5).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
             </Bar>
