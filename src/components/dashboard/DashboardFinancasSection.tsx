@@ -18,32 +18,32 @@ export function DashboardFinancasSection({
     status: projeto.percentual_gasto > 110 ? 'critico' as const : projeto.percentual_gasto > 90 ? 'atencao' as const : 'normal' as const
   }));
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
-  return <Card>
-      <CardHeader>
-        <CardTitle className="text-responsive-xl">Finanças</CardTitle>
+  return <Card className="max-w-md">
+      <CardHeader className="py-2 px-3">
+        <CardTitle className="text-sm">Finanças</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 border rounded-lg bg-card">
-            <p className="text-sm text-muted-foreground">Orçamento Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(orcamentoTotal)}</p>
+      <CardContent className="space-y-2 px-3 pb-3 pt-0">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="p-2 border rounded bg-card">
+            <p className="text-xs text-muted-foreground">Orçamento Total</p>
+            <p className="text-sm font-bold">{formatCurrency(orcamentoTotal)}</p>
           </div>
-          <div className="p-4 border rounded-lg bg-card">
-            <p className="text-sm text-muted-foreground">Gasto Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(gastoTotal)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{percentualGasto}% do orçamento</p>
+          <div className="p-2 border rounded bg-card">
+            <p className="text-xs text-muted-foreground">Gasto Total</p>
+            <p className="text-sm font-bold">{formatCurrency(gastoTotal)}</p>
+            <p className="text-[10px] text-muted-foreground">{percentualGasto}% do orçamento</p>
           </div>
         </div>
 
         {topProjetosGasto.length > 0 ? (
           <div className="w-full">
-            <h3 className="text-sm font-semibold mb-3">Top 5 Projetos por Gasto</h3>
-            <div className="w-full">
+            <h3 className="text-xs font-semibold mb-1">Top 5 Projetos por Gasto</h3>
+            <div className="w-full h-32">
               <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
             </div>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-8">Nenhum dado financeiro disponível</p>
+          <p className="text-center text-muted-foreground py-4 text-xs">Nenhum dado financeiro disponível</p>
         )}
       </CardContent>
     </Card>;
