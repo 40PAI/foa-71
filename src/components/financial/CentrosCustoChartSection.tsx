@@ -1,9 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { HorizontalBarChart } from "@/components/charts/HorizontalBarChart";
-import { AlertTriangle, AlertCircle, Building2, TrendingUp } from "lucide-react";
+import { AlertTriangle, Building2, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { clampPercentage, formatPercentageWithExcess } from "@/lib/helpers";
 
 interface CentrosCustoChartSectionProps {
   data: {
@@ -97,14 +96,12 @@ export function CentrosCustoChartSection({ data }: CentrosCustoChartSectionProps
                   <td className="p-2 text-right">{formatCurrency(cc.orcamento)}</td>
                   <td className="p-2 text-right">{formatCurrency(cc.gasto)}</td>
                   <td className="p-2 text-right">
-                    <span className={`font-semibold flex items-center justify-end gap-1 ${
-                      cc.utilizacao >= 100 ? 'text-destructive' :
+                    <span className={`font-semibold ${
                       cc.status === 'critico' ? 'text-destructive' :
                       cc.status === 'atencao' ? 'text-warning' :
                       'text-success'
                     }`}>
-                      {cc.utilizacao >= 100 && <AlertCircle className="h-3 w-3" />}
-                      {formatPercentageWithExcess(cc.utilizacao, 1)}
+                      {cc.utilizacao.toFixed(1)}%
                     </span>
                   </td>
                 </tr>

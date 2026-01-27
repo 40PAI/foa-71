@@ -7,19 +7,10 @@ export type UserRole = 'diretor_tecnico' | 'encarregado_obra' | 'assistente_comp
 
 export interface UserProfile extends Tables<'profiles'> {}
 
-export interface UserRoleRecord {
-  id: string;
-  user_id: string;
-  role: UserRole;
-  granted_by: string | null;
-  granted_at: string;
-}
-
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: UserProfile | null;
-  userRoles: UserRole[];
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, nome: string) => Promise<{ error: any }>;
@@ -27,7 +18,6 @@ interface AuthContextType {
   hasRole: (role: UserRole) => boolean;
   isDirector: () => boolean;
   canAccessModule: (module: string) => boolean;
-  refreshRoles: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,126 +38,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Função para buscar roles da tabela user_roles (SEGURO)
-  const fetchUserRoles = async (userId: string): Promise<UserRole[]> => {
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error fetching user roles:', error);
-        return [];
-      }
-
-      return (data || []).map(r => r.role as UserRole);
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      return [];
-    }
-  };
-
-  // Função para buscar profile
-  const fetchProfile = async (userId: string): Promise<UserProfile | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      return null;
-    }
-  };
-
-  // Função para refresh de roles (útil após alterações)
-  const refreshRoles = async () => {
-    if (user?.id) {
-      const roles = await fetchUserRoles(user.id);
-      setUserRoles(roles);
-    }
-  };
-
   useEffect(() => {
-    let isMounted = true;
-
-    // Inicializar sessão existente
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!isMounted) return;
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          const [profileData, roles] = await Promise.all([
-            fetchProfile(session.user.id),
-            fetchUserRoles(session.user.id)
-          ]);
-          
-          if (isMounted) {
-            setProfile(profileData);
-            setUserRoles(roles);
-          }
-        }
-      } catch (error) {
-        console.error('Error initializing session:', error);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initSession();
-
-    // Listener para mudanças de auth
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return;
-        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          const [profileData, roles] = await Promise.all([
-            fetchProfile(session.user.id),
-            fetchUserRoles(session.user.id)
-          ]);
-          
-          if (isMounted) {
-            setProfile(profileData);
-            setUserRoles(roles);
-          }
+          // Fetch user profile
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+            setProfile(profile);
+          }, 0);
         } else {
           setProfile(null);
-          setUserRoles([]);
         }
-        
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     );
 
-    return () => {
-      isMounted = false;
-      subscription.unsubscribe();
-    };
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (!session) {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -200,7 +106,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSession(null);
       setProfile(null);
-      setUserRoles([]);
       
       // Attempt to sign out from Supabase
       await supabase.auth.signOut();
@@ -210,47 +115,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // SEGURO: Verifica role a partir da tabela user_roles (não profiles.cargo)
   const hasRole = (role: UserRole): boolean => {
-    // Também verificar se o profile está ativo
-    if (!profile?.ativo) return false;
-    return userRoles.includes(role);
+    return profile?.cargo === role && profile?.ativo === true;
   };
 
   const isDirector = (): boolean => {
-    return hasRole('diretor_tecnico') || hasRole('coordenacao_direcao');
+    return hasRole('diretor_tecnico');
   };
 
   const canAccessModule = (module: string): boolean => {
     if (!profile || !profile.ativo) return false;
-    if (userRoles.length === 0) return false;
 
-    // Diretores e coordenação têm acesso a tudo
-    if (isDirector()) return true;
+    const role = profile.cargo;
     
     switch (module) {
       case 'projetos':
-        return false; // Apenas diretores (já verificado acima)
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'requisicoes':
-        return hasRole('encarregado_obra') || hasRole('departamento_hst');
+        return ['diretor_tecnico', 'encarregado_obra', 'departamento_hst'].includes(role);
       case 'armazem':
-        return hasRole('assistente_compras');
+        return ['diretor_tecnico', 'assistente_compras', 'coordenacao_direcao'].includes(role);
       case 'rh':
-        return false; // Apenas diretores
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'seguranca':
-        return hasRole('departamento_hst');
+        return ['diretor_tecnico', 'departamento_hst', 'coordenacao_direcao'].includes(role);
       case 'tarefas':
-        return hasRole('encarregado_obra');
+        return ['diretor_tecnico', 'encarregado_obra', 'coordenacao_direcao'].includes(role);
       case 'financas':
-        return false; // Apenas diretores
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'graficos':
-        return false; // Apenas diretores
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'compras':
-        return hasRole('assistente_compras');
+        return ['diretor_tecnico', 'assistente_compras', 'coordenacao_direcao'].includes(role);
       case 'user_management':
-        return false; // Apenas diretores
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       default:
-        return false;
+        return ['coordenacao_direcao'].includes(role);
     }
   };
 
@@ -258,7 +158,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     user,
     session,
     profile,
-    userRoles,
     loading,
     signIn,
     signUp,
@@ -266,7 +165,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     hasRole,
     isDirector,
     canAccessModule,
-    refreshRoles,
   };
 
   return (

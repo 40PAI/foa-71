@@ -4,16 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { formatCurrency } from "@/utils/formatters";
 import { useProjectContext } from "@/contexts/ProjectContext";
-import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Search, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2 } from "lucide-react";
+import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Search, Maximize2, Wallet, Building, Users, Truck, DollarSign } from "lucide-react";
 import { FinanceModal } from "@/components/modals/FinanceModal";
 import { useConsolidatedFinancialData } from "@/hooks/useConsolidatedFinancialData";
 import { useRequisitions } from "@/hooks/useRequisitions";
-import { useProjects } from "@/hooks/useProjects";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MobileKPIGrid } from "@/components/mobile/MobileKPIGrid";
 import SectionLoadingFallback, { ChartLoadingFallback } from "@/components/loading/SectionLoadingFallback";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 
 // Lazy load componentes pesados
 const IntegratedFinancialDashboard = lazy(() => import("@/components/IntegratedFinancialDashboard").then(m => ({
@@ -46,7 +42,6 @@ const ContasCorrentesSection = lazy(() => import("@/components/financial/ContasC
 const CollapsibleFinancialSection = lazy(() => import("@/components/financial/CollapsibleFinancialSection").then(m => ({
   default: m.CollapsibleFinancialSection
 })));
-
 const SummaryCardSkeleton = () => <Card>
     <CardContent className="p-6">
       <div className="flex items-center justify-between">
@@ -58,70 +53,10 @@ const SummaryCardSkeleton = () => <Card>
       </div>
     </CardContent>
   </Card>;
-
-// Componente para selecionar projeto em mobile quando não há seleção
-function MobileProjectQuickSelect({ onSelect }: { onSelect: (id: number) => void }) {
-  const { data: projects = [], isLoading } = useProjects();
-  const activeProjects = projects.filter(p => p.status === "Em Andamento");
-
-  if (isLoading) {
-    return (
-      <div className="space-y-3 p-4">
-        {[1, 2, 3].map((i) => (
-          <Skeleton key={i} className="h-16 w-full rounded-lg" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="p-4 space-y-4">
-      <div className="text-center space-y-2">
-        <Building2 className="h-12 w-12 text-primary/50 mx-auto" />
-        <h2 className="text-lg font-semibold">Selecione um Projeto</h2>
-        <p className="text-sm text-muted-foreground">
-          Escolha um projeto para ver a análise financeira
-        </p>
-      </div>
-      
-      <div className="space-y-2">
-        {activeProjects.length > 0 && (
-          <p className="text-xs font-semibold text-muted-foreground uppercase px-1">
-            Projectos Activos ({activeProjects.length})
-          </p>
-        )}
-        {activeProjects.map((project) => (
-          <button
-            key={project.id}
-            onClick={() => onSelect(project.id!)}
-            className="w-full p-3 rounded-lg border bg-card text-left transition-all active:scale-[0.98] hover:border-primary/50"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm truncate">{project.nome}</p>
-                <p className="text-xs text-muted-foreground truncate">{project.cliente}</p>
-              </div>
-              <span className="text-xs text-muted-foreground shrink-0">
-                {formatCurrency(project.orcamento || 0)}
-              </span>
-            </div>
-          </button>
-        ))}
-        
-        {activeProjects.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground py-4">
-            Nenhum projeto activo
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function ConsolidatedFinancasPage() {
-  const { selectedProjectId, setSelectedProjectId } = useProjectContext();
-  const isMobile = useIsMobile();
+  const {
+    selectedProjectId
+  } = useProjectContext();
   const {
     data: consolidatedData,
     isLoading
@@ -154,23 +89,7 @@ export function ConsolidatedFinancasPage() {
       approvalRate: total_requisitions > 0 ? approved_requisitions / total_requisitions * 100 : 0
     };
   }, [consolidatedData?.requisitions_summary]);
-
-  // KPIs para mobile
-  const mobileKPIs = useMemo(() => [
-    { label: "Total Compras", value: formatCurrency(summaryStats.totalPurchaseValue), icon: ShoppingCart, color: "default" as const },
-    { label: "Aprovado", value: formatCurrency(summaryStats.totalApprovedValue), icon: CheckCircle, color: "success" as const },
-    { label: "Pendente", value: formatCurrency(summaryStats.totalPendingValue), icon: TrendingDown, color: "warning" as const },
-    { label: "Taxa Aprovação", value: `${(summaryStats.approvalRate ?? 0).toFixed(0)}%`, icon: TrendingUp, color: "info" as const },
-  ], [summaryStats]);
-
   const pendingApprovalsCount = consolidatedData?.requisitions_summary?.pending_approvals || 0;
-  
-  // Mobile: Mostrar seleção de projeto quando não há projeto selecionado
-  if (!selectedProjectId && isMobile) {
-    return <MobileProjectQuickSelect onSelect={setSelectedProjectId} />;
-  }
-
-  // Desktop: Mostrar mensagem padrão
   if (!selectedProjectId) {
     return <div className="flex items-center justify-center h-96">
         <div className="text-center space-y-4">
@@ -184,76 +103,6 @@ export function ConsolidatedFinancasPage() {
         </div>
       </div>;
   }
-  // Mobile Layout
-  if (isMobile) {
-    return (
-      <div className="w-full space-y-3 px-3 py-3">
-        {/* Header Mobile */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Finanças</h1>
-          <FinanceModal projectId={selectedProjectId} />
-        </div>
-
-        {/* KPIs Mobile */}
-        <MobileKPIGrid items={mobileKPIs} isLoading={isLoading && !consolidatedData} columns={2} />
-
-        {/* Collapsible Sections Mobile */}
-        <Accordion type="multiple" className="w-full space-y-2">
-          <CollapsibleFinancialSection value="fluxo-caixa" title="Fluxo de Caixa" icon={Wallet} badge={{
-            text: "FOA",
-            variant: "default"
-          }}>
-            <Suspense fallback={<SectionLoadingFallback rows={3} />}>
-              <FluxoCaixaSection projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
-
-          <CollapsibleFinancialSection value="expenses" title="Gastos por Categoria" icon={TrendingDown}>
-            <div className="grid grid-cols-2 gap-2">
-              <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.material_total || 0} fromCentroCusto={0} manualExpenses={0} />
-              </Suspense>
-              <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.mao_obra_total || 0} fromCentroCusto={0} manualExpenses={0} />
-              </Suspense>
-              <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.patrimonio_total || 0} fromCentroCusto={0} manualExpenses={0} />
-              </Suspense>
-              <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="indireto" title="Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.indireto_total || 0} fromCentroCusto={0} manualExpenses={0} />
-              </Suspense>
-            </div>
-          </CollapsibleFinancialSection>
-
-          <CollapsibleFinancialSection value="tasks" title="Performance Tarefas" icon={Target} badge={consolidatedData?.task_analytics ? {
-            text: `${(consolidatedData.task_analytics.efficiency_score ?? 0).toFixed(0)}%`,
-            variant: (consolidatedData.task_analytics.efficiency_score ?? 0) >= 80 ? "default" : "destructive"
-          } : undefined}>
-            <Suspense fallback={<SectionLoadingFallback rows={3} />}>
-              <TaskFinancialBreakdown projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
-
-          <CollapsibleFinancialSection value="approvals" title="Aprovações" icon={ClipboardCheck} badge={pendingApprovalsCount > 0 ? {
-            text: `${pendingApprovalsCount}`,
-            variant: "destructive"
-          } : undefined}>
-            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <OptimizedApprovalInterface projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
-
-          <CollapsibleFinancialSection value="audit" title="Auditoria" icon={Search}>
-            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <DiscrepancyReport projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
-        </Accordion>
-      </div>
-    );
-  }
-
-  // Desktop Layout
   return <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análise Financeira</h1>

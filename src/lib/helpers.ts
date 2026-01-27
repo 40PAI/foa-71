@@ -26,27 +26,7 @@ export function formatCurrency(value: number, currency: string = "AOA"): string 
  * Format percentage value
  */
 export function formatPercentage(value: number, decimals: number = 1): string {
-  return `${(value ?? 0).toFixed(decimals)}%`;
-}
-
-/**
- * Clamp percentage for visualization (0-100)
- * Used to display progress bars and charts that shouldn't exceed 100%
- */
-export function clampPercentage(value: number): number {
-  return Math.min(Math.max(value ?? 0, 0), 100);
-}
-
-/**
- * Format percentage with excess indicator
- * Shows "100%+" when value exceeds 100%, with real value in parentheses
- */
-export function formatPercentageWithExcess(value: number, decimals: number = 0): string {
-  const safeValue = value ?? 0;
-  if (safeValue > 100) {
-    return `100%+ (${safeValue.toFixed(decimals)}%)`;
-  }
-  return `${safeValue.toFixed(decimals)}%`;
+  return `${value.toFixed(decimals)}%`;
 }
 
 /**

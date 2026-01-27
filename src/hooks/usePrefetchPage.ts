@@ -111,7 +111,7 @@ export function usePrefetchPage() {
         const { data, error } = await supabase
           .from("materiais_armazem")
           .select("*")
-          .order("nome_material", { ascending: true });
+          .order("nome", { ascending: true });
         if (error) throw error;
         return data;
       },
@@ -126,7 +126,7 @@ export function usePrefetchPage() {
         const { data, error } = await supabase
           .from("colaboradores")
           .select("*")
-          .order("nome", { ascending: true });
+          .order("nome_completo", { ascending: true });
         if (error) throw error;
         return data;
       },
@@ -144,7 +144,7 @@ export function usePrefetchPage() {
           .from("incidentes")
           .select("*")
           .eq("id_projeto", selectedProjectId)
-          .order("data", { ascending: false });
+          .order("data_incidente", { ascending: false });
         if (error) throw error;
         return data;
       },

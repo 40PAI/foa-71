@@ -10,7 +10,6 @@ import { ReembolsoFOAModal } from "@/components/modals/ReembolsoFOAModal";
 import { formatCurrency } from "@/utils/currency";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
-import { isCredito } from "@/types/dividas";
 
 interface ReembolsosFOASectionProps {
   projectId?: number; // Agora é opcional
@@ -99,28 +98,25 @@ export function ReembolsosFOASection({ projectId }: ReembolsosFOASectionProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reembolsos.map((reembolso) => {
-                  const isCred = isCredito(reembolso.tipo);
-                  return (
-                    <TableRow key={reembolso.id}>
-                      <TableCell>{format(new Date(reembolso.data_reembolso), 'dd/MM/yyyy')}</TableCell>
-                      <TableCell>
-                        <Badge variant={isCred ? 'default' : 'secondary'}>
-                          {isCred ? 'Crédito' : reembolso.tipo === 'juro' ? 'Juros' : 'Amortização'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{reembolso.descricao}</TableCell>
-                      <TableCell className="text-right font-bold">
-                        <span className={isCred ? 'text-green-600' : 'text-orange-600'}>
-                          {isCred ? '+' : '-'}{formatCurrency(reembolso.valor)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {reembolso.observacoes || '-'}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {reembolsos.map((reembolso) => (
+                  <TableRow key={reembolso.id}>
+                    <TableCell>{format(new Date(reembolso.data_reembolso), 'dd/MM/yyyy')}</TableCell>
+                    <TableCell>
+                      <Badge variant={reembolso.tipo === 'aporte' ? 'default' : 'secondary'}>
+                        {reembolso.tipo === 'aporte' ? 'Aporte FOF' : 'Amortização FOA'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{reembolso.descricao}</TableCell>
+                    <TableCell className="text-right font-bold">
+                      <span className={reembolso.tipo === 'aporte' ? 'text-green-600' : 'text-orange-600'}>
+                        {reembolso.tipo === 'aporte' ? '+' : '-'}{formatCurrency(reembolso.valor)}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {reembolso.observacoes || '-'}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           ) : (

@@ -108,7 +108,7 @@ const financasItems = [
     module: "financas",
   },
   {
-    title: "Controle de Dívidas",
+    title: "Controle de Dívida FOA ↔ FOF",
     icon: ArrowRight,
     path: "/divida-foa-fof",
     module: "financas",

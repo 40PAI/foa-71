@@ -1,12 +1,5 @@
-import { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, ReferenceLine, Area, ComposedChart } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Clock, AlertTriangle, Maximize2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TimelineChartProps {
   data: Array<{
@@ -24,211 +17,66 @@ const chartConfig = {
     color: "hsl(var(--chart-1))",
   },
   avanco_real: {
-    label: "Avanço Real (Físico)",
-    color: "hsl(var(--chart-2))",
+    label: "Avanço Real (PPC)",
+    color: "hsl(var(--color-financeiro))",
   },
   ppc_semanal: {
-    label: "Avanço Financeiro",
-    color: "hsl(var(--chart-3))",
+    label: "PPC Semanal",
+    color: "hsl(var(--color-aprovado))",
   },
 };
 
 export function TimelineChart({ data, title }: TimelineChartProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const hasMultiplePoints = data.length > 3;
-  const lastPoint = data[data.length - 1];
-  
-  // Calcular gap entre linear e real
-  const gap = lastPoint ? lastPoint.avanco_linear - lastPoint.avanco_real : 0;
-  const isDelayed = gap > 10;
-
-  const ChartContent = ({ expanded }: { expanded: boolean }) => (
-    <ChartContainer 
-      config={chartConfig} 
-      className={expanded ? "h-[500px] w-full" : "h-[250px] sm:h-[320px] lg:h-[350px] w-full max-w-4xl"}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorAvancoReal" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-          <XAxis 
-            dataKey="periodo" 
-            fontSize={expanded ? 12 : 11}
-            className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-          />
-          <YAxis 
-            domain={[0, 100]} 
-            fontSize={expanded ? 12 : 11}
-            className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickFormatter={(value) => `${value}%`}
-          />
-          <ChartTooltip 
-            content={<ChartTooltipContent />} 
-            formatter={(value: number) => `${value.toFixed(1)}%`}
-          />
-          <Legend 
-            wrapperStyle={{ fontSize: expanded ? '12px' : '11px', paddingTop: '10px' }}
-          />
-          
-          {/* Linha de referência para 80% (meta PPC) */}
-          <ReferenceLine 
-            y={80} 
-            stroke="hsl(var(--chart-4))" 
-            strokeDasharray="5 5" 
-            label={{ 
-              value: "Meta 80%", 
-              position: "right", 
-              fontSize: expanded ? 11 : 10,
-              fill: 'hsl(var(--muted-foreground))'
-            }} 
-          />
-          
-          {/* Linha de baseline linear (tracejada) */}
-          <Line 
-            type="monotone" 
-            dataKey="avanco_linear" 
-            stroke="var(--color-avanco_linear)" 
-            strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={false}
-            name="Baseline Linear"
-          />
-          
-          {/* Área e linha do avanço real físico */}
-          <Area
-            type="monotone"
-            dataKey="avanco_real"
-            stroke="var(--color-avanco_real)"
-            fill="url(#colorAvancoReal)"
-            strokeWidth={2.5}
-            name="Avanço Físico"
-          />
-          
-          {/* Linha do avanço financeiro */}
-          <Line 
-            type="monotone" 
-            dataKey="ppc_semanal" 
-            stroke="var(--color-ppc_semanal)" 
-            strokeWidth={2}
-            dot={{ r: 3, fill: 'var(--color-ppc_semanal)' }}
-            name="Avanço Financeiro"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
-    </ChartContainer>
-  );
-
-  const Summary = () => (
-    hasMultiplePoints && lastPoint ? (
-      <div className="mt-3 pt-3 border-t text-xs text-muted-foreground grid grid-cols-3 gap-2 max-w-md mx-auto">
-        <div className="text-center">
-          <span className="font-medium text-foreground">{lastPoint.avanco_linear?.toFixed(1) || 0}%</span>
-          <p>Esperado</p>
-        </div>
-        <div className="text-center">
-          <span className={`font-medium ${isDelayed ? 'text-destructive' : 'text-foreground'}`}>
-            {lastPoint.avanco_real?.toFixed(1) || 0}%
-          </span>
-          <p>Real Físico</p>
-        </div>
-        <div className="text-center">
-          <span className="font-medium text-foreground">{lastPoint.ppc_semanal?.toFixed(1) || 0}%</span>
-          <p>Financeiro</p>
-        </div>
-      </div>
-    ) : null
-  );
-
-  if (data.length < 2) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-            {title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-            <div className="text-center space-y-2">
-              <AlertTriangle className="h-8 w-8 mx-auto opacity-50" />
-              <p className="text-sm">Dados insuficientes para gráfico temporal</p>
-              <p className="text-xs">Configure datas de início e fim do projeto</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <>
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-              {title}
-            </CardTitle>
-            <div className="flex items-center gap-2">
-              {hasMultiplePoints && (
-                <Badge variant={isDelayed ? 'destructive' : 'default'} className="text-xs">
-                  {isDelayed ? `Atraso: ${gap.toFixed(0)}%` : 'No Prazo'}
-                </Badge>
-              )}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => setIsExpanded(true)}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Expandir gráfico</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-          {!hasMultiplePoints && (
-            <p className="text-xs text-muted-foreground">
-              Visualização simplificada. Mais pontos serão adicionados com o progresso do projeto.
-            </p>
-          )}
-        </CardHeader>
-        <CardContent className="flex flex-col items-center">
-          <ChartContent expanded={false} />
-          <Summary />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              {title}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <ChartContent expanded={true} />
-            <Summary />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+    <div className="space-y-2">
+      <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
+      <ChartContainer config={chartConfig} className="h-[280px] sm:h-[350px] lg:h-[380px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="periodo" 
+              fontSize={11}
+              className="text-xs"
+            />
+            <YAxis 
+              domain={[0, 100]} 
+              fontSize={11}
+              className="text-xs"
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Legend 
+              wrapperStyle={{ fontSize: '12px' }}
+            />
+            
+            {/* Linha de referência para 80% (meta PPC) */}
+            <ReferenceLine y={80} stroke="hsl(var(--chart-4))" strokeDasharray="5 5" label="Meta PPC (80%)" />
+            
+            <Line 
+              type="monotone" 
+              dataKey="avanco_linear" 
+              stroke="var(--color-avanco_linear)" 
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={{ fill: "var(--color-avanco_linear)", strokeWidth: 2, r: 3 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="avanco_real" 
+              stroke="var(--color-avanco_real)" 
+              strokeWidth={2}
+              dot={{ fill: "var(--color-avanco_real)", strokeWidth: 2, r: 4 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="ppc_semanal" 
+              stroke="var(--color-ppc_semanal)" 
+              strokeWidth={2}
+              dot={{ fill: "var(--color-ppc_semanal)", strokeWidth: 2, r: 2 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </div>
   );
 }

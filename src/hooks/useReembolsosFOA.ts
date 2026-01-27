@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { isCredito, type FonteCredito, type TipoMovimentoDivida, type StatusDivida } from "@/types/dividas";
 
 export interface ReembolsoFOA {
   id: string;
@@ -9,14 +8,7 @@ export interface ReembolsoFOA {
   data_reembolso: string;
   descricao: string;
   valor: number;
-  tipo: TipoMovimentoDivida;
-  fonte_credito: FonteCredito;
-  credor_nome?: string;
-  fornecedor_id?: string;
-  taxa_juro?: number;
-  data_vencimento?: string;
-  numero_contrato?: string;
-  status_divida: StatusDivida;
+  tipo: 'amortizacao' | 'aporte';
   meta_total?: number;
   percentual_cumprido?: number;
   responsavel_id?: string;
@@ -25,12 +17,10 @@ export interface ReembolsoFOA {
   updated_at: string;
 }
 
-export type CreateReembolsoInput = Omit<ReembolsoFOA, "id" | "created_at" | "updated_at" | "percentual_cumprido">;
-
 // Buscar reembolsos por projeto (se projectId = undefined, busca TODOS)
-export function useReembolsosFOA(projectId?: number, fonteCredito?: FonteCredito) {
+export function useReembolsosFOA(projectId?: number) {
   return useQuery({
-    queryKey: ["reembolsos-foa", projectId, fonteCredito],
+    queryKey: ["reembolsos-foa", projectId],
     queryFn: async () => {
       let query = supabase
         .from("reembolsos_foa_fof")
@@ -41,86 +31,10 @@ export function useReembolsosFOA(projectId?: number, fonteCredito?: FonteCredito
         query = query.eq("projeto_id", projectId);
       }
 
-      if (fonteCredito) {
-        query = query.eq("fonte_credito", fonteCredito);
-      }
-
       const { data, error } = await query;
 
       if (error) throw error;
       return data as ReembolsoFOA[];
-    },
-  });
-}
-
-// Buscar resumo de dívidas agrupado por fonte/credor
-export function useResumoDividas(projectId?: number) {
-  return useQuery({
-    queryKey: ["resumo-dividas", projectId],
-    queryFn: async () => {
-      let query = supabase
-        .from("reembolsos_foa_fof")
-        .select("*");
-
-      if (projectId !== undefined) {
-        query = query.eq("projeto_id", projectId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Agrupar por fonte_credito + credor_nome
-      const agrupado = (data as ReembolsoFOA[]).reduce((acc, mov) => {
-        const chave = mov.fonte_credito === 'FOF' 
-          ? 'FOF'
-          : mov.fonte_credito === 'FORNECEDOR'
-            ? `FORNECEDOR:${mov.fornecedor_id || 'desconhecido'}`
-            : `${mov.fonte_credito}:${mov.credor_nome || 'desconhecido'}`;
-
-        if (!acc[chave]) {
-          acc[chave] = {
-            fonte_credito: mov.fonte_credito,
-            credor_nome: mov.credor_nome || (mov.fonte_credito === 'FOF' ? 'FOF' : 'Desconhecido'),
-            fornecedor_id: mov.fornecedor_id,
-            total_credito: 0,
-            total_amortizado: 0,
-            total_juros: 0,
-            proxima_vencimento: undefined as string | undefined,
-          };
-        }
-
-        if (isCredito(mov.tipo)) {
-          acc[chave].total_credito += mov.valor;
-        } else if (mov.tipo === 'amortizacao') {
-          acc[chave].total_amortizado += mov.valor;
-        } else if (mov.tipo === 'juro') {
-          acc[chave].total_juros += mov.valor;
-        }
-
-        // Atualizar próxima data de vencimento
-        if (mov.data_vencimento) {
-          if (!acc[chave].proxima_vencimento || mov.data_vencimento < acc[chave].proxima_vencimento) {
-            acc[chave].proxima_vencimento = mov.data_vencimento;
-          }
-        }
-
-        return acc;
-      }, {} as Record<string, {
-        fonte_credito: FonteCredito;
-        credor_nome: string;
-        fornecedor_id?: string;
-        total_credito: number;
-        total_amortizado: number;
-        total_juros: number;
-        proxima_vencimento?: string;
-      }>);
-
-      return Object.values(agrupado).map(item => ({
-        ...item,
-        saldo_devedor: item.total_credito - item.total_amortizado,
-        status: item.total_credito <= item.total_amortizado ? 'quitado' as StatusDivida : 'ativo' as StatusDivida,
-      }));
     },
   });
 }
@@ -130,16 +44,10 @@ export function useCreateReembolso() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (reembolso: CreateReembolsoInput) => {
-      // Map old 'aporte' type to new 'credito' type for backward compatibility
-      const tipoNormalizado = reembolso.tipo === 'aporte' as any ? 'credito' : reembolso.tipo;
-      
+    mutationFn: async (reembolso: Omit<ReembolsoFOA, "id" | "created_at" | "updated_at" | "percentual_cumprido">) => {
       const { data, error } = await supabase
         .from("reembolsos_foa_fof")
-        .insert({
-          ...reembolso,
-          tipo: tipoNormalizado,
-        })
+        .insert(reembolso)
         .select()
         .single();
 
@@ -150,11 +58,10 @@ export function useCreateReembolso() {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
-      queryClient.invalidateQueries({ queryKey: ["resumo-dividas"] });
-      toast.success("Movimento registrado com sucesso!");
+      toast.success("Reembolso registrado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao registrar movimento: ${error.message}`);
+      toast.error(`Erro ao registrar reembolso: ${error.message}`);
     },
   });
 }
@@ -179,11 +86,10 @@ export function useUpdateReembolso() {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
-      queryClient.invalidateQueries({ queryKey: ["resumo-dividas"] });
-      toast.success("Movimento atualizado com sucesso!");
+      toast.success("Reembolso atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar movimento: ${error.message}`);
+      toast.error(`Erro ao atualizar reembolso: ${error.message}`);
     },
   });
 }
@@ -205,11 +111,10 @@ export function useDeleteReembolso() {
       queryClient.invalidateQueries({ queryKey: ["reembolsos-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa"] });
       queryClient.invalidateQueries({ queryKey: ["resumo-foa-geral"] });
-      queryClient.invalidateQueries({ queryKey: ["resumo-dividas"] });
-      toast.success("Movimento removido com sucesso!");
+      toast.success("Reembolso removido com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao remover movimento: ${error.message}`);
+      toast.error(`Erro ao remover reembolso: ${error.message}`);
     },
   });
 }
@@ -230,19 +135,17 @@ export function useReembolsosAcumulados(projectId: number) {
         (acc, item) => {
           if (item.tipo === 'amortizacao') {
             acc.amortizacao += item.valor;
-          } else if (item.tipo === 'credito' || item.tipo === 'aporte') {
-            acc.credito += item.valor;
-          } else if (item.tipo === 'juro') {
-            acc.juros += item.valor;
+          } else {
+            acc.aporte += item.valor;
           }
           return acc;
         },
-        { amortizacao: 0, credito: 0, juros: 0 }
+        { amortizacao: 0, aporte: 0 }
       );
 
       return {
         ...totais,
-        saldo: totais.credito - totais.amortizacao,
+        saldo: totais.aporte - totais.amortizacao,
       };
     },
     enabled: !!projectId,

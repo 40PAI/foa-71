@@ -4,16 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Safe area insets for mobile devices with notch */
-.safe-area-bottom {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-.safe-area-top {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-
-
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

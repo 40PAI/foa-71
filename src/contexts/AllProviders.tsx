@@ -22,26 +22,20 @@ function BackgroundPrefetch() {
 
   useEffect(() => {
     if (user) {
+      // Aggressive background prefetch of all main routes after 1 second
       const timer = setTimeout(() => {
         console.log("🚀 Background prefetch started...");
-        
-        // Safe prefetch with error handling to prevent cascading failures
-        const safePrefetch = (fn: () => void, name: string) => {
-          try { fn(); } 
-          catch (e) { console.warn(`Prefetch ${name} failed:`, e); }
-        };
-        
-        safePrefetch(prefetch.prefetchDashboard, 'dashboard');
-        safePrefetch(prefetch.prefetchProjetos, 'projetos');
+        prefetch.prefetchDashboard();
+        prefetch.prefetchProjetos();
         
         if (selectedProjectId) {
-          safePrefetch(prefetch.prefetchFinancas, 'financas');
-          safePrefetch(prefetch.prefetchCentrosCusto, 'centros-custo');
-          safePrefetch(prefetch.prefetchCompras, 'compras');
-          safePrefetch(prefetch.prefetchArmazem, 'armazem');
-          safePrefetch(prefetch.prefetchRH, 'rh');
-          safePrefetch(prefetch.prefetchSeguranca, 'seguranca');
-          safePrefetch(prefetch.prefetchTarefas, 'tarefas');
+          prefetch.prefetchFinancas();
+          prefetch.prefetchCentrosCusto();
+          prefetch.prefetchCompras();
+          prefetch.prefetchArmazem();
+          prefetch.prefetchRH();
+          prefetch.prefetchSeguranca();
+          prefetch.prefetchTarefas();
         }
       }, 1000);
 

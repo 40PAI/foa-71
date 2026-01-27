@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { formatCurrency } from '@/utils/formatters';
-import { Download, Maximize2 } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface GroupedBarChartProps {
   data: any[];
@@ -28,8 +25,6 @@ export function GroupedBarChart({
   onExport,
   height = 400
 }: GroupedBarChartProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -47,87 +42,52 @@ export function GroupedBarChart({
     return null;
   };
 
-  const ChartContent = ({ expanded }: { expanded: boolean }) => (
-    <ResponsiveContainer width="100%" height={expanded ? 500 : height}>
-      <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-        <XAxis 
-          dataKey={xAxisKey} 
-          className="text-xs"
-          angle={-45}
-          textAnchor="end"
-          height={80}
-          tick={{ fontSize: expanded ? 12 : 11 }}
-        />
-        <YAxis className="text-xs" tickFormatter={formatValue} tick={{ fontSize: expanded ? 12 : 11 }} />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ paddingTop: '20px' }}
-          iconType="circle"
-        />
-        {dataKeys.map((dataKey) => (
-          <Bar
-            key={dataKey.key}
-            dataKey={dataKey.key}
-            name={dataKey.name}
-            fill={dataKey.color}
-            radius={[8, 8, 0, 0]}
-            animationDuration={800}
-          />
-        ))}
-      </BarChart>
-    </ResponsiveContainer>
-  );
-
   return (
-    <>
-      <Card className="animate-fade-in">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{title}</CardTitle>
-              {description && <CardDescription>{description}</CardDescription>}
-            </div>
-            <div className="flex items-center gap-2">
-              {onExport && (
-                <Button variant="outline" size="sm" onClick={onExport}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar
-                </Button>
-              )}
-              <TooltipProvider>
-                <UITooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => setIsExpanded(true)}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Expandir gráfico</p>
-                  </TooltipContent>
-                </UITooltip>
-              </TooltipProvider>
-            </div>
+    <Card className="animate-fade-in">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            {description && <CardDescription>{description}</CardDescription>}
           </div>
-        </CardHeader>
-        <CardContent>
-          <ChartContent expanded={false} />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
-        <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
-          </DialogHeader>
-          <ChartContent expanded={true} />
-        </DialogContent>
-      </Dialog>
-    </>
+          {onExport && (
+            <Button variant="outline" size="sm" onClick={onExport}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        <ResponsiveContainer width="100%" height={height}>
+          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis 
+              dataKey={xAxisKey} 
+              className="text-xs"
+              angle={-45}
+              textAnchor="end"
+              height={80}
+            />
+            <YAxis className="text-xs" tickFormatter={formatValue} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend 
+              wrapperStyle={{ paddingTop: '20px' }}
+              iconType="circle"
+            />
+            {dataKeys.map((dataKey) => (
+              <Bar
+                key={dataKey.key}
+                dataKey={dataKey.key}
+                name={dataKey.name}
+                fill={dataKey.color}
+                radius={[8, 8, 0, 0]}
+                animationDuration={800}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
   );
 }

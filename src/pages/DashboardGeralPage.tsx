@@ -1,11 +1,10 @@
 import { lazy, Suspense, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Wallet, CheckSquare, ShoppingCart, BarChart3, FileText, Building2, XCircle, Lightbulb, RefreshCw, TrendingUp, Package, PieChart } from "lucide-react";
+import { ChevronDown, ChevronUp, Wallet, CheckSquare, ShoppingCart, BarChart3, FileText, Building2, XCircle, Lightbulb, RefreshCw, TrendingUp } from "lucide-react";
 import { useDashboardGeral } from "@/hooks/useDashboardGeral";
 import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
@@ -21,11 +20,6 @@ const DashboardRequisicoesSection = lazy(() => import("@/components/dashboard/Da
 const DashboardProjetosSection = lazy(() => import("@/components/dashboard/DashboardProjetosSection").then(m => ({ default: m.DashboardProjetosSection })));
 const DashboardDRESection = lazy(() => import("@/components/dashboard/DashboardDRESection").then(m => ({ default: m.DashboardDRESection })));
 const DashboardRelatoriosFOASection = lazy(() => import("@/components/dashboard/DashboardRelatoriosFOASection").then(m => ({ default: m.DashboardRelatoriosFOASection })));
-const DashboardArmazemSection = lazy(() => import("@/components/dashboard/DashboardArmazemSection").then(m => ({ default: m.DashboardArmazemSection })));
-
-// Lazy load analytics modals
-const FinanceAnalyticsModal = lazy(() => import("@/components/modals/FinanceAnalyticsModal").then(m => ({ default: m.FinanceAnalyticsModal })));
-const WarehouseAnalyticsModal = lazy(() => import("@/components/modals/WarehouseAnalyticsModal").then(m => ({ default: m.WarehouseAnalyticsModal })));
 
 export function DashboardGeralPage() {
   return (
@@ -36,24 +30,17 @@ export function DashboardGeralPage() {
 }
 
 function DashboardGeralContent() {
-  const navigate = useNavigate();
   const { profile } = useAuth();
   const permissions = useUserPermissions();
   useRealtimeDashboard(); // Atualização automática em tempo real
   const { data: dashboardData, isLoading, error, refetch } = useDashboardGeral();
 
-  // Collapsible section states
   const [financasOpen, setFinancasOpen] = useState(true);
   const [tarefasOpen, setTarefasOpen] = useState(false);
   const [requisicoesOpen, setRequisicoesOpen] = useState(false);
-  const [armazemOpen, setArmazemOpen] = useState(false);
   const [dreOpen, setDreOpen] = useState(false);
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [projetosOpen, setProjetosOpen] = useState(false);
-
-  // Analytics modal states
-  const [financeModalOpen, setFinanceModalOpen] = useState(false);
-  const [warehouseModalOpen, setWarehouseModalOpen] = useState(false);
 
   if (isLoading && !dashboardData) {
     return (
@@ -118,21 +105,10 @@ function DashboardGeralContent() {
 
   return (
     <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-4 sm:space-y-6">
-      {/* Header with Analytics Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <PageHeader
-          title="Dashboard Geral FOA"
-          description={`Bem-vindo, ${profile?.nome || 'Usuário'} - ${permissions.roleLabel}`}
-        />
-        <Button 
-          onClick={() => navigate('/graficos')} 
-          variant="outline"
-          className="flex items-center gap-2 w-fit"
-        >
-          <PieChart className="h-4 w-4" />
-          Analytics
-        </Button>
-      </div>
+      <PageHeader
+        title="Dashboard Geral FOA"
+        description={`Bem-vindo, ${profile?.nome || 'Usuário'} - ${permissions.roleLabel}`}
+      />
 
       {/* KPIs Principais */}
       <Suspense fallback={<KPILoadingFallback />}>
@@ -152,12 +128,6 @@ function DashboardGeralContent() {
                 </span>
               </Button>
             </CollapsibleTrigger>
-            {financasOpen && (
-              <Button variant="outline" size="sm" onClick={() => setFinanceModalOpen(true)}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Ver Análise
-              </Button>
-            )}
           </div>
           <CollapsibleContent className="mt-4">
             <Suspense fallback={<SectionLoadingFallback rows={4} />}>
@@ -213,28 +183,6 @@ function DashboardGeralContent() {
           <CollapsibleContent className="mt-4">
             <Suspense fallback={<SectionLoadingFallback rows={3} />}>
               <DashboardRequisicoesSection requisicoesResumo={requisicoes_resumo} />
-            </Suspense>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
-
-      {/* Seção de Armazém */}
-      {permissions.canViewWarehouse && (
-        <Collapsible open={armazemOpen} onOpenChange={setArmazemOpen}>
-          <div className="flex items-center justify-between">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="p-0 hover:bg-transparent">
-                <span className="text-lg font-semibold flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Armazém
-                  {armazemOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </span>
-              </Button>
-            </CollapsibleTrigger>
-          </div>
-          <CollapsibleContent className="mt-4">
-            <Suspense fallback={<SectionLoadingFallback rows={4} />}>
-              <DashboardArmazemSection onOpenAnalytics={() => setWarehouseModalOpen(true)} />
             </Suspense>
           </CollapsibleContent>
         </Collapsible>
@@ -308,25 +256,11 @@ function DashboardGeralContent() {
       <Alert className="mt-6">
         <AlertDescription className="text-sm">
           <strong className="flex items-center gap-1.5">
-            <span className="text-primary">ℹ️</span> Nota:
+            <span className="text-blue-500">ℹ️</span> Nota:
           </strong> Você está visualizando dados de {dashboardData.visible_project_count} projeto(s)
           baseado nas suas permissões de acesso ({permissions.roleLabel}).
         </AlertDescription>
       </Alert>
-
-      {/* Analytics Modals */}
-      <Suspense fallback={null}>
-        <FinanceAnalyticsModal 
-          open={financeModalOpen} 
-          onOpenChange={setFinanceModalOpen} 
-        />
-      </Suspense>
-      <Suspense fallback={null}>
-        <WarehouseAnalyticsModal 
-          open={warehouseModalOpen} 
-          onOpenChange={setWarehouseModalOpen} 
-        />
-      </Suspense>
     </div>
   );
 }
