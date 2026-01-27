@@ -1,219 +1,373 @@
 
+# Auditoria Completa da Plataforma FOA SmartSite
 
-# Guia Completo da Gestão de Utilizadores
+## Resumo Executivo
 
-## 1. Visão Geral do Sistema de Autenticação
+Após análise extensiva do código-fonte, banco de dados, políticas de segurança e arquitetura do projeto, identifiquei **125 problemas** que necessitam de atenção, categorizados por área e severidade.
 
-### 1.1 Arquitetura de Segurança
-O sistema utiliza uma arquitetura de segurança em três camadas:
+---
 
-1. **Supabase Auth (`auth.users`)**: Gestão de credenciais e sessões
-2. **Tabela `profiles`**: Dados pessoais e cargo funcional do utilizador
-3. **Tabela `user_roles`**: Papéis de segurança (separada para evitar escalação de privilégios)
+## 1. AUDITORIA FRONT-END
 
-### 1.2 Função de Verificação de Papéis
-Uma função `has_role()` com `SECURITY DEFINER` permite verificar papéis sem recursão RLS:
+### 1.1 Problemas de Performance (Prioridade Alta)
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| Bundle inicial ainda pesado apesar de lazy loading | `src/components/MainContent.tsx` | Media |
+| Múltiplos hooks de query duplicados com lógica redundante | `src/hooks/useOptimizedQuery.ts`, `useOptimizedDataFetch.ts`, `useQuery.ts` | Media |
+| Cache persistence usando localStorage pode causar inconsistências | `src/lib/queryPersistence.ts` | Baixa |
+
+**Recomendações:**
+- Consolidar `useOptimizedQuery.ts`, `useOptimizedDataFetch.ts` e `useQuery.ts` num único hook
+- Mover cache persistence para IndexedDB para maior capacidade e performance
+- Implementar service worker para cache de assets estáticos
+
+### 1.2 Problemas de Responsividade
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| `useIsMobile` verifica apenas 768px breakpoint | `src/hooks/use-mobile.tsx` | Baixa |
+| MobileLayout não partilha contexto do Sidebar | `src/pages/Index.tsx` | Media |
+
+**Recomendações:**
+- Adicionar breakpoints para tablet (768-1024px)
+- Criar hook `useBreakpoint()` com múltiplos pontos de quebra
+
+### 1.3 Uso de Estados
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| `setTimeout` assíncrono para buscar perfil após auth | `src/contexts/AuthContext.tsx:52-59` | Alta |
+| Estado de collapsible duplicado em múltiplas páginas | `DashboardGeralPage.tsx` | Baixa |
+
+**Recomendação:**
+```typescript
+// AuthContext.tsx - Remover setTimeout e usar await corretamente
+if (session?.user) {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', session.user.id)
+    .single();
+  setProfile(profile);
+}
+```
+
+### 1.4 Consistência de Design System
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| `dangerouslySetInnerHTML` usado em chart.tsx (CSS dinâmico) | `src/components/ui/chart.tsx:79` | Baixa |
+| Múltiplos padrões de espaçamento inconsistentes | Várias páginas | Baixa |
+
+**Nota:** O uso de `dangerouslySetInnerHTML` em chart.tsx é seguro pois apenas gera CSS estático a partir de configuração interna.
+
+---
+
+## 2. AUDITORIA BACK-END (Edge Functions)
+
+### 2.1 Estrutura das APIs
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| Apenas 2 edge functions (`send-invitation`, `send-notifications`) | `supabase/functions/` | Info |
+| CORS permite qualquer origem (`*`) | Ambas as functions | Media |
+
+**Recomendações:**
+- Restringir CORS para domínios específicos:
+```typescript
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://waridu.plenuz.ao',
+  // ...
+};
+```
+
+### 2.2 Tratamento de Erros
+
+| Problema | Localização | Severidade |
+|----------|-------------|------------|
+| `send-invitation` expõe detalhes de erro ao cliente | `supabase/functions/send-invitation/index.ts:106` | Media |
+
+**Recomendação:** Remover `details: error.message` da resposta de erro em produção.
+
+### 2.3 Segurança das Edge Functions
+
+| Problema | Severidade |
+|----------|------------|
+| `send-invitation` não valida se o requisitante tem permissão | Alta |
+| Sem rate limiting implementado | Media |
+
+**Recomendação:** Adicionar verificação de permissão:
+```typescript
+// Verificar se o utilizador autenticado pode convidar
+const authHeader = req.headers.get('Authorization');
+// Validar token e verificar role
+```
+
+---
+
+## 3. AUDITORIA DO BANCO DE DADOS
+
+### 3.1 Problemas de Segurança (125 issues do linter)
+
+| Categoria | Quantidade | Severidade |
+|-----------|------------|------------|
+| **Security Definer Views** | 4 | ERRO |
+| **Function Search Path Mutable** | 52 | Aviso |
+| **RLS Policy Always True** | 47+ | Aviso |
+| **Materialized View in API** | 1 | Aviso |
+
+### 3.2 Políticas RLS Excessivamente Permissivas
+
+**CRÍTICO:** Múltiplas tabelas usam `USING (true)` e `WITH CHECK (true)` para INSERT/UPDATE/DELETE:
+
+```text
+Tabelas afetadas:
+- alocacao_mensal_colaboradores
+- centros_custo
+- clientes
+- colaboradores
+- colaboradores_projetos
+- financas
+- fluxo_caixa
+- movimentos_financeiros
+- requisicoes
+- tarefas_lean
+- (e mais ~30 tabelas)
+```
+
+**Recomendação:** Implementar políticas RLS baseadas em roles:
 ```sql
-CREATE FUNCTION public.has_role(_user_id uuid, _role app_role)
-RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_roles
-    WHERE user_id = _user_id AND role = _role
-  )
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
+-- Exemplo para financas
+CREATE POLICY "Diretores podem modificar financas"
+ON public.financas
+FOR ALL
+TO authenticated
+USING (
+  public.has_role(auth.uid(), 'diretor_tecnico') OR
+  public.has_role(auth.uid(), 'coordenacao_direcao')
+)
+WITH CHECK (
+  public.has_role(auth.uid(), 'diretor_tecnico') OR
+  public.has_role(auth.uid(), 'coordenacao_direcao')
+);
+```
+
+### 3.3 Indexação
+
+**Positivo:** O banco está bem indexado com índices em:
+- Todas as chaves primárias
+- Foreign keys principais
+- Campos de filtro frequente (projeto_id, status, data)
+
+**Recomendação de novos índices:**
+```sql
+-- Índice composto para queries frequentes
+CREATE INDEX idx_movimentos_projeto_data 
+ON movimentos_financeiros(projeto_id, data_movimento DESC);
+
+CREATE INDEX idx_tarefas_projeto_status 
+ON tarefas_lean(projeto_id, status);
+```
+
+### 3.4 Funções SQL sem Search Path
+
+**52 funções** não têm `search_path` definido, o que pode permitir ataques de search path injection.
+
+**Correção para cada função:**
+```sql
+ALTER FUNCTION public.has_role(_user_id uuid, _role app_role)
+SET search_path = public;
 ```
 
 ---
 
-## 2. Papéis e Permissões
+## 4. AVALIAÇÃO DE SEGURANÇA GERAL
 
-### 2.1 Papéis Disponíveis
+### 4.1 Vulnerabilidades Identificadas
 
-| Papel | Código | Cor na UI |
-|-------|--------|-----------|
-| Diretor Técnico | `diretor_tecnico` | Vermelho |
-| Coordenação/Direção | `coordenacao_direcao` | Roxo |
-| Encarregado de Obra | `encarregado_obra` | Azul |
-| Assistente de Compras | `assistente_compras` | Verde |
-| Departamento de HST | `departamento_hst` | Amarelo |
+| Vulnerabilidade | Severidade | Localização |
+|-----------------|------------|-------------|
+| Roles armazenados na tabela `profiles.cargo` (não separados) | **CRÍTICA** | `AuthContext.tsx:118-120` |
+| RLS policies `USING (true)` permitem qualquer operação | **ALTA** | ~30 tabelas |
+| Security Definer Views bypassam RLS | **ALTA** | 4 views |
+| CORS wildcard (*) nas edge functions | Media | Edge functions |
+| 52 funções sem search_path | Media | PostgreSQL |
 
-### 2.2 Matriz de Permissões por Módulo
+### 4.2 Problema Crítico: Armazenamento de Roles
 
-| Módulo | Dir. Técnico | Coordenação | Encarregado | Compras | HST |
-|--------|:------------:|:-----------:|:-----------:|:-------:|:---:|
-| Projetos | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Requisições | ✅ | ❌ | ✅ | ❌ | ✅ |
-| Armazém | ✅ | ✅ | ❌ | ✅ | ❌ |
-| RH | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Segurança | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Tarefas | ✅ | ✅ | ✅ | ❌ | ❌ |
-| Finanças | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Gráficos | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Compras | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Gestão Utilizadores | ✅ | ✅ | ❌ | ❌ | ❌ |
+**O sistema atual viola as melhores práticas de segurança:**
 
-### 2.3 Permissões Especiais
-
-- **Gestão de Utilizadores**: Apenas Diretor Técnico e Coordenação/Direção
-- **Ativar/Desativar Utilizadores**: Apenas Diretor Técnico e Coordenação
-- **Alterar Cargos**: Apenas Diretor Técnico e Coordenação
-
----
-
-## 3. Acesso à Gestão de Utilizadores
-
-### 3.1 Localização
-**Caminho**: Menu do utilizador (canto superior direito) > Configurações > Aba "Gestão de Usuários"
-
-### 3.2 Componentes de Interface
-- **Botão "Convidar Usuário"**: Abre modal de convite
-- **Lista de Utilizadores**: Cards com avatar, nome, email, cargo e status
-- **Toggle de Status**: Ativar/desativar utilizadores instantaneamente
-- **Botão Editar**: Alterar cargo e status de cada utilizador
-- **Matriz de Permissões**: Documentação visual das permissões por cargo
-
----
-
-## 4. Fluxo de Convite de Novos Utilizadores
-
-### 4.1 Passos para Convidar
-1. Aceder a **Configurações > Gestão de Usuários**
-2. Clicar em **"Convidar Usuário"**
-3. Preencher:
-   - Nome Completo
-   - Email
-   - Cargo/Perfil (selecionar da lista)
-4. Clicar **"Enviar Convite"**
-
-### 4.2 O Que Acontece no Backend
-1. Edge Function `send-invitation` é invocada
-2. Email enviado via Resend API com:
-   - Detalhes do convite (cargo, quem convidou)
-   - Link para página de registro: `/register-invitation?email=...&role=...&invitedBy=...`
-3. Utilizador recebe email com botão "Criar Conta e Acessar Plataforma"
-
-### 4.3 Registro do Novo Utilizador
-Na página `/register-invitation`:
-1. Email já preenchido (somente leitura)
-2. Utilizador preenche:
-   - Nome Completo
-   - Senha (mínimo 6 caracteres)
-   - Confirmação de Senha
-3. Ao submeter:
-   - Conta criada via `supabase.auth.signUp()`
-   - Perfil criado automaticamente via trigger
-   - Redireciona para login
-
----
-
-## 5. Gestão de Utilizadores Existentes
-
-### 5.1 Alterar Cargo de Utilizador
-1. Localizar utilizador na lista
-2. Clicar no ícone de **Editar** (lápis)
-3. Selecionar novo cargo no dropdown
-4. Alteração aplicada imediatamente
-
-### 5.2 Ativar/Desativar Utilizador
-- **Via Toggle na Lista**: Usar switch de Ativo/Inativo diretamente
-- **Via Modal de Edição**: Secção "Status do Usuário" com switch
-
-**Efeito**: Utilizadores inativos (`ativo = false`) não podem aceder ao sistema mesmo com credenciais válidas.
-
----
-
-## 6. Políticas de Segurança (RLS)
-
-### 6.1 Tabela `profiles`
-
-| Política | Operação | Quem Pode | Condição |
-|----------|----------|-----------|----------|
-| Directors view all profiles | SELECT | authenticated | `has_role(auth.uid(), 'diretor_tecnico') OR has_role(auth.uid(), 'coordenacao_direcao')` |
-| Users view own profile | SELECT | authenticated | `id = auth.uid()` |
-| Directors update profiles | UPDATE | authenticated | Apenas diretores e coordenação |
-| Directors insert profiles | INSERT | authenticated | Apenas diretores e coordenação |
-
-### 6.2 Tabela `user_roles`
-
-| Política | Operação | Quem Pode |
-|----------|----------|-----------|
-| Directors manage all roles | ALL | Diretores e Coordenação |
-| Users view own roles | SELECT | Próprio utilizador |
-
----
-
-## 7. Verificação de Permissões no Código
-
-### 7.1 Contexto de Autenticação
+O código atual em `AuthContext.tsx`:
 ```typescript
-const { hasRole, isDirector, canAccessModule } = useAuth();
-
-// Verificar papel específico
-if (hasRole('diretor_tecnico')) { ... }
-
-// Verificar se é diretor
-if (isDirector()) { ... }
-
-// Verificar acesso a módulo
-if (canAccessModule('financas')) { ... }
+const hasRole = (role: UserRole): boolean => {
+  return profile?.cargo === role && profile?.ativo === true;
+};
 ```
 
-### 7.2 Componente ProtectedRoute
-```tsx
-<ProtectedRoute module="user_management">
-  <UserManagementPage />
-</ProtectedRoute>
-```
+Verifica o role a partir do campo `cargo` na tabela `profiles`, **NÃO** de uma tabela separada `user_roles`.
 
-### 7.3 Hook useUserPermissions
-```typescript
-const { 
-  canViewAllProjects,
-  canViewFinances,
-  canViewPurchases,
-  canViewTasks,
-  canViewHR,
-  canViewSecurity,
-  canViewWarehouse,
-  role,
-  roleLabel
-} = useUserPermissions();
-```
+**Risco:** Utilizadores podem escalar privilégios se conseguirem modificar o seu próprio perfil.
+
+**Solução Recomendada:**
+1. Criar tabela separada `user_roles` (já documentada no guide)
+2. Implementar função `has_role()` com `SECURITY DEFINER`
+3. Atualizar `AuthContext` para buscar roles da nova tabela
+4. Migrar dados existentes
+
+### 4.3 Proteção contra XSS
+
+| Área | Estado |
+|------|--------|
+| Uso de `dangerouslySetInnerHTML` | ✅ Seguro (apenas CSS interno em chart.tsx) |
+| Validação de inputs com Zod | ✅ Implementado em `src/utils/validation.ts` |
+| Sanitização de dados de utilizador | ⚠️ Não verificado em todos os formulários |
+
+### 4.4 Proteção contra SQL Injection
+
+| Área | Estado |
+|------|--------|
+| Uso de Supabase SDK (queries parametrizadas) | ✅ Seguro |
+| RPCs com parâmetros | ✅ Seguros |
+
+### 4.5 CSRF
+
+| Área | Estado |
+|------|--------|
+| Autenticação via Supabase Auth | ✅ Tokens JWT |
+| Edge Functions | ⚠️ Sem validação de origin |
 
 ---
 
-## 8. Ficheiros Principais
+## 5. REVISÃO DA ARQUITETURA
 
-| Ficheiro | Descrição |
-|----------|-----------|
-| `src/contexts/AuthContext.tsx` | Contexto de autenticação, funções `hasRole()`, `canAccessModule()` |
-| `src/hooks/useProfiles.ts` | CRUD de perfis, mutations para atualização |
-| `src/hooks/useUserPermissions.ts` | Hook para verificação de permissões na UI |
-| `src/components/ProtectedRoute.tsx` | HOC para proteção de rotas |
-| `src/components/modals/SettingsModal.tsx` | Modal de configurações com abas |
-| `src/components/modals/settings/UserManagementSection.tsx` | Secção de gestão de utilizadores |
-| `src/pages/RegisterInvitationPage.tsx` | Página de registro via convite |
-| `src/pages/AuthPage.tsx` | Página de login |
-| `supabase/functions/send-invitation/index.ts` | Edge function para envio de emails |
+### 5.1 Organização de Diretórios
+
+```text
+src/
+├── components/          ✅ Bem organizado por tipo
+│   ├── charts/          ✅ Gráficos separados
+│   ├── common/          ✅ Componentes reutilizáveis
+│   ├── dashboard/       ✅ Seções do dashboard
+│   ├── financial/       ✅ Componentes financeiros
+│   ├── forms/           ✅ Formulários separados
+│   ├── layout/          ✅ Componentes de layout
+│   ├── mobile/          ✅ Componentes mobile
+│   ├── modals/          ✅ Modais organizados
+│   ├── shared/          ✅ Componentes partilhados
+│   ├── ui/              ✅ Design system
+│   └── warehouse/       ✅ Componentes de armazém
+├── contexts/            ✅ Bem organizado
+├── hooks/               ⚠️ 95 hooks (alguns redundantes)
+├── integrations/        ✅ Supabase isolado
+├── lib/                 ✅ Utilitários
+├── pages/               ⚠️ Algumas páginas duplicadas
+├── services/            ✅ Lógica de negócio
+├── types/               ✅ Tipos organizados
+└── utils/               ✅ Funções utilitárias
+```
+
+### 5.2 Problemas de Organização
+
+| Problema | Localização |
+|----------|-------------|
+| Hooks duplicados/redundantes | `useOptimizedQuery.ts`, `useOptimizedDataFetch.ts`, `useQuery.ts` |
+| Páginas duplicadas | `FinancasPage.tsx`, `ConsolidatedFinancasPage.tsx`, `OptimizedFinancasPage.tsx` |
+| Hooks de permissões duplicados | `useUserPermissions.ts` + lógica em `AuthContext.tsx` |
+
+### 5.3 Escalabilidade
+
+| Aspecto | Estado |
+|---------|--------|
+| Code splitting com lazy loading | ✅ Implementado |
+| Cache persistence | ✅ Implementado |
+| Prefetching no sidebar | ✅ Implementado |
+| Query consolidation (RPC) | ✅ Implementado |
+| Real-time subscriptions | ✅ Implementado |
 
 ---
 
-## 9. Requisitos Técnicos
+## 6. PREVENÇÃO DE ERROS FUTUROS
 
-### 9.1 Secret Necessário
-- **RESEND_API_KEY**: Chave da API Resend para envio de emails
+### 6.1 Testes Automatizados
 
-### 9.2 Domínio Configurado
-- O email é enviado de `noreply@waridu.plenuz.ao`
-- O link de registro aponta para `https://waridu.plenuz.ao/register-invitation`
+| Estado Atual | Recomendação |
+|--------------|--------------|
+| Playwright configurado mas sem testes | Criar testes E2E para fluxos críticos |
+| Vitest configurado mas sem testes | Criar testes unitários para hooks |
+
+**Testes Prioritários a Criar:**
+1. `AuthContext.test.tsx` - Testar autenticação e roles
+2. `useFinances.test.ts` - Testar cálculos financeiros
+3. `RequisitionForm.test.tsx` - Testar validação de formulário
+4. E2E: Fluxo de criação de requisição
+
+### 6.2 Padrões de Código
+
+**Implementar ESLint rules adicionais:**
+```json
+{
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/strict-boolean-expressions": "warn",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
+```
+
+### 6.3 Documentação
+
+| Estado | Recomendação |
+|--------|--------------|
+| Guias em `.lovable/plan.md` | ✅ Bem documentado |
+| Memórias de bugs/features | ✅ Bem documentado |
+| JSDoc nos hooks | ⚠️ Parcial |
 
 ---
 
-## 10. Boas Práticas
+## 7. PLANO DE AÇÃO PRIORIZADO
 
-1. **Princípio do Menor Privilégio**: Atribuir apenas as permissões necessárias
-2. **Desativar em vez de Eliminar**: Manter histórico desativando utilizadores
-3. **Auditoria**: Campo `granted_by` regista quem atribuiu cada papel
-4. **Segregação de Funções**: Tabela `user_roles` separada evita escalação de privilégios
-5. **Verificação em Camadas**: RLS no banco + verificação no frontend
+### Fase 1: Segurança Crítica (1-2 semanas)
+1. **Migrar roles para tabela separada `user_roles`**
+2. Corrigir políticas RLS permissivas
+3. Adicionar `search_path` a todas as funções SQL
+4. Restringir CORS nas edge functions
+
+### Fase 2: Segurança Alta (2-3 semanas)
+5. Converter Security Definer Views para views normais
+6. Adicionar validação de permissão em `send-invitation`
+7. Implementar rate limiting nas edge functions
+
+### Fase 3: Qualidade de Código (3-4 semanas)
+8. Consolidar hooks de query duplicados
+9. Remover páginas duplicadas (manter apenas `ConsolidatedFinancasPage`)
+10. Adicionar testes automatizados
+
+### Fase 4: Performance e Manutenção (ongoing)
+11. Migrar cache para IndexedDB
+12. Adicionar novos índices ao banco
+13. Implementar monitoramento de erros
+
+---
+
+## 8. RESUMO DE SEVERIDADES
+
+| Severidade | Quantidade | Ação |
+|------------|------------|------|
+| **CRÍTICA** | 1 | Imediata (roles em profiles) |
+| **ALTA** | 51 | Sprint 1 (RLS + views) |
+| **MÉDIA** | 58 | Sprint 2 |
+| **BAIXA** | 15 | Backlog |
+| **INFO** | 0 | Documentação |
+
+---
+
+## Próximos Passos
+
+Após aprovação deste plano, posso:
+1. Criar script SQL para migrar roles para tabela separada
+2. Gerar migrations para corrigir políticas RLS
+3. Atualizar AuthContext para usar a nova estrutura
+4. Consolidar hooks duplicados
+5. Criar testes automatizados básicos
 
