@@ -101,39 +101,73 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   useEffect(() => {
-    // Set up auth state listener BEFORE checking session
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+    let isMounted = true;
+
+    // Inicializar sessão existente
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!isMounted) return;
+        
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Buscar profile e roles em paralelo (sem setTimeout)
           const [profileData, roles] = await Promise.all([
             fetchProfile(session.user.id),
             fetchUserRoles(session.user.id)
           ]);
           
-          setProfile(profileData);
-          setUserRoles(roles);
+          if (isMounted) {
+            setProfile(profileData);
+            setUserRoles(roles);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initSession();
+
+    // Listener para mudanças de auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const [profileData, roles] = await Promise.all([
+            fetchProfile(session.user.id),
+            fetchUserRoles(session.user.id)
+          ]);
+          
+          if (isMounted) {
+            setProfile(profileData);
+            setUserRoles(roles);
+          }
         } else {
           setProfile(null);
           setUserRoles([]);
         }
-        setLoading(false);
+        
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (!session) {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
