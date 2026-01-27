@@ -1,13 +1,25 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { Resend } from "npm:resend@4.0.0";
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+// CORS restrito para domínios específicos (Segurança)
+const allowedOrigins = [
+  'https://waridu.plenuz.ao',
+  'https://foa-71.lovable.app',
+  'https://id-preview--1e652bca-993a-42a7-9ea2-bb2f10a775b5.lovable.app'
+];
+
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const isAllowed = origin && (allowedOrigins.includes(origin) || origin.includes('lovable'));
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : allowedOrigins[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 interface InvitationRequest {
   email: string;
@@ -17,13 +29,77 @@ interface InvitationRequest {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Validar autenticação e permissão
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Não autorizado' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    // Criar cliente Supabase com o token do usuário
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Validar token e obter claims
+    const token = authHeader.replace('Bearer ', '');
+    const { data: authData, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !authData?.user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Token inválido' }),
+        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    const userId = authData.user.id;
+
+    // Verificar se o usuário tem permissão para convidar (diretor ou coordenação)
+    const { data: userRoles, error: rolesError } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    if (rolesError) {
+      console.error('Error checking user roles:', rolesError);
+      return new Response(
+        JSON.stringify({ success: false, error: 'Erro ao verificar permissões' }),
+        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
+    const allowedRoles = ['diretor_tecnico', 'coordenacao_direcao'];
+    const hasPermission = userRoles?.some(r => allowedRoles.includes(r.role));
+
+    if (!hasPermission) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Permissão negada. Apenas diretores podem convidar usuários.' }),
+        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
+
     const { email, nome, cargo, invitedBy }: InvitationRequest = await req.json();
+
+    // Validar campos obrigatórios
+    if (!email || !nome || !cargo) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Campos obrigatórios: email, nome, cargo' }),
+        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
+      );
+    }
 
     console.log('Sending invitation to:', email, 'for role:', cargo);
 
@@ -90,7 +166,7 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error in send-invitation function:', error);
     
-    // Handle specific Resend errors
+    // Não expor detalhes do erro em produção
     let errorMessage = 'Erro interno ao enviar convite';
     if (error.message?.includes('API key')) {
       errorMessage = 'Erro de configuração do email. Contate o administrador.';
@@ -102,8 +178,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       success: false,
-      error: errorMessage,
-      details: error.message 
+      error: errorMessage
+      // Removido: details: error.message (segurança)
     }), {
       status: 500,
       headers: { 

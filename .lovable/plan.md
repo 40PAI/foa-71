@@ -1,13 +1,34 @@
 
 # Auditoria Completa da Plataforma FOA SmartSite
 
-## Resumo Executivo
+## ✅ CORREÇÕES IMPLEMENTADAS (Fase 1 - Segurança Crítica)
 
-Após análise extensiva do código-fonte, banco de dados, políticas de segurança e arquitetura do projeto, identifiquei **125 problemas** que necessitam de atenção, categorizados por área e severidade.
+### 1. Tabela `user_roles` - VERIFICADA ✅
+A tabela `user_roles` já existia com:
+- Estrutura correta (id, user_id, role, granted_by, granted_at)
+- 2 roles migrados (diretor_tecnico, coordenacao_direcao)
+- RLS policies implementados
+- Função `has_role()` com SECURITY DEFINER
 
----
+### 2. AuthContext - ATUALIZADO ✅
+- Removido uso de `profiles.cargo` para verificação de roles
+- Novo: busca roles da tabela `user_roles` (seguro)
+- Novo: `userRoles` array no contexto
+- Novo: `refreshRoles()` para atualizar roles
+- Removido: `setTimeout` problemático
+- Implementado: busca paralela de profile + roles
 
-## 1. AUDITORIA FRONT-END
+### 3. useUserPermissions - ATUALIZADO ✅
+- Novo: usa `userRoles` do AuthContext
+- Novo: propriedade `isDirector` e `canManageUsers`
+- Novo: propriedade `roles` (array de todos os roles)
+
+### 4. Edge Functions - ATUALIZADAS ✅
+- CORS restrito para domínios específicos (não mais `*`)
+- `send-invitation`: validação de permissão antes de enviar
+- Removida exposição de detalhes de erro ao cliente
+
+
 
 ### 1.1 Problemas de Performance (Prioridade Alta)
 

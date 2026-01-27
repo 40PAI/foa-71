@@ -9,16 +9,17 @@ export interface UserPermissions {
   canViewHR: boolean;
   canViewSecurity: boolean;
   canViewWarehouse: boolean;
+  canManageUsers: boolean;
   role: UserRole | null;
+  roles: UserRole[];
   roleLabel: string;
+  isDirector: boolean;
 }
 
 export function useUserPermissions(): UserPermissions {
-  const { profile } = useAuth();
+  const { profile, userRoles, hasRole, isDirector } = useAuth();
 
   return useMemo(() => {
-    const role = profile?.cargo || null;
-
     // Mapear roles para labels
     const roleLabels: Record<UserRole, string> = {
       diretor_tecnico: "Diretor Técnico",
@@ -28,24 +29,26 @@ export function useUserPermissions(): UserPermissions {
       coordenacao_direcao: "Coordenação/Direção"
     };
 
-    const roleLabel = role ? roleLabels[role] : "Usuário";
+    // Role principal (primeiro role ou null)
+    const primaryRole = userRoles.length > 0 ? userRoles[0] : null;
+    const roleLabel = primaryRole ? roleLabels[primaryRole] : "Usuário";
 
-    // Definir permissões baseadas no role
-    const isDirectorOrCoord = role === 'diretor_tecnico' || role === 'coordenacao_direcao';
-    const isEncarregado = role === 'encarregado_obra';
-    const isCompras = role === 'assistente_compras';
-    const isHST = role === 'departamento_hst';
+    // Verificar se é diretor ou coordenação (acesso total)
+    const isDirectorOrCoord = isDirector();
 
     return {
       canViewAllProjects: isDirectorOrCoord,
-      canViewFinances: isDirectorOrCoord || isEncarregado,
-      canViewPurchases: isDirectorOrCoord || isEncarregado || isCompras,
-      canViewTasks: isDirectorOrCoord || isEncarregado,
+      canViewFinances: isDirectorOrCoord || hasRole('encarregado_obra'),
+      canViewPurchases: isDirectorOrCoord || hasRole('encarregado_obra') || hasRole('assistente_compras'),
+      canViewTasks: isDirectorOrCoord || hasRole('encarregado_obra'),
       canViewHR: isDirectorOrCoord,
-      canViewSecurity: isDirectorOrCoord || isHST,
-      canViewWarehouse: isDirectorOrCoord || isEncarregado || isCompras,
-      role,
-      roleLabel
+      canViewSecurity: isDirectorOrCoord || hasRole('departamento_hst'),
+      canViewWarehouse: isDirectorOrCoord || hasRole('encarregado_obra') || hasRole('assistente_compras'),
+      canManageUsers: isDirectorOrCoord,
+      role: primaryRole,
+      roles: userRoles,
+      roleLabel,
+      isDirector: isDirectorOrCoord
     };
-  }, [profile]);
+  }, [profile, userRoles, hasRole, isDirector]);
 }
