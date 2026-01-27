@@ -41,8 +41,8 @@ export function HorizontalBarChart({
   title, 
   valueFormatter = formatCurrency 
 }: HorizontalBarChartProps) {
-  // Fixed compact height - max 5 items at 28px each + padding
-  const chartHeight = Math.min(data.length, 5) * 28 + 20;
+  // Fixed height - max 5 items at 36px each + padding
+  const chartHeight = Math.min(data.length, 5) * 36 + 30;
   
   return (
     <div className="w-full">
@@ -75,7 +75,7 @@ export function HorizontalBarChart({
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={18}>
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
               {data.slice(0, 5).map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
