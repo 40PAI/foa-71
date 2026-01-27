@@ -1,394 +1,185 @@
 
-# Auditoria Completa da Plataforma FOA SmartSite
+# Plano de Correção: Loading Infinito e Erros de Plataforma
 
-## ✅ CORREÇÕES IMPLEMENTADAS (Fase 1 - Segurança Crítica)
+## Diagnóstico Completo
 
-### 1. Tabela `user_roles` - VERIFICADA ✅
-A tabela `user_roles` já existia com:
-- Estrutura correta (id, user_id, role, granted_by, granted_at)
-- 2 roles migrados (diretor_tecnico, coordenacao_direcao)
-- RLS policies implementados
-- Função `has_role()` com SECURITY DEFINER
+Após análise extensiva, identifiquei **4 problemas críticos** que estão a causar o loading infinito e mau funcionamento da plataforma:
 
-### 2. AuthContext - ATUALIZADO ✅
-- Removido uso de `profiles.cargo` para verificação de roles
-- Novo: busca roles da tabela `user_roles` (seguro)
-- Novo: `userRoles` array no contexto
-- Novo: `refreshRoles()` para atualizar roles
-- Removido: `setTimeout` problemático
-- Implementado: busca paralela de profile + roles
+### Problema 1: Nomes de Colunas Incorretos (CRÍTICO)
+Os logs do Postgres mostram erros repetidos:
+- `column colaboradores.nome_completo does not exist` - A coluna correta é `nome`
+- `column materiais_armazem.nome does not exist` - A coluna correta é `nome_material`
+- `column incidentes.data_incidente does not exist` - A coluna correta é `data`
 
-### 3. useUserPermissions - ATUALIZADO ✅
-- Novo: usa `userRoles` do AuthContext
-- Novo: propriedade `isDirector` e `canManageUsers`
-- Novo: propriedade `roles` (array de todos os roles)
+**Arquivo afetado:** `src/hooks/usePrefetchPage.ts`
+- Linha 114: `.order("nome", ...)` → deve ser `.order("nome_material", ...)`
+- Linha 129: `.order("nome_completo", ...)` → deve ser `.order("nome", ...)`
+- Linha 147: `.order("data_incidente", ...)` → deve ser `.order("data", ...)`
 
-### 4. Edge Functions - ATUALIZADAS ✅
-- CORS restrito para domínios específicos (não mais `*`)
-- `send-invitation`: validação de permissão antes de enviar
-- Removida exposição de detalhes de erro ao cliente
+### Problema 2: Políticas RLS Duplicadas (MÉDIO)
+A tabela `user_roles` tem 4 políticas mas apenas 2 são necessárias:
+- "Directors manage all roles" (duplicada com "Directors can manage all roles")
+- "Users view own roles" (duplicada com "Users can view their own roles")
 
+### Problema 3: BackgroundPrefetch Executa com Erros (MÉDIO)
+O `BackgroundPrefetch` em `AllProviders.tsx` executa 1 segundo após login, disparando queries com nomes de colunas incorretos que falham silenciosamente e podem afetar o estado da aplicação.
 
-
-### 1.1 Problemas de Performance (Prioridade Alta)
-
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| Bundle inicial ainda pesado apesar de lazy loading | `src/components/MainContent.tsx` | Media |
-| Múltiplos hooks de query duplicados com lógica redundante | `src/hooks/useOptimizedQuery.ts`, `useOptimizedDataFetch.ts`, `useQuery.ts` | Media |
-| Cache persistence usando localStorage pode causar inconsistências | `src/lib/queryPersistence.ts` | Baixa |
-
-**Recomendações:**
-- Consolidar `useOptimizedQuery.ts`, `useOptimizedDataFetch.ts` e `useQuery.ts` num único hook
-- Mover cache persistence para IndexedDB para maior capacidade e performance
-- Implementar service worker para cache de assets estáticos
-
-### 1.2 Problemas de Responsividade
-
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| `useIsMobile` verifica apenas 768px breakpoint | `src/hooks/use-mobile.tsx` | Baixa |
-| MobileLayout não partilha contexto do Sidebar | `src/pages/Index.tsx` | Media |
-
-**Recomendações:**
-- Adicionar breakpoints para tablet (768-1024px)
-- Criar hook `useBreakpoint()` com múltiplos pontos de quebra
-
-### 1.3 Uso de Estados
-
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| `setTimeout` assíncrono para buscar perfil após auth | `src/contexts/AuthContext.tsx:52-59` | Alta |
-| Estado de collapsible duplicado em múltiplas páginas | `DashboardGeralPage.tsx` | Baixa |
-
-**Recomendação:**
-```typescript
-// AuthContext.tsx - Remover setTimeout e usar await corretamente
-if (session?.user) {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', session.user.id)
-    .single();
-  setProfile(profile);
-}
-```
-
-### 1.4 Consistência de Design System
-
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| `dangerouslySetInnerHTML` usado em chart.tsx (CSS dinâmico) | `src/components/ui/chart.tsx:79` | Baixa |
-| Múltiplos padrões de espaçamento inconsistentes | Várias páginas | Baixa |
-
-**Nota:** O uso de `dangerouslySetInnerHTML` em chart.tsx é seguro pois apenas gera CSS estático a partir de configuração interna.
+### Problema 4: AuthContext - Robustez de Tratamento de Erros (BAIXO)
+O `AuthContext` atual trata erros corretamente com `try/catch/finally`, mas pode beneficiar de tratamento mais robusto para cenários edge-case.
 
 ---
 
-## 2. AUDITORIA BACK-END (Edge Functions)
+## Plano de Implementação
 
-### 2.1 Estrutura das APIs
+### Fase 1: Corrigir Nomes de Colunas (Impacto Imediato)
 
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| Apenas 2 edge functions (`send-invitation`, `send-notifications`) | `supabase/functions/` | Info |
-| CORS permite qualquer origem (`*`) | Ambas as functions | Media |
-
-**Recomendações:**
-- Restringir CORS para domínios específicos:
-```typescript
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://waridu.plenuz.ao',
-  // ...
-};
-```
-
-### 2.2 Tratamento de Erros
-
-| Problema | Localização | Severidade |
-|----------|-------------|------------|
-| `send-invitation` expõe detalhes de erro ao cliente | `supabase/functions/send-invitation/index.ts:106` | Media |
-
-**Recomendação:** Remover `details: error.message` da resposta de erro em produção.
-
-### 2.3 Segurança das Edge Functions
-
-| Problema | Severidade |
-|----------|------------|
-| `send-invitation` não valida se o requisitante tem permissão | Alta |
-| Sem rate limiting implementado | Media |
-
-**Recomendação:** Adicionar verificação de permissão:
-```typescript
-// Verificar se o utilizador autenticado pode convidar
-const authHeader = req.headers.get('Authorization');
-// Validar token e verificar role
-```
-
----
-
-## 3. AUDITORIA DO BANCO DE DADOS
-
-### 3.1 Problemas de Segurança (125 issues do linter)
-
-| Categoria | Quantidade | Severidade |
-|-----------|------------|------------|
-| **Security Definer Views** | 4 | ERRO |
-| **Function Search Path Mutable** | 52 | Aviso |
-| **RLS Policy Always True** | 47+ | Aviso |
-| **Materialized View in API** | 1 | Aviso |
-
-### 3.2 Políticas RLS Excessivamente Permissivas
-
-**CRÍTICO:** Múltiplas tabelas usam `USING (true)` e `WITH CHECK (true)` para INSERT/UPDATE/DELETE:
+**Arquivo:** `src/hooks/usePrefetchPage.ts`
 
 ```text
-Tabelas afetadas:
-- alocacao_mensal_colaboradores
-- centros_custo
-- clientes
-- colaboradores
-- colaboradores_projetos
-- financas
-- fluxo_caixa
-- movimentos_financeiros
-- requisicoes
-- tarefas_lean
-- (e mais ~30 tabelas)
+Alterações:
+- Linha 113-114: Mudar de .order("nome", ...) para .order("nome_material", ...)
+- Linha 127-129: Mudar de .order("nome_completo", ...) para .order("nome", ...)  
+- Linha 145-147: Mudar de .order("data_incidente", ...) para .order("data", ...)
 ```
 
-**Recomendação:** Implementar políticas RLS baseadas em roles:
-```sql
--- Exemplo para financas
-CREATE POLICY "Diretores podem modificar financas"
-ON public.financas
-FOR ALL
-TO authenticated
-USING (
-  public.has_role(auth.uid(), 'diretor_tecnico') OR
-  public.has_role(auth.uid(), 'coordenacao_direcao')
-)
-WITH CHECK (
-  public.has_role(auth.uid(), 'diretor_tecnico') OR
-  public.has_role(auth.uid(), 'coordenacao_direcao')
-);
-```
+### Fase 2: Adicionar Tratamento de Erros ao BackgroundPrefetch
 
-### 3.3 Indexação
+**Arquivo:** `src/contexts/AllProviders.tsx`
 
-**Positivo:** O banco está bem indexado com índices em:
-- Todas as chaves primárias
-- Foreign keys principais
-- Campos de filtro frequente (projeto_id, status, data)
+Envolver cada chamada de prefetch em try/catch para evitar que erros silenciosos afetem o funcionamento:
 
-**Recomendação de novos índices:**
-```sql
--- Índice composto para queries frequentes
-CREATE INDEX idx_movimentos_projeto_data 
-ON movimentos_financeiros(projeto_id, data_movimento DESC);
-
-CREATE INDEX idx_tarefas_projeto_status 
-ON tarefas_lean(projeto_id, status);
-```
-
-### 3.4 Funções SQL sem Search Path
-
-**52 funções** não têm `search_path` definido, o que pode permitir ataques de search path injection.
-
-**Correção para cada função:**
-```sql
-ALTER FUNCTION public.has_role(_user_id uuid, _role app_role)
-SET search_path = public;
-```
-
----
-
-## 4. AVALIAÇÃO DE SEGURANÇA GERAL
-
-### 4.1 Vulnerabilidades Identificadas
-
-| Vulnerabilidade | Severidade | Localização |
-|-----------------|------------|-------------|
-| Roles armazenados na tabela `profiles.cargo` (não separados) | **CRÍTICA** | `AuthContext.tsx:118-120` |
-| RLS policies `USING (true)` permitem qualquer operação | **ALTA** | ~30 tabelas |
-| Security Definer Views bypassam RLS | **ALTA** | 4 views |
-| CORS wildcard (*) nas edge functions | Media | Edge functions |
-| 52 funções sem search_path | Media | PostgreSQL |
-
-### 4.2 Problema Crítico: Armazenamento de Roles
-
-**O sistema atual viola as melhores práticas de segurança:**
-
-O código atual em `AuthContext.tsx`:
 ```typescript
-const hasRole = (role: UserRole): boolean => {
-  return profile?.cargo === role && profile?.ativo === true;
-};
-```
+useEffect(() => {
+  if (user) {
+    const timer = setTimeout(() => {
+      console.log("🚀 Background prefetch started...");
+      
+      // Wrap each prefetch in try/catch to prevent cascading failures
+      try { prefetch.prefetchDashboard(); } catch (e) { console.warn('Dashboard prefetch failed:', e); }
+      try { prefetch.prefetchProjetos(); } catch (e) { console.warn('Projetos prefetch failed:', e); }
+      
+      if (selectedProjectId) {
+        try { prefetch.prefetchFinancas(); } catch (e) { console.warn('Financas prefetch failed:', e); }
+        // ... outros prefetch com try/catch
+      }
+    }, 1000);
 
-Verifica o role a partir do campo `cargo` na tabela `profiles`, **NÃO** de uma tabela separada `user_roles`.
-
-**Risco:** Utilizadores podem escalar privilégios se conseguirem modificar o seu próprio perfil.
-
-**Solução Recomendada:**
-1. Criar tabela separada `user_roles` (já documentada no guide)
-2. Implementar função `has_role()` com `SECURITY DEFINER`
-3. Atualizar `AuthContext` para buscar roles da nova tabela
-4. Migrar dados existentes
-
-### 4.3 Proteção contra XSS
-
-| Área | Estado |
-|------|--------|
-| Uso de `dangerouslySetInnerHTML` | ✅ Seguro (apenas CSS interno em chart.tsx) |
-| Validação de inputs com Zod | ✅ Implementado em `src/utils/validation.ts` |
-| Sanitização de dados de utilizador | ⚠️ Não verificado em todos os formulários |
-
-### 4.4 Proteção contra SQL Injection
-
-| Área | Estado |
-|------|--------|
-| Uso de Supabase SDK (queries parametrizadas) | ✅ Seguro |
-| RPCs com parâmetros | ✅ Seguros |
-
-### 4.5 CSRF
-
-| Área | Estado |
-|------|--------|
-| Autenticação via Supabase Auth | ✅ Tokens JWT |
-| Edge Functions | ⚠️ Sem validação de origin |
-
----
-
-## 5. REVISÃO DA ARQUITETURA
-
-### 5.1 Organização de Diretórios
-
-```text
-src/
-├── components/          ✅ Bem organizado por tipo
-│   ├── charts/          ✅ Gráficos separados
-│   ├── common/          ✅ Componentes reutilizáveis
-│   ├── dashboard/       ✅ Seções do dashboard
-│   ├── financial/       ✅ Componentes financeiros
-│   ├── forms/           ✅ Formulários separados
-│   ├── layout/          ✅ Componentes de layout
-│   ├── mobile/          ✅ Componentes mobile
-│   ├── modals/          ✅ Modais organizados
-│   ├── shared/          ✅ Componentes partilhados
-│   ├── ui/              ✅ Design system
-│   └── warehouse/       ✅ Componentes de armazém
-├── contexts/            ✅ Bem organizado
-├── hooks/               ⚠️ 95 hooks (alguns redundantes)
-├── integrations/        ✅ Supabase isolado
-├── lib/                 ✅ Utilitários
-├── pages/               ⚠️ Algumas páginas duplicadas
-├── services/            ✅ Lógica de negócio
-├── types/               ✅ Tipos organizados
-└── utils/               ✅ Funções utilitárias
-```
-
-### 5.2 Problemas de Organização
-
-| Problema | Localização |
-|----------|-------------|
-| Hooks duplicados/redundantes | `useOptimizedQuery.ts`, `useOptimizedDataFetch.ts`, `useQuery.ts` |
-| Páginas duplicadas | `FinancasPage.tsx`, `ConsolidatedFinancasPage.tsx`, `OptimizedFinancasPage.tsx` |
-| Hooks de permissões duplicados | `useUserPermissions.ts` + lógica em `AuthContext.tsx` |
-
-### 5.3 Escalabilidade
-
-| Aspecto | Estado |
-|---------|--------|
-| Code splitting com lazy loading | ✅ Implementado |
-| Cache persistence | ✅ Implementado |
-| Prefetching no sidebar | ✅ Implementado |
-| Query consolidation (RPC) | ✅ Implementado |
-| Real-time subscriptions | ✅ Implementado |
-
----
-
-## 6. PREVENÇÃO DE ERROS FUTUROS
-
-### 6.1 Testes Automatizados
-
-| Estado Atual | Recomendação |
-|--------------|--------------|
-| Playwright configurado mas sem testes | Criar testes E2E para fluxos críticos |
-| Vitest configurado mas sem testes | Criar testes unitários para hooks |
-
-**Testes Prioritários a Criar:**
-1. `AuthContext.test.tsx` - Testar autenticação e roles
-2. `useFinances.test.ts` - Testar cálculos financeiros
-3. `RequisitionForm.test.tsx` - Testar validação de formulário
-4. E2E: Fluxo de criação de requisição
-
-### 6.2 Padrões de Código
-
-**Implementar ESLint rules adicionais:**
-```json
-{
-  "rules": {
-    "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/strict-boolean-expressions": "warn",
-    "react-hooks/exhaustive-deps": "warn"
+    return () => clearTimeout(timer);
   }
-}
+}, [user, selectedProjectId, prefetch]);
 ```
 
-### 6.3 Documentação
+### Fase 3: Limpar Políticas RLS Duplicadas (Banco de Dados)
 
-| Estado | Recomendação |
-|--------|--------------|
-| Guias em `.lovable/plan.md` | ✅ Bem documentado |
-| Memórias de bugs/features | ✅ Bem documentado |
-| JSDoc nos hooks | ⚠️ Parcial |
+**Migração SQL:**
+```sql
+-- Remover políticas duplicadas
+DROP POLICY IF EXISTS "Directors can manage all roles" ON public.user_roles;
+DROP POLICY IF EXISTS "Users can view their own roles" ON public.user_roles;
+```
 
----
+### Fase 4: Incrementar Versão do Cache
 
-## 7. PLANO DE AÇÃO PRIORIZADO
+**Arquivo:** `src/lib/queryPersistence.ts`
 
-### Fase 1: Segurança Crítica (1-2 semanas)
-1. **Migrar roles para tabela separada `user_roles`**
-2. Corrigir políticas RLS permissivas
-3. Adicionar `search_path` a todas as funções SQL
-4. Restringir CORS nas edge functions
+Incrementar `CACHE_VERSION` de "v3" para "v4" para forçar limpeza de cache corrompido:
 
-### Fase 2: Segurança Alta (2-3 semanas)
-5. Converter Security Definer Views para views normais
-6. Adicionar validação de permissão em `send-invitation`
-7. Implementar rate limiting nas edge functions
-
-### Fase 3: Qualidade de Código (3-4 semanas)
-8. Consolidar hooks de query duplicados
-9. Remover páginas duplicadas (manter apenas `ConsolidatedFinancasPage`)
-10. Adicionar testes automatizados
-
-### Fase 4: Performance e Manutenção (ongoing)
-11. Migrar cache para IndexedDB
-12. Adicionar novos índices ao banco
-13. Implementar monitoramento de erros
+```typescript
+const CACHE_VERSION = "v4"; // Incrementado para limpar cache com dados inválidos
+```
 
 ---
 
-## 8. RESUMO DE SEVERIDADES
+## Resumo das Alterações
 
-| Severidade | Quantidade | Ação |
-|------------|------------|------|
-| **CRÍTICA** | 1 | Imediata (roles em profiles) |
-| **ALTA** | 51 | Sprint 1 (RLS + views) |
-| **MÉDIA** | 58 | Sprint 2 |
-| **BAIXA** | 15 | Backlog |
-| **INFO** | 0 | Documentação |
+| Arquivo | Tipo de Alteração | Prioridade |
+|---------|-------------------|------------|
+| `src/hooks/usePrefetchPage.ts` | Corrigir 3 nomes de colunas | CRÍTICA |
+| `src/contexts/AllProviders.tsx` | Adicionar try/catch ao prefetch | ALTA |
+| `src/lib/queryPersistence.ts` | Incrementar CACHE_VERSION | ALTA |
+| Banco de Dados | Remover políticas duplicadas | MÉDIA |
 
 ---
 
-## Próximos Passos
+## Resultado Esperado
 
-Após aprovação deste plano, posso:
-1. Criar script SQL para migrar roles para tabela separada
-2. Gerar migrations para corrigir políticas RLS
-3. Atualizar AuthContext para usar a nova estrutura
-4. Consolidar hooks duplicados
-5. Criar testes automatizados básicos
+Após implementação:
+1. O loading inicial completará em <1 segundo
+2. Não haverá erros de colunas inexistentes nos logs
+3. O prefetch em background funcionará sem falhas silenciosas
+4. O cache local será limpo e reconstruído corretamente
+5. A navegação funcionará sem travamentos
 
+---
+
+## Detalhes Técnicos
+
+### usePrefetchPage.ts - Correções Específicas
+
+**prefetchArmazem (linhas 107-119):**
+```typescript
+// ANTES:
+.order("nome", { ascending: true });
+
+// DEPOIS:
+.order("nome_material", { ascending: true });
+```
+
+**prefetchRH (linhas 122-135):**
+```typescript
+// ANTES:
+.order("nome_completo", { ascending: true });
+
+// DEPOIS:
+.order("nome", { ascending: true });
+```
+
+**prefetchSeguranca (linhas 137-153):**
+```typescript
+// ANTES:
+.order("data_incidente", { ascending: false });
+
+// DEPOIS:
+.order("data", { ascending: false });
+```
+
+### AllProviders.tsx - BackgroundPrefetch Robusto
+
+```typescript
+function BackgroundPrefetch() {
+  const prefetch = usePrefetchPage();
+  const { user } = useAuth();
+  const { selectedProjectId } = useProjectContext();
+
+  useEffect(() => {
+    if (user) {
+      const timer = setTimeout(() => {
+        console.log("🚀 Background prefetch started...");
+        
+        // Safe prefetch with error handling
+        const safePrefetch = (fn: () => void, name: string) => {
+          try { fn(); } 
+          catch (e) { console.warn(`Prefetch ${name} failed:`, e); }
+        };
+        
+        safePrefetch(prefetch.prefetchDashboard, 'dashboard');
+        safePrefetch(prefetch.prefetchProjetos, 'projetos');
+        
+        if (selectedProjectId) {
+          safePrefetch(prefetch.prefetchFinancas, 'financas');
+          safePrefetch(prefetch.prefetchCentrosCusto, 'centros-custo');
+          safePrefetch(prefetch.prefetchCompras, 'compras');
+          safePrefetch(prefetch.prefetchArmazem, 'armazem');
+          safePrefetch(prefetch.prefetchRH, 'rh');
+          safePrefetch(prefetch.prefetchSeguranca, 'seguranca');
+          safePrefetch(prefetch.prefetchTarefas, 'tarefas');
+        }
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user, selectedProjectId, prefetch]);
+
+  return null;
+}
+```
