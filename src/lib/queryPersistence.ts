@@ -7,7 +7,7 @@
 import type { QueryClient } from "@tanstack/react-query";
 
 const CACHE_KEY = "FOA_QUERY_CACHE";
-const CACHE_VERSION = "v3"; // Incremented to fix FOA totals aggregation issue
+const CACHE_VERSION = "v4"; // Incremented to clear cache with invalid column names
 const MAX_AGE = 1000 * 60 * 60 * 24; // 24 hours
 
 interface CachedData {
