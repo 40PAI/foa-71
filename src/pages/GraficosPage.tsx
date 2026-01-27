@@ -28,6 +28,13 @@ import { StackedBarChart } from "@/components/charts/StackedBarChart";
 import { GaugeChart } from "@/components/charts/GaugeChart";
 import { SCurveChart } from "@/components/charts/SCurveChart";
 import { BurndownChart } from "@/components/charts/BurndownChart";
+import { CashFlowAreaChart } from "@/components/charts/CashFlowAreaChart";
+import { CostCenterUtilizationChart } from "@/components/charts/CostCenterUtilizationChart";
+import { SupplierBalanceTreemap } from "@/components/charts/SupplierBalanceTreemap";
+import { MaterialFlowChart } from "@/components/charts/MaterialFlowChart";
+import { TopMaterialsChart } from "@/components/charts/TopMaterialsChart";
+import { ConsumptionByProjectChart } from "@/components/charts/ConsumptionByProjectChart";
+import { CriticalStockChart } from "@/components/charts/CriticalStockChart";
 import { useOptimizedPurchaseBreakdown } from "@/hooks/useOptimizedPurchaseBreakdown";
 import { useIntegratedDashboard } from "@/hooks/useIntegratedDashboard";
 import { useWarehouseAnalytics } from "@/hooks/useWarehouseAnalytics";
@@ -145,12 +152,32 @@ const ProjectChartsContent = ({ projectId }: { projectId: number }) => {
     );
   }
 
+  // Verificar se há dados suficientes para gráficos temporais
+  const hasTimelineData = chartData?.hasEnoughTimelineData && chartData?.timelineMonths >= 2;
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Gauge sempre disponível com métricas atuais */}
       <GaugeChart 
         value={chartData?.metrics.physicalProgress || 0} 
         title="Avanço Físico" 
       />
+      
+      {/* Aviso se não houver dados temporais suficientes */}
+      {!hasTimelineData && (
+        <Card className="border-dashed border-muted-foreground/30">
+          <CardContent className="py-6 text-center">
+            <AlertTriangle className="h-8 w-8 text-muted-foreground/50 mx-auto mb-2" />
+            <p className="text-sm font-medium">Dados temporais limitados</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Os gráficos abaixo mostram dados simplificados. Para visualização completa com evolução mensal, 
+              certifique-se de que o projeto possui datas de início/fim configuradas e tarefas com prazos definidos.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {/* Gráficos temporais - agora com dados reais mensais */}
       <TimelineChart 
         data={chartData?.chartData.sCurve?.map(item => ({
           periodo: item.periodo,
@@ -167,40 +194,18 @@ const ProjectChartsContent = ({ projectId }: { projectId: number }) => {
 };
 
 const FinanceChartsContent = ({ projectId }: { projectId: number }) => {
-  const { data: integratedData, isLoading } = useIntegratedDashboard(projectId);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-40 text-muted-foreground">
-        Carregando gráficos financeiros...
-      </div>
-    );
-  }
-
-  const radarData = integratedData?.map(item => ({
-    categoria: item.categoria,
-    orcamentado: item.valor_orcamentado,
-    gasto: item.valor_gasto,
-    maxValue: Math.max(item.valor_orcamentado, item.valor_gasto),
-  })) || [];
-
-  const stackedData = integratedData?.map(item => ({
-    categoria: item.categoria,
-    orcamentado: item.valor_orcamentado,
-    gasto: item.valor_gasto,
-    desvio: item.valor_gasto - item.valor_orcamentado,
-  })) || [];
-
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-      <div className="xl:col-span-2">
-        <IntegratedFinancialDashboard projectId={projectId} />
+    <div className="space-y-6">
+      {/* New Financial Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <CashFlowAreaChart projectId={projectId} />
+        <CostCenterUtilizationChart projectId={projectId} />
       </div>
-      <div className="xl:col-span-1">
-        <RadarChart data={radarData} title="Orçado vs Real - Visão Radial" />
-      </div>
-      <div className="xl:col-span-1">
-        <StackedBarChart data={stackedData} title="Breakdown de Gastos por Categoria" />
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <SupplierBalanceTreemap projectId={projectId} />
+        <div>
+          <IntegratedFinancialDashboard projectId={projectId} />
+        </div>
       </div>
     </div>
   );
@@ -261,57 +266,17 @@ const PurchaseChartsContent = ({ projectId }: { projectId: number }) => {
 };
 
 const WarehouseChartsContent = ({ projectId }: { projectId: number }) => {
-  const { data: warehouseData, isLoading } = useWarehouseAnalytics(projectId);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-40 text-muted-foreground">
-        Carregando gráficos de armazém...
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-      <Card className="xl:col-span-1">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
-            Consumo Semanal por Obra
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {warehouseData?.weekly_consumption.slice(0, 6).map((item, index) => (
-              <div key={index} className="flex justify-between items-center p-2 bg-muted/30 rounded text-sm">
-                <span>{item.semana}</span>
-                <Badge variant="outline">{item.consumo_total} un.</Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card className="xl:col-span-1">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5" />
-            Materiais com Stock Crítico
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {warehouseData?.critical_stock.slice(0, 5).map((item, index) => (
-              <div key={index} className="flex justify-between items-center p-2 border rounded text-sm">
-                <span className="text-sm truncate flex-1 mr-2">{item.nome_material}</span>
-                <Badge variant={item.status_criticidade === 'crítico' ? 'destructive' : 'secondary'} className="text-xs">
-                  {item.quantidade_stock}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-6">
+      {/* New Material Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <MaterialFlowChart projectId={projectId} />
+        <TopMaterialsChart projectId={projectId} />
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <ConsumptionByProjectChart />
+        <CriticalStockChart />
+      </div>
     </div>
   );
 };

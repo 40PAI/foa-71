@@ -1,5 +1,11 @@
+import { useState } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Maximize2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DonutChartProps {
   data: Array<{
@@ -38,6 +44,7 @@ const chartConfig = {
 };
 
 export function DonutChart({ data, title }: DonutChartProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
   // Função determinística para obter cor - sem random!
@@ -58,56 +65,100 @@ export function DonutChart({ data, title }: DonutChartProps) {
     fill: getColor(entry, index),
   }));
 
+  const ChartContent = ({ expanded }: { expanded: boolean }) => (
+    <ChartContainer config={chartConfig} className={expanded ? "h-[400px]" : "h-[250px] sm:h-[300px] lg:h-[320px]"}>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={dataWithColors}
+            cx="50%"
+            cy="50%"
+            innerRadius={expanded ? "35%" : "40%"}
+            outerRadius={expanded ? "75%" : "70%"}
+            paddingAngle={3}
+            dataKey="value"
+          >
+            {dataWithColors.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.fill} />
+            ))}
+          </Pie>
+          <ChartTooltip 
+            content={({ active, payload }) => {
+              if (active && payload && payload[0]) {
+                const data = payload[0].payload;
+                const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
+                return (
+                  <div className="bg-background border rounded-lg p-2 shadow-lg">
+                    <p className="font-semibold text-sm">{data.name}</p>
+                    <p className="text-xs">
+                      {data.value} ({percentage}%)
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            }}
+          />
+          <Legend 
+            wrapperStyle={{ fontSize: '12px' }}
+            iconType="circle"
+            formatter={(value, entry) => (
+              <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>
+            )}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartContainer>
+  );
+
   return (
-    <div className="space-y-2">
-      <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
-      <ChartContainer config={chartConfig} className="h-[250px] sm:h-[300px] lg:h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={dataWithColors}
-              cx="50%"
-              cy="50%"
-              innerRadius="40%"
-              outerRadius="70%"
-              paddingAngle={3}
-              dataKey="value"
-            >
-              {dataWithColors.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-            </Pie>
-            <ChartTooltip 
-              content={({ active, payload }) => {
-                if (active && payload && payload[0]) {
-                  const data = payload[0].payload;
-                  const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : 0;
-                  return (
-                    <div className="bg-background border rounded-lg p-2 shadow-lg">
-                      <p className="font-semibold text-sm">{data.name}</p>
-                      <p className="text-xs">
-                        {data.value} ({percentage}%)
-                      </p>
-                    </div>
-                  );
-                }
-                return null;
-              }}
-            />
-            <Legend 
-              wrapperStyle={{ fontSize: '12px' }}
-              iconType="circle"
-              formatter={(value, entry) => (
-                <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </ChartContainer>
-      <div className="text-center">
-        <div className="text-xl sm:text-2xl font-bold">{total}</div>
-        <div className="text-xs sm:text-sm text-muted-foreground">Total de Requisições</div>
-      </div>
-    </div>
+    <>
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsExpanded(true)}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Expandir gráfico</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <ChartContent expanded={false} />
+          <div className="text-center">
+            <div className="text-xl sm:text-2xl font-bold">{total}</div>
+            <div className="text-xs sm:text-sm text-muted-foreground">Total de Requisições</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <ChartContent expanded={true} />
+            <div className="text-center">
+              <div className="text-2xl font-bold">{total}</div>
+              <div className="text-sm text-muted-foreground">Total de Requisições</div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

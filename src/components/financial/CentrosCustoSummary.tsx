@@ -4,10 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowRight, AlertTriangle } from "lucide-react";
+import { ArrowRight, AlertTriangle, AlertCircle } from "lucide-react";
 import { useSaldosCentrosCusto } from "@/hooks/useCentrosCusto";
 import { formatCurrencyInput } from "@/utils/currency";
 import { useNavigate } from "react-router-dom";
+import { clampPercentage, formatPercentageWithExcess } from "@/lib/helpers";
 
 interface CentrosCustoSummaryProps {
   projectId: number;
@@ -17,7 +18,7 @@ export function CentrosCustoSummary({ projectId }: CentrosCustoSummaryProps) {
   const { data: saldos, isLoading } = useSaldosCentrosCusto(projectId);
   const navigate = useNavigate();
 
-  const getStatusColor = (percentual: number) => {
+  const getStatusColor = (percentual: number): "destructive" | "secondary" | "default" | "outline" => {
     if (percentual >= 100) return "destructive";
     if (percentual >= 90) return "destructive";
     if (percentual >= 80) return "secondary";
@@ -29,6 +30,12 @@ export function CentrosCustoSummary({ projectId }: CentrosCustoSummaryProps) {
     if (percentual >= 90) return "Crítico";
     if (percentual >= 80) return "Atenção";
     return "Normal";
+  };
+
+  const getStatusIcon = (percentual: number) => {
+    if (percentual >= 100) return <AlertCircle className="h-3 w-3" />;
+    if (percentual >= 80) return <AlertTriangle className="h-3 w-3" />;
+    return null;
   };
 
   const centrosEmAlerta = saldos?.filter(s => s.percentual_utilizado >= 80).length || 0;
@@ -109,16 +116,17 @@ export function CentrosCustoSummary({ projectId }: CentrosCustoSummaryProps) {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Progress 
-                          value={Math.min(saldo.percentual_utilizado, 100)} 
+                          value={clampPercentage(saldo.percentual_utilizado)} 
                           className="w-[80px]"
                         />
-                        <span className="text-sm font-medium">
-                          {Math.round(saldo.percentual_utilizado)}%
+                        <span className={`text-sm font-medium ${saldo.percentual_utilizado >= 100 ? 'text-destructive' : ''}`}>
+                          {formatPercentageWithExcess(saldo.percentual_utilizado)}
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusColor(saldo.percentual_utilizado)}>
+                      <Badge variant={getStatusColor(saldo.percentual_utilizado)} className="flex items-center gap-1 w-fit">
+                        {getStatusIcon(saldo.percentual_utilizado)}
                         {getStatusText(saldo.percentual_utilizado)}
                       </Badge>
                     </TableCell>

@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { useProjectDetails } from "./useProjectDetails";
 import { useFinancesByProject } from "./useFinances";
@@ -7,6 +6,8 @@ import { usePatrimonyByProject } from "./usePatrimony";
 import { useTasks } from "./useTasks";
 import { useProjectMetrics } from "./useProjectMetrics";
 import { useMaterialArmazemByProject } from "./useMaterialsArmazem";
+import { useProjectStages } from "./useProjectStages";
+import { useProjectTimelineData } from "./useProjectTimelineData";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useProjectChartData(projectId: number) {
@@ -17,6 +18,37 @@ export function useProjectChartData(projectId: number) {
   const { data: allTasks } = useTasks(projectId);
   const { data: metrics } = useProjectMetrics(projectId);
   const { data: warehouseMaterials } = useMaterialArmazemByProject(projectId);
+  const { data: stages } = useProjectStages(projectId);
+
+  // Preparar dados para o hook de timeline
+  const tasks = allTasks?.filter(task => task.id_projeto === projectId) || [];
+  const project = projectDetails?.project;
+  
+  const { 
+    sCurveData: timelineSCurveData, 
+    burndownData: timelineBurndownData,
+    hasEnoughData 
+  } = useProjectTimelineData({
+    dataInicio: project?.data_inicio,
+    dataFimPrevista: project?.data_fim_prevista,
+    tasks: tasks.map(t => ({
+      id: t.id,
+      prazo: t.prazo,
+      status: t.status,
+      percentual_conclusao: t.percentual_conclusao,
+      updated_at: t.updated_at,
+    })),
+    stages: (stages || []).map(s => ({
+      numero_etapa: s.numero_etapa,
+      data_inicio_etapa: s.data_inicio_etapa,
+      data_fim_prevista_etapa: s.data_fim_prevista_etapa,
+      orcamento_etapa: s.orcamento_etapa || 0,
+      gasto_etapa: s.gasto_etapa || 0,
+      status_etapa: s.status_etapa,
+    })),
+    orcamentoTotal: project?.orcamento || 0,
+    gastoAtual: project?.gasto || 0,
+  });
 
   return useQuery({
     queryKey: ["project-chart-data", projectId],
@@ -99,27 +131,31 @@ export function useProjectChartData(projectId: number) {
         };
       };
 
-      // Dados para S-Curve usando métricas automáticas
-      const sCurveData = [
-        { 
-          periodo: "Início", 
-          fisico: 0, 
-          financeiro: 0, 
-          tempo: 0 
-        },
-        { 
-          periodo: "Atual", 
-          fisico: physicalProgress, 
-          financeiro: financialProgress, 
-          tempo: timeProgress 
-        },
-        { 
-          periodo: "Meta", 
-          fisico: 100, 
-          financeiro: 100, 
-          tempo: 100 
-        }
-      ];
+      // Usar dados de S-Curve do hook de timeline (dados reais mensais)
+      // Se não tiver dados suficientes, usar fallback com 3 pontos
+      const sCurveData = hasEnoughData && timelineSCurveData.length >= 2
+        ? timelineSCurveData
+        : [
+            { periodo: "Início", fisico: 0, financeiro: 0, tempo: 0 },
+            { periodo: "Atual", fisico: physicalProgress, financeiro: financialProgress, tempo: timeProgress },
+            { periodo: "Meta", fisico: 100, financeiro: 100, tempo: 100 }
+          ];
+
+      // Usar dados de burndown do hook de timeline (dados reais mensais)
+      // Se não tiver dados suficientes, usar fallback baseado em tarefas
+      const burndownData = hasEnoughData && timelineBurndownData.length >= 2
+        ? timelineBurndownData.map(point => ({
+            tarefa: point.periodo,
+            planejado: point.planejado,
+            real: point.real,
+            status: point.tarefasRestantes > 0 ? 'Em Andamento' : 'Concluído'
+          }))
+        : tasks.map((task, index) => ({
+            tarefa: `Tarefa ${index + 1}`,
+            planejado: Math.round(tasks.length - ((index + 1) / tasks.length) * tasks.length),
+            real: task.status === 'Concluído' ? 0 : 1,
+            status: task.status
+          }));
 
       // Dados financeiros por categoria
       const financeData = finances?.map(finance => ({
@@ -147,14 +183,6 @@ export function useProjectChartData(projectId: number) {
         
         return acc;
       }, [] as any[]) || [];
-
-      // Dados para burndown de tarefas
-      const burndownData = tasks.map((task, index) => ({
-        tarefa: `Tarefa ${index + 1}`,
-        planejado: 100 - ((index + 1) / tasks.length) * 100,
-        real: task.percentual_conclusao,
-        status: task.status
-      }));
 
       // Processar dados de materiais de armazém do projeto
       const materialsDisponivel = warehouseMaterials?.filter(m => m.status_item === "Disponível").length || 0;
@@ -213,9 +241,11 @@ export function useProjectChartData(projectId: number) {
             byCategory: materialsByCategory,
             materials: warehouseMaterials || []
           }
-        }
+        },
+        hasEnoughTimelineData: hasEnoughData,
+        timelineMonths: timelineSCurveData.length,
       };
     },
-    enabled: !!projectId && !!projectDetails,
+    enabled: !!projectId && !!projectDetails && !!stages,
   });
 }

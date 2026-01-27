@@ -8,6 +8,7 @@ export interface UserPermissions {
   canViewTasks: boolean;
   canViewHR: boolean;
   canViewSecurity: boolean;
+  canViewWarehouse: boolean;
   role: UserRole | null;
   roleLabel: string;
 }
@@ -42,6 +43,7 @@ export function useUserPermissions(): UserPermissions {
       canViewTasks: isDirectorOrCoord || isEncarregado,
       canViewHR: isDirectorOrCoord,
       canViewSecurity: isDirectorOrCoord || isHST,
+      canViewWarehouse: isDirectorOrCoord || isEncarregado || isCompras,
       role,
       roleLabel
     };
