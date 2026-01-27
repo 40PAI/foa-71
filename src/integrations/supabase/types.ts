@@ -1619,45 +1619,6 @@ export type Database = {
           },
         ]
       }
-      invitations: {
-        Row: {
-          cargo: Database["public"]["Enums"]["app_role"]
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string | null
-          invited_by_name: string | null
-          nome: string
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          cargo: Database["public"]["Enums"]["app_role"]
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          invited_by_name?: string | null
-          nome: string
-          token?: string
-          used_at?: string | null
-        }
-        Update: {
-          cargo?: Database["public"]["Enums"]["app_role"]
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          invited_by_name?: string | null
-          nome?: string
-          token?: string
-          used_at?: string | null
-        }
-        Relationships: []
-      }
       lancamentos_fornecedor: {
         Row: {
           centro_custo_id: string | null
@@ -1759,84 +1720,6 @@ export type Database = {
         }
         Relationships: []
       }
-      materiais_alocados: {
-        Row: {
-          created_at: string | null
-          etapa_id: number | null
-          id: string
-          material_id: string
-          movimentacao_saida_id: string | null
-          projeto_id: number
-          quantidade_alocada: number
-          quantidade_consumida: number
-          quantidade_devolvida: number
-          status: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          etapa_id?: number | null
-          id?: string
-          material_id: string
-          movimentacao_saida_id?: string | null
-          projeto_id: number
-          quantidade_alocada?: number
-          quantidade_consumida?: number
-          quantidade_devolvida?: number
-          status?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          etapa_id?: number | null
-          id?: string
-          material_id?: string
-          movimentacao_saida_id?: string | null
-          projeto_id?: number
-          quantidade_alocada?: number
-          quantidade_consumida?: number
-          quantidade_devolvida?: number
-          status?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "materiais_alocados_etapa_id_fkey"
-            columns: ["etapa_id"]
-            isOneToOne: false
-            referencedRelation: "etapas_projeto"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_alocados_material_id_fkey"
-            columns: ["material_id"]
-            isOneToOne: false
-            referencedRelation: "materiais_armazem"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_alocados_movimentacao_saida_id_fkey"
-            columns: ["movimentacao_saida_id"]
-            isOneToOne: false
-            referencedRelation: "materiais_movimentacoes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_alocados_projeto_id_fkey"
-            columns: ["projeto_id"]
-            isOneToOne: false
-            referencedRelation: "projetos"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_alocados_projeto_id_fkey"
-            columns: ["projeto_id"]
-            isOneToOne: false
-            referencedRelation: "vw_resumo_foa"
-            referencedColumns: ["projeto_id"]
-          },
-        ]
-      }
       materiais_armazem: {
         Row: {
           categoria_principal:
@@ -1918,15 +1801,9 @@ export type Database = {
       materiais_movimentacoes: {
         Row: {
           created_at: string
-          custo_unitario: number | null
           data_movimentacao: string
-          documento_referencia: string | null
-          estado_material: string | null
-          guia_consumo_id: string | null
           id: string
           material_id: string
-          motivo_devolucao: string | null
-          movimentacao_origem_id: string | null
           observacoes: string | null
           projeto_destino_id: number | null
           projeto_origem_id: number | null
@@ -1937,15 +1814,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          custo_unitario?: number | null
           data_movimentacao?: string
-          documento_referencia?: string | null
-          estado_material?: string | null
-          guia_consumo_id?: string | null
           id?: string
           material_id: string
-          motivo_devolucao?: string | null
-          movimentacao_origem_id?: string | null
           observacoes?: string | null
           projeto_destino_id?: number | null
           projeto_origem_id?: number | null
@@ -1956,15 +1827,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          custo_unitario?: number | null
           data_movimentacao?: string
-          documento_referencia?: string | null
-          estado_material?: string | null
-          guia_consumo_id?: string | null
           id?: string
           material_id?: string
-          motivo_devolucao?: string | null
-          movimentacao_origem_id?: string | null
           observacoes?: string | null
           projeto_destino_id?: number | null
           projeto_origem_id?: number | null
@@ -1986,20 +1851,6 @@ export type Database = {
             columns: ["material_id"]
             isOneToOne: false
             referencedRelation: "materiais_armazem"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_movimentacoes_guia_consumo_id_fkey"
-            columns: ["guia_consumo_id"]
-            isOneToOne: false
-            referencedRelation: "guias_consumo"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "materiais_movimentacoes_movimentacao_origem_id_fkey"
-            columns: ["movimentacao_origem_id"]
-            isOneToOne: false
-            referencedRelation: "materiais_movimentacoes"
             referencedColumns: ["id"]
           },
         ]
@@ -2696,75 +2547,47 @@ export type Database = {
       reembolsos_foa_fof: {
         Row: {
           created_at: string | null
-          credor_nome: string | null
           data_reembolso: string
-          data_vencimento: string | null
           descricao: string
-          fonte_credito: string | null
-          fornecedor_id: string | null
           id: string
           meta_total: number | null
-          numero_contrato: string | null
           observacoes: string | null
           percentual_cumprido: number | null
           projeto_id: number | null
           responsavel_id: string | null
-          status_divida: string | null
-          taxa_juro: number | null
           tipo: string | null
           updated_at: string | null
           valor: number
         }
         Insert: {
           created_at?: string | null
-          credor_nome?: string | null
           data_reembolso: string
-          data_vencimento?: string | null
           descricao: string
-          fonte_credito?: string | null
-          fornecedor_id?: string | null
           id?: string
           meta_total?: number | null
-          numero_contrato?: string | null
           observacoes?: string | null
           percentual_cumprido?: number | null
           projeto_id?: number | null
           responsavel_id?: string | null
-          status_divida?: string | null
-          taxa_juro?: number | null
           tipo?: string | null
           updated_at?: string | null
           valor: number
         }
         Update: {
           created_at?: string | null
-          credor_nome?: string | null
           data_reembolso?: string
-          data_vencimento?: string | null
           descricao?: string
-          fonte_credito?: string | null
-          fornecedor_id?: string | null
           id?: string
           meta_total?: number | null
-          numero_contrato?: string | null
           observacoes?: string | null
           percentual_cumprido?: number | null
           projeto_id?: number | null
           responsavel_id?: string | null
-          status_divida?: string | null
-          taxa_juro?: number | null
           tipo?: string | null
           updated_at?: string | null
           valor?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "reembolsos_foa_fof_fornecedor_id_fkey"
-            columns: ["fornecedor_id"]
-            isOneToOne: false
-            referencedRelation: "fornecedores"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "reembolsos_foa_fof_projeto_id_fkey"
             columns: ["projeto_id"]
@@ -3553,12 +3376,6 @@ export type Database = {
           valor_pendente: number
         }[]
       }
-      get_quantidade_pendente: {
-        Args: {
-          alocacao: Database["public"]["Tables"]["materiais_alocados"]["Row"]
-        }
-        Returns: number
-      }
       get_task_financial_analytics: {
         Args: { project_id: number }
         Returns: {
@@ -3679,7 +3496,7 @@ export type Database = {
         Args: { new_amount: number; project_id: number }
         Returns: boolean
       }
-      verificar_notificacoes_periodicas: { Args: never; Returns: undefined }
+      verificar_notificacoes_periodicas: { Args: never; Returns: Json }
       zerar_custos_projeto: { Args: { p_projeto_id: number }; Returns: Json }
     }
     Enums: {

@@ -1,5 +1,5 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { Resend } from "npm:resend@4.0.0";
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
@@ -13,6 +13,7 @@ interface InvitationRequest {
   email: string;
   nome: string;
   cargo: string;
+  invitedBy: string;
 }
 
 serve(async (req) => {
@@ -22,128 +23,11 @@ serve(async (req) => {
   }
 
   try {
-    // Authenticate the request
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Missing token' }),
-        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
+    const { email, nome, cargo, invitedBy }: InvitationRequest = await req.json();
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    
-    // Create client with user's auth for permission checking
-    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Create service client for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Verify the user's JWT
-    const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getUser(token);
-    
-    if (claimsError || !claimsData?.user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized - Invalid token' }),
-        { status: 401, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    const userId = claimsData.user.id;
-
-    // Check if user has director or coordinator role
-    const { data: hasDirectorRole } = await supabaseAdmin.rpc('has_role', {
-      _user_id: userId,
-      _role: 'diretor_tecnico'
-    });
-
-    const { data: hasCoordRole } = await supabaseAdmin.rpc('has_role', {
-      _user_id: userId,
-      _role: 'coordenacao_direcao'
-    });
-
-    if (!hasDirectorRole && !hasCoordRole) {
-      return new Response(
-        JSON.stringify({ error: 'Forbidden - Insufficient permissions' }),
-        { status: 403, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    // Get inviter's name for the email
-    const { data: inviterProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('nome')
-      .eq('id', userId)
-      .single();
-    
-    const inviterName = inviterProfile?.nome || 'Administrador';
-
-    // Parse and validate request body
-    const body = await req.json();
-    const { email, nome, cargo } = body as InvitationRequest;
-
-    // Validate required fields
-    if (!email || !nome || !cargo) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, nome, cargo' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email format' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    // Validate cargo against allowed roles
-    const validRoles = ['diretor_tecnico', 'encarregado_obra', 'assistente_compras', 'departamento_hst', 'coordenacao_direcao'];
-    if (!validRoles.includes(cargo)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid role specified' }),
-        { status: 400, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
-
-    console.log('Creating invitation for:', email, 'role:', cargo, 'by:', inviterName);
-
-    // Create invitation record with secure token
-    const invitationToken = crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    const { data: invitation, error: inviteError } = await supabaseAdmin
-      .from('invitations')
-      .insert({
-        email: email.toLowerCase().trim(),
-        nome: nome.trim(),
-        cargo: cargo,
-        token: invitationToken,
-        invited_by: userId,
-        invited_by_name: inviterName,
-        expires_at: expiresAt.toISOString()
-      })
-      .select()
-      .single();
-
-    if (inviteError) {
-      console.error('Error creating invitation:', inviteError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create invitation', details: inviteError.message }),
-        { status: 500, headers: { 'Content-Type': 'application/json', ...corsHeaders } }
-      );
-    }
+    console.log('Sending invitation to:', email, 'for role:', cargo);
 
     // Send invitation email using Resend
-    const inviteUrl = `https://waridu.plenuz.ao/register-invitation?token=${invitationToken}`;
-    
     const emailResponse = await resend.emails.send({
       from: 'Equipe FOA <noreply@waridu.plenuz.ao>',
       to: [email],
@@ -154,7 +38,7 @@ serve(async (req) => {
           
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h2>Olá ${nome}!</h2>
-            <p>Você foi convidado(a) por <strong>${inviterName}</strong> para fazer parte da equipe na Plataforma FOA SmartSite.</p>
+            <p>Você foi convidado(a) por <strong>${invitedBy}</strong> para fazer parte da equipe na Plataforma FOA SmartSite.</p>
             
             <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; margin: 15px 0;">
               <p><strong>Cargo atribuído:</strong> ${cargo}</p>
@@ -163,7 +47,7 @@ serve(async (req) => {
             
             <p>Para criar sua conta e acessar a plataforma, clique no link abaixo:</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${inviteUrl}" 
+              <a href="https://waridu.plenuz.ao/register-invitation?email=${encodeURIComponent(email)}&role=${encodeURIComponent(cargo)}&invitedBy=${encodeURIComponent(invitedBy)}" 
                  style="background-color: #2563eb; color: white; padding: 12px 24px; 
                         text-decoration: none; border-radius: 6px; display: inline-block;">
                 Criar Conta e Acessar Plataforma
@@ -174,17 +58,15 @@ serve(async (req) => {
               <h3>Como proceder:</h3>
               <ol>
                 <li>Clique no link acima para criar sua conta</li>
+                <li>Confirme seu email: <strong>${email}</strong></li>
                 <li>Crie uma senha segura para sua conta</li>
                 <li>Após o registro, faça login para acessar a plataforma</li>
               </ol>
             </div>
-            
-            <p style="color: #64748b; font-size: 12px; margin-top: 20px;">
-              Este convite expira em 7 dias. Se você não esperava este convite, pode ignorar este email.
-            </p>
           </div>
           
           <div style="text-align: center; color: #64748b; font-size: 14px; margin-top: 30px;">
+            <p>Se você não esperava este convite, pode ignorar este email.</p>
             <p>© 2025 FOA SmartSite - Plataforma de Gestão de Projetos</p>
           </div>
         </div>
@@ -196,8 +78,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Convite enviado com sucesso!',
-      emailId: emailResponse.data?.id,
-      invitationId: invitation.id
+      emailId: emailResponse.data?.id 
     }), {
       status: 200,
       headers: {

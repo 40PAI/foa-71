@@ -45,18 +45,9 @@ export function useUpdateProfile() {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: UserProfileUpdate }) => {
-      // Only allow updating safe fields (not cargo/role)
-      const safeUpdates: UserProfileUpdate = {
-        nome: updates.nome,
-        telefone: updates.telefone,
-        foto_perfil_url: updates.foto_perfil_url,
-        data_nascimento: updates.data_nascimento,
-        departamento: updates.departamento,
-      };
-
       const { data, error } = await supabase
         .from('profiles')
-        .update(safeUpdates)
+        .update(updates)
         .eq('id', id)
         .select();
 
@@ -88,38 +79,42 @@ export function useInviteUser() {
 
   return useMutation({
     mutationFn: async ({ email, nome, cargo }: { email: string; nome: string; cargo: string }) => {
-      // Call the secure edge function instead of client-side admin.createUser
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (!sessionData?.session?.access_token) {
-        throw new Error('Não autenticado. Faça login novamente.');
-      }
-
-      const response = await supabase.functions.invoke('send-invitation', {
-        body: { email, nome, cargo },
+      // Create the user account via admin API
+      const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password: 'temp123456', // Temporary password - user will be asked to change
+        email_confirm: true,
+        user_metadata: {
+          nome
+        }
       });
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Erro ao enviar convite');
-      }
+      if (error) throw error;
 
-      if (!response.data?.success) {
-        throw new Error(response.data?.error || 'Erro ao enviar convite');
-      }
+      // Update the profile with the correct role
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ 
+          cargo: cargo as any,
+          nome 
+        })
+        .eq('id', data.user.id);
 
-      return response.data;
+      if (profileError) throw profileError;
+
+      return data.user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });
       toast({
         title: "Sucesso",
-        description: "Convite enviado com sucesso! O usuário receberá um email para criar sua conta.",
+        description: "Usuário convidado com sucesso.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error) => {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao convidar usuário. Tente novamente.",
+        description: "Erro ao convidar usuário. Tente novamente.",
         variant: "destructive",
       });
       console.error('Error inviting user:', error);
