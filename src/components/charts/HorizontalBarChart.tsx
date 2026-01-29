@@ -44,8 +44,8 @@ export function HorizontalBarChart({
   return (
     <div className="w-full">
       {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[120px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(120, data.length * 24)}>
+      <ChartContainer config={chartConfig} className="w-full min-h-[140px] h-auto">
+        <ResponsiveContainer width="100%" height={Math.max(140, data.length * 28)}>
           <BarChart 
             data={data} 
             layout="vertical" 
@@ -56,20 +56,20 @@ export function HorizontalBarChart({
               type="number" 
               tickFormatter={valueFormatter} 
               className="text-[10px]"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={80}
+              width={85}
               className="text-[10px]"
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 9 }}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
             />
             <ChartTooltip 
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
