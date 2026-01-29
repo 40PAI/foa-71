@@ -44,8 +44,8 @@ export function HorizontalBarChart({
   return (
     <div className="w-full">
       {title && <h3 className="text-lg font-semibold mb-2">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[280px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(280, data.length * 50)}>
+      <ChartContainer config={chartConfig} className="w-full min-h-[180px] h-auto">
+        <ResponsiveContainer width="100%" height={Math.max(180, data.length * 36)}>
           <BarChart 
             data={data} 
             layout="vertical" 
