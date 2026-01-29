@@ -41,33 +41,42 @@ export function HorizontalBarChart({
   title, 
   valueFormatter = formatCurrency 
 }: HorizontalBarChartProps) {
+  // Calcular altura compacta: barSize + pequeno espaço entre barras
+  const barHeight = 18;
+  const barGap = 4;
+  const chartHeight = Math.max(80, data.length * (barHeight + barGap) + 20);
+
   return (
     <div className="w-full">
       {title && <h3 className="text-xs font-semibold mb-0.5">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[100px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(100, data.length * 20)}>
+      <ChartContainer config={chartConfig} className="w-full" style={{ minHeight: `${chartHeight}px` }}>
+        <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart 
             data={data} 
             layout="vertical" 
-            margin={{ left: 2, right: 15, top: 2, bottom: 2 }}
+            margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
+            barCategoryGap={barGap}
           >
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
               tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 8 }}
+              axisLine={false}
+              tickLine={false}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={60}
+              width={55}
               tick={{ fill: 'hsl(var(--foreground))', fontSize: 8 }}
+              axisLine={false}
+              tickLine={false}
             />
             <ChartTooltip 
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={14}>
+            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={barHeight}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
