@@ -43,33 +43,33 @@ export function HorizontalBarChart({
 }: HorizontalBarChartProps) {
   return (
     <div className="w-full">
-      {title && <h3 className="text-lg font-semibold mb-2">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[180px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(180, data.length * 36)}>
+      {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
+      <ChartContainer config={chartConfig} className="w-full min-h-[120px] h-auto">
+        <ResponsiveContainer width="100%" height={Math.max(120, data.length * 24)}>
           <BarChart 
             data={data} 
             layout="vertical" 
-            margin={{ left: 10, right: 30, top: 10, bottom: 10 }}
+            margin={{ left: 5, right: 20, top: 5, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              className="text-[10px]"
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={120}
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--foreground))' }}
+              width={80}
+              className="text-[10px]"
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 9 }}
             />
             <ChartTooltip 
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={24}>
+            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={16}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
