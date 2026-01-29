@@ -43,33 +43,31 @@ export function HorizontalBarChart({
 }: HorizontalBarChartProps) {
   return (
     <div className="w-full">
-      {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
-      <ChartContainer config={chartConfig} className="w-full min-h-[140px] h-auto">
-        <ResponsiveContainer width="100%" height={Math.max(140, data.length * 28)}>
+      {title && <h3 className="text-xs font-semibold mb-0.5">{title}</h3>}
+      <ChartContainer config={chartConfig} className="w-full min-h-[100px] h-auto">
+        <ResponsiveContainer width="100%" height={Math.max(100, data.length * 20)}>
           <BarChart 
             data={data} 
             layout="vertical" 
-            margin={{ left: 5, right: 20, top: 5, bottom: 5 }}
+            margin={{ left: 2, right: 15, top: 2, bottom: 2 }}
           >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
-              className="text-[10px]"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 8 }}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={85}
-              className="text-[10px]"
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
+              width={60}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 8 }}
             />
             <ChartTooltip 
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={14}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
