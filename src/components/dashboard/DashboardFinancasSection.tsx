@@ -19,31 +19,31 @@ export function DashboardFinancasSection({
   }));
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
   return <Card>
-      <CardHeader>
-        <CardTitle className="text-responsive-xl">Finanças</CardTitle>
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-base font-semibold">Finanças</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 border rounded-lg bg-card">
-            <p className="text-sm text-muted-foreground">Orçamento Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(orcamentoTotal)}</p>
+      <CardContent className="space-y-3 px-4 pb-4 pt-0">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-2.5 border rounded-md bg-muted/30">
+            <p className="text-xs text-muted-foreground">Orçamento Total</p>
+            <p className="text-lg font-bold">{formatCurrency(orcamentoTotal)}</p>
           </div>
-          <div className="p-4 border rounded-lg bg-card">
-            <p className="text-sm text-muted-foreground">Gasto Total</p>
-            <p className="text-2xl font-bold">{formatCurrency(gastoTotal)}</p>
-            <p className="text-xs text-muted-foreground mt-1">{percentualGasto}% do orçamento</p>
+          <div className="p-2.5 border rounded-md bg-muted/30">
+            <p className="text-xs text-muted-foreground">Gasto Total</p>
+            <p className="text-lg font-bold">{formatCurrency(gastoTotal)}</p>
+            <p className="text-xs text-muted-foreground">{percentualGasto}% do orçamento</p>
           </div>
         </div>
 
         {topProjetosGasto.length > 0 ? (
           <div className="w-full">
-            <h3 className="text-sm font-semibold mb-3">Top 5 Projetos por Gasto</h3>
+            <h3 className="text-xs font-semibold mb-2">Top 5 Projetos por Gasto</h3>
             <div className="w-full">
               <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
             </div>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-8">Nenhum dado financeiro disponível</p>
+          <p className="text-center text-muted-foreground py-4 text-sm">Nenhum dado financeiro disponível</p>
         )}
       </CardContent>
     </Card>;
