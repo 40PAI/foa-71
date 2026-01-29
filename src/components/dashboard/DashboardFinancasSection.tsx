@@ -19,31 +19,31 @@ export function DashboardFinancasSection({
   }));
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
   return <Card>
-      <CardHeader className="py-3 px-4">
-        <CardTitle className="text-base font-semibold">Finanças</CardTitle>
+      <CardHeader className="py-2 px-3">
+        <CardTitle className="text-sm font-semibold">Finanças</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 px-4 pb-4 pt-0">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-2.5 border rounded-md bg-muted/30">
-            <p className="text-xs text-muted-foreground">Orçamento Total</p>
-            <p className="text-lg font-bold">{formatCurrency(orcamentoTotal)}</p>
+      <CardContent className="space-y-2 px-3 pb-3 pt-0">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="p-2 border rounded-md bg-muted/30">
+            <p className="text-[10px] text-muted-foreground">Orçamento Total</p>
+            <p className="text-sm font-bold">{formatCurrency(orcamentoTotal)}</p>
           </div>
-          <div className="p-2.5 border rounded-md bg-muted/30">
-            <p className="text-xs text-muted-foreground">Gasto Total</p>
-            <p className="text-lg font-bold">{formatCurrency(gastoTotal)}</p>
-            <p className="text-xs text-muted-foreground">{percentualGasto}% do orçamento</p>
+          <div className="p-2 border rounded-md bg-muted/30">
+            <p className="text-[10px] text-muted-foreground">Gasto Total</p>
+            <p className="text-sm font-bold">{formatCurrency(gastoTotal)}</p>
+            <p className="text-[10px] text-muted-foreground">{percentualGasto}% do orçamento</p>
           </div>
         </div>
 
         {topProjetosGasto.length > 0 ? (
           <div className="w-full">
-            <h3 className="text-xs font-semibold mb-2">Top 5 Projetos por Gasto</h3>
+            <h3 className="text-[10px] font-semibold mb-1">Top 5 Projetos por Gasto</h3>
             <div className="w-full">
               <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
             </div>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-4 text-sm">Nenhum dado financeiro disponível</p>
+          <p className="text-center text-muted-foreground py-2 text-xs">Nenhum dado financeiro disponível</p>
         )}
       </CardContent>
     </Card>;
