@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePrefetchPage } from "@/hooks/usePrefetchPage";
 import {
   Sheet,
   SheetContent,
@@ -44,6 +45,18 @@ const financeSubItems = [
 export function MobileMoreMenu({ open, onOpenChange }: MobileMoreMenuProps) {
   const navigate = useNavigate();
   const { signOut, canAccessModule, isDirector } = useAuth();
+  const prefetch = usePrefetchPage();
+
+  const prefetchMap: Record<string, () => void> = {
+    "/armazem": prefetch.prefetchArmazem,
+    "/rh": prefetch.prefetchRH,
+    "/seguranca": prefetch.prefetchSeguranca,
+    "/tarefas": prefetch.prefetchTarefas,
+    "/compras": prefetch.prefetchCompras,
+    "/centros-custo": prefetch.prefetchCentrosCusto,
+    "/gastos-obra": prefetch.prefetchFinancas,
+    "/contas-fornecedores": prefetch.prefetchContasFornecedores,
+  };
 
   const handleNavigation = (path: string) => {
     navigate(path);
@@ -71,6 +84,8 @@ export function MobileMoreMenu({ open, onOpenChange }: MobileMoreMenuProps) {
               <button
                 key={item.path}
                 onClick={() => handleNavigation(item.path)}
+                onPointerDown={() => prefetchMap[item.path]?.()}
+                onTouchStart={() => prefetchMap[item.path]?.()}
                 className={cn(
                   "w-full flex items-center gap-4 px-4 py-3 rounded-lg",
                   "text-left transition-colors",
@@ -94,6 +109,8 @@ export function MobileMoreMenu({ open, onOpenChange }: MobileMoreMenuProps) {
             <button
               key={item.path}
               onClick={() => handleNavigation(item.path)}
+              onPointerDown={() => prefetchMap[item.path]?.()}
+              onTouchStart={() => prefetchMap[item.path]?.()}
               className={cn(
                 "w-full flex items-center gap-4 px-4 py-3 rounded-lg",
                 "text-left transition-colors",

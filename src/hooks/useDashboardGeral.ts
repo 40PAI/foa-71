@@ -142,6 +142,12 @@ export function useDashboardGeral() {
           });
 
         if (error) {
+          // Tratar 404 (função não existe) graciosamente
+          if (error.code === 'PGRST202' || error.message?.includes('Could not find')) {
+            console.warn("⚠️ RPC get_dashboard_geral_data não existe, usando fallback...");
+            return await loadBasicDashboardData(user.id);
+          }
+          
           console.error("❌ Erro RPC dashboard:", error);
           
           // Se erro de função SQL, tentar fallback
@@ -158,7 +164,7 @@ export function useDashboardGeral() {
         // Validar estrutura retornada
         if (!data || typeof data !== 'object') {
           console.error("❌ Dados inválidos retornados:", data);
-          throw new Error("Formato de dados inválido retornado do servidor");
+          return await loadBasicDashboardData(user.id);
         }
 
         // Se RPC retornou um erro interno
@@ -169,9 +175,15 @@ export function useDashboardGeral() {
         }
 
         return data as unknown as DashboardGeralData;
-      } catch (err) {
+      } catch (err: any) {
+        // Fallback para qualquer erro não tratado
+        if (err?.code === 'PGRST202' || err?.message?.includes('Could not find')) {
+          console.warn("⚠️ RPC não encontrada, usando fallback...");
+          return await loadBasicDashboardData(user.id);
+        }
         console.error("❌ Erro crítico ao buscar dashboard:", err);
-        throw err;
+        // Usar fallback em vez de propagar erro
+        return await loadBasicDashboardData(user.id);
       }
     },
     enabled: !!user?.id,
