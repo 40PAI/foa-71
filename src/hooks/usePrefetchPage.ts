@@ -11,14 +11,18 @@ export function usePrefetchPage() {
   const { selectedProjectId } = useProjectContext();
 
   const prefetchDashboard = () => {
+    // Prefetch projetos como fallback (RPC pode não existir)
     queryClient.prefetchQuery({
-      queryKey: ["dashboard-geral"],
+      queryKey: ["projetos"],
       queryFn: async () => {
-        const { data, error } = await supabase.rpc("get_dashboard_geral_data");
+        const { data, error } = await supabase
+          .from("projetos")
+          .select("*")
+          .order("nome", { ascending: true });
         if (error) throw error;
         return data;
       },
-      staleTime: 30000, // 30 segundos
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -33,7 +37,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 60000, // 1 minuto
+      staleTime: 3 * 60 * 1000, // 3 minutos
     });
   };
 
@@ -50,7 +54,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -68,7 +72,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
 
     queryClient.prefetchQuery({
@@ -82,7 +86,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -100,7 +104,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -110,12 +114,11 @@ export function usePrefetchPage() {
       queryFn: async () => {
         const { data, error } = await supabase
           .from("materiais_armazem")
-          .select("*")
-          .order("nome", { ascending: true });
+          .select("*");
         if (error) throw error;
         return data;
       },
-      staleTime: 60000,
+      staleTime: 5 * 60 * 1000, // 5 minutos (dados estáticos)
     });
   };
 
@@ -126,11 +129,11 @@ export function usePrefetchPage() {
         const { data, error } = await supabase
           .from("colaboradores")
           .select("*")
-          .order("nome_completo", { ascending: true });
+          .order("nome", { ascending: true });
         if (error) throw error;
         return data;
       },
-      staleTime: 60000,
+      staleTime: 5 * 60 * 1000, // 5 minutos (dados estáticos)
     });
   };
 
@@ -148,7 +151,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -166,7 +169,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 
@@ -185,7 +188,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
 
     queryClient.prefetchQuery({
@@ -198,7 +201,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 30000,
+      staleTime: 2 * 60 * 1000, // 2 minutos
     });
   };
 

@@ -22,22 +22,24 @@ function BackgroundPrefetch() {
 
   useEffect(() => {
     if (user) {
-      // Aggressive background prefetch of all main routes after 1 second
+      // Aggressive background prefetch of all main routes after 500ms
       const timer = setTimeout(() => {
         console.log("🚀 Background prefetch started...");
         prefetch.prefetchDashboard();
         prefetch.prefetchProjetos();
         
+        // Prefetch global data (não depende de projeto)
+        prefetch.prefetchArmazem();
+        prefetch.prefetchRH();
+        
         if (selectedProjectId) {
           prefetch.prefetchFinancas();
           prefetch.prefetchCentrosCusto();
           prefetch.prefetchCompras();
-          prefetch.prefetchArmazem();
-          prefetch.prefetchRH();
           prefetch.prefetchSeguranca();
           prefetch.prefetchTarefas();
         }
-      }, 1000);
+      }, 500); // Reduzido de 1000ms para 500ms
 
       return () => clearTimeout(timer);
     }

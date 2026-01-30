@@ -1,6 +1,7 @@
 import { Home, HardHat, Banknote, Menu } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { usePrefetchPage } from "@/hooks/usePrefetchPage";
 
 interface MobileBottomNavProps {
   onMoreClick: () => void;
@@ -14,6 +15,13 @@ const navItems = [
 
 export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
   const location = useLocation();
+  const prefetch = usePrefetchPage();
+
+  const prefetchMap: Record<string, () => void> = {
+    "/": prefetch.prefetchDashboard,
+    "/projetos": prefetch.prefetchProjetos,
+    "/financas": prefetch.prefetchFinancas,
+  };
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -29,6 +37,8 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
             <NavLink
               key={item.path}
               to={item.path}
+              onPointerDown={() => prefetchMap[item.path]?.()}
+              onTouchStart={() => prefetchMap[item.path]?.()}
               className={cn(
                 "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-300",
                 "touch-manipulation",
