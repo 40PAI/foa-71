@@ -14,7 +14,7 @@ import { useProjectStages } from "@/hooks/useProjectStages";
 import { useTasks } from "@/hooks/useTasks";
 import { useCreateGastoObra, useUpdateGastoObra, GastoObra, SubtipoEntrada } from "@/hooks/useGastosObra";
 import { useAuth } from "@/contexts/AuthContext";
-import { Receipt, Wallet, ClipboardList } from "lucide-react";
+import { Receipt, Wallet, ClipboardList, CalendarIcon } from "lucide-react";
 
 interface GastoObraModalProps {
   open: boolean;
@@ -221,13 +221,17 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="data_movimento">Data *</Label>
-                <Input
-                  id="data_movimento"
-                  type="date"
-                  value={formData.data_movimento}
-                  onChange={(e) => setFormData({ ...formData, data_movimento: e.target.value })}
-                  required
-                />
+                <div className="relative">
+                  <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="data_movimento"
+                    type="date"
+                    value={formData.data_movimento}
+                    onChange={(e) => setFormData({ ...formData, data_movimento: e.target.value })}
+                    className="pl-10"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
