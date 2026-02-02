@@ -17,7 +17,9 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   isDirector: () => boolean;
+  isCoordinator: () => boolean;
   canAccessModule: (module: string) => boolean;
+  canManageUsers: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -123,34 +125,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return hasRole('diretor_tecnico');
   };
 
+  const isCoordinator = (): boolean => {
+    return hasRole('coordenacao_direcao');
+  };
+
+  const canManageUsers = (): boolean => {
+    return isDirector() || isCoordinator();
+  };
+
   const canAccessModule = (module: string): boolean => {
     if (!profile || !profile.ativo) return false;
 
     const role = profile.cargo;
     
     switch (module) {
+      case 'dashboard':
+        // Todos têm acesso ao dashboard (conteúdo filtrado por RLS)
+        return true;
       case 'projetos':
-        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'encarregado_obra'].includes(role);
       case 'requisicoes':
-        return ['diretor_tecnico', 'encarregado_obra', 'departamento_hst'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'encarregado_obra', 'departamento_hst', 'assistente_compras'].includes(role);
       case 'armazem':
-        return ['diretor_tecnico', 'assistente_compras', 'coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'assistente_compras', 'encarregado_obra'].includes(role);
       case 'rh':
         return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'seguranca':
-        return ['diretor_tecnico', 'departamento_hst', 'coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'departamento_hst'].includes(role);
       case 'tarefas':
-        return ['diretor_tecnico', 'encarregado_obra', 'coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'encarregado_obra'].includes(role);
       case 'financas':
         return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'graficos':
         return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       case 'compras':
-        return ['diretor_tecnico', 'assistente_compras', 'coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao', 'assistente_compras', 'departamento_hst'].includes(role);
       case 'user_management':
         return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
       default:
-        return ['coordenacao_direcao'].includes(role);
+        return ['diretor_tecnico', 'coordenacao_direcao'].includes(role);
     }
   };
 
@@ -164,7 +177,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signOut,
     hasRole,
     isDirector,
+    isCoordinator,
     canAccessModule,
+    canManageUsers,
   };
 
   return (

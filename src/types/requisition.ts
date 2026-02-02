@@ -3,6 +3,8 @@
 import type { MaterialCategory } from "./warehouse";
 import type { UnitOfMeasure } from "./warehouse";
 
+export type RequisitionType = "alocamento" | "compra";
+
 export type RequisitionStatus =
   | "Pendente"
   | "Cotações"
@@ -42,6 +44,7 @@ export interface Requisition {
   status_fluxo: RequisitionStatus;
   aprovacao_qualidade: boolean;
   observacoes?: string;
+  tipo_requisicao?: RequisitionType;
   created_at?: string;
   updated_at?: string;
 }
