@@ -54,6 +54,8 @@ export function UserManagementSection() {
     setIsInviting(true);
     
     try {
+      console.log('Enviando convite para:', inviteForm.email);
+      
       // Send invitation using the edge function
       const { data, error } = await supabase.functions.invoke('send-invitation', {
         body: {
@@ -64,16 +66,19 @@ export function UserManagementSection() {
         }
       });
 
+      console.log('Resposta da edge function:', { data, error });
+
       if (error) {
         console.error('Erro ao enviar convite:', error);
         toast.error('Erro ao enviar convite', error.message || 'Tente novamente mais tarde');
+        setIsInviting(false);
         return;
       }
 
       const result = data as { success: boolean; message: string; error?: string };
       
-      if (result.success) {
-        toast.success('Convite enviado!', result.message);
+      if (result?.success) {
+        toast.success('Convite enviado!', result.message || 'O utilizador receberá um email com instruções.');
         
         // Reset form and close modal
         setInviteForm({
@@ -83,14 +88,14 @@ export function UserManagementSection() {
         });
         setInviteModalOpen(false);
         
-        // Optionally refresh the profiles list
+        // Refresh the profiles list
         refetch();
       } else {
-        toast.error('Erro ao enviar convite', result.error || 'Tente novamente');
+        toast.error('Erro ao enviar convite', result?.error || 'Tente novamente');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao enviar convite:', error);
-      toast.error('Erro inesperado', 'Não foi possível enviar o convite. Tente novamente.');
+      toast.error('Erro inesperado', error?.message || 'Não foi possível enviar o convite. Tente novamente.');
     } finally {
       setIsInviting(false);
     }
