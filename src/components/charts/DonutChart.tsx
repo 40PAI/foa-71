@@ -136,7 +136,7 @@ export function DonutChart({ data, title }: DonutChartProps) {
             </TooltipProvider>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="flex flex-col items-center justify-center space-y-2">
           <ChartContent expanded={false} />
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold">{total}</div>
