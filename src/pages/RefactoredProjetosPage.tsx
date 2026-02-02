@@ -18,40 +18,53 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import type { ProjectStatus } from "@/types/project";
-
 export function RefactoredProjetosPage() {
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const isMobile = useIsMobile();
-  const { data: projects, isLoading: projectsLoading } = useProjects();
-  const { data: kpis, isLoading: kpisLoading } = useDashboardKpis();
+  const {
+    data: projects,
+    isLoading: projectsLoading
+  } = useProjects();
+  const {
+    data: kpis,
+    isLoading: kpisLoading
+  } = useDashboardKpis();
   const deleteProjectMutation = useDeleteProject();
   const updateProject = useUpdateProject();
-  
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<{ id: number; nome: string } | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<{
+    id: number;
+    nome: string;
+  } | null>(null);
   const [statusFilter, setStatusFilter] = useState<"todos" | ProjectStatus>("todos");
 
   // Contagens para tabs
   const counts = useMemo(() => {
-    if (!projects) return { todos: 0, andamento: 0, atrasado: 0, pausado: 0, concluido: 0, cancelado: 0 };
-    
+    if (!projects) return {
+      todos: 0,
+      andamento: 0,
+      atrasado: 0,
+      pausado: 0,
+      concluido: 0,
+      cancelado: 0
+    };
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
-    
     const atrasados = projects.filter(p => {
       if (p.status === 'Concluído' || p.status === 'Cancelado') return false;
       const dataFim = new Date(p.data_fim_prevista);
       dataFim.setHours(0, 0, 0, 0);
       return dataFim < hoje;
     }).length;
-
     return {
       todos: projects.length,
       andamento: projects.filter(p => p.status === "Em Andamento").length,
       atrasado: atrasados,
       pausado: projects.filter(p => p.status === "Pausado").length,
       concluido: projects.filter(p => p.status === "Concluído").length,
-      cancelado: projects.filter(p => p.status === "Cancelado").length,
+      cancelado: projects.filter(p => p.status === "Cancelado").length
     };
   }, [projects]);
 
@@ -59,7 +72,6 @@ export function RefactoredProjetosPage() {
   const filteredProjects = useMemo(() => {
     if (!projects) return [];
     if (statusFilter === "todos") return projects;
-    
     if (statusFilter === "Atrasado") {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
@@ -70,7 +82,6 @@ export function RefactoredProjetosPage() {
         return dataFim < hoje;
       });
     }
-    
     return projects.filter(p => p.status === statusFilter);
   }, [projects, statusFilter]);
 
@@ -78,61 +89,108 @@ export function RefactoredProjetosPage() {
   const mobileKPIs = useMemo(() => {
     if (!projects) return [];
     const totalOrcamento = projects.reduce((acc, p) => acc + (p.orcamento || 0), 0);
-    const mediaFisico = projects.length > 0 
-      ? projects.reduce((acc, p) => acc + (p.avanco_fisico || 0), 0) / projects.length 
-      : 0;
-
-    return [
-      { label: "Em Andamento", value: counts.andamento, icon: Building2, color: "info" as const },
-      { label: "Atrasados", value: counts.atrasado, icon: AlertTriangle, color: counts.atrasado > 0 ? "danger" as const : "success" as const },
-      { label: "Progresso Médio", value: `${mediaFisico.toFixed(0)}%`, icon: Clock, color: "default" as const },
-      { label: "Orçamento Total", value: formatCurrency(totalOrcamento), icon: CheckCircle, color: "success" as const },
-    ];
+    const mediaFisico = projects.length > 0 ? projects.reduce((acc, p) => acc + (p.avanco_fisico || 0), 0) / projects.length : 0;
+    return [{
+      label: "Em Andamento",
+      value: counts.andamento,
+      icon: Building2,
+      color: "info" as const
+    }, {
+      label: "Atrasados",
+      value: counts.atrasado,
+      icon: AlertTriangle,
+      color: counts.atrasado > 0 ? "danger" as const : "success" as const
+    }, {
+      label: "Progresso Médio",
+      value: `${mediaFisico.toFixed(0)}%`,
+      icon: Clock,
+      color: "default" as const
+    }, {
+      label: "Orçamento Total",
+      value: formatCurrency(totalOrcamento),
+      icon: CheckCircle,
+      color: "success" as const
+    }];
   }, [projects, counts]);
 
   // Tabs para mobile
-  const mobileTabs = [
-    { value: "todos", label: "Todos", count: counts.todos },
-    { value: "Em Andamento", label: "Activos", count: counts.andamento },
-    { value: "Atrasado", label: "Atrasados", count: counts.atrasado },
-    { value: "Pausado", label: "Pausados", count: counts.pausado },
-    { value: "Concluído", label: "Concluídos", count: counts.concluido },
-    { value: "Cancelado", label: "Cancelados", count: counts.cancelado },
-  ];
-
+  const mobileTabs = [{
+    value: "todos",
+    label: "Todos",
+    count: counts.todos
+  }, {
+    value: "Em Andamento",
+    label: "Activos",
+    count: counts.andamento
+  }, {
+    value: "Atrasado",
+    label: "Atrasados",
+    count: counts.atrasado
+  }, {
+    value: "Pausado",
+    label: "Pausados",
+    count: counts.pausado
+  }, {
+    value: "Concluído",
+    label: "Concluídos",
+    count: counts.concluido
+  }, {
+    value: "Cancelado",
+    label: "Cancelados",
+    count: counts.cancelado
+  }];
   const openDeleteDialog = (id: number, nome: string) => {
-    setProjectToDelete({ id, nome });
+    setProjectToDelete({
+      id,
+      nome
+    });
     setDeleteDialogOpen(true);
   };
-
   const handleComplete = async (id: number, nome: string) => {
     try {
-      await updateProject.mutateAsync({ id, status: "Concluído" as any });
-      toast({ title: "Sucesso", description: `Obra "${nome}" marcada como concluída.` });
+      await updateProject.mutateAsync({
+        id,
+        status: "Concluído" as any
+      });
+      toast({
+        title: "Sucesso",
+        description: `Obra "${nome}" marcada como concluída.`
+      });
     } catch (error) {
-      toast({ title: "Erro", description: "Erro ao concluir obra.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Erro ao concluir obra.",
+        variant: "destructive"
+      });
     }
   };
-
   const handleCancel = async (id: number, nome: string) => {
     try {
-      await updateProject.mutateAsync({ id, status: "Cancelado" as any });
-      toast({ title: "Sucesso", description: `Obra "${nome}" cancelada.` });
+      await updateProject.mutateAsync({
+        id,
+        status: "Cancelado" as any
+      });
+      toast({
+        title: "Sucesso",
+        description: `Obra "${nome}" cancelada.`
+      });
     } catch (error) {
-      toast({ title: "Erro", description: "Erro ao cancelar obra.", variant: "destructive" });
+      toast({
+        title: "Erro",
+        description: "Erro ao cancelar obra.",
+        variant: "destructive"
+      });
     }
   };
-
   const confirmDelete = async () => {
     if (!projectToDelete) return;
-
     try {
       await deleteProjectMutation.mutateAsync(projectToDelete.id);
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
       toast({
         title: "Sucesso",
-        description: `Projeto "${projectToDelete.nome}" eliminado com sucesso`,
+        description: `Projeto "${projectToDelete.nome}" eliminado com sucesso`
       });
     } catch (error: any) {
       setDeleteDialogOpen(false);
@@ -140,28 +198,24 @@ export function RefactoredProjetosPage() {
       toast({
         title: "Erro ao Eliminar Projeto",
         description: error.message || "Erro ao eliminar projeto. Tente novamente.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const cancelDelete = () => {
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
   };
-
   if (projectsLoading || kpisLoading) {
     return <LoadingSpinner />;
   }
-
   if (!projects) {
     return <div>Erro ao carregar projetos</div>;
   }
 
   // MOBILE LAYOUT
   if (isMobile) {
-    return (
-      <div className="w-full space-y-3 px-3 py-3">
+    return <div className="w-full space-y-3 px-3 py-3">
         {/* Header Mobile */}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold">Projetos</h1>
@@ -175,50 +229,25 @@ export function RefactoredProjetosPage() {
         <MobileKPIGrid items={mobileKPIs} columns={2} />
 
         {/* Tabs Mobile com scroll horizontal */}
-        <MobileTabsScroll
-          tabs={mobileTabs}
-          value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as any)}
-        />
+        <MobileTabsScroll tabs={mobileTabs} value={statusFilter} onValueChange={v => setStatusFilter(v as any)} />
 
         {/* Lista de Projetos Mobile */}
-        <MobileProjectsList
-          projects={filteredProjects}
-          kpis={kpis}
-          onDelete={openDeleteDialog}
-          onComplete={handleComplete}
-          onCancel={handleCancel}
-          isUpdating={updateProject.isPending}
-        />
+        <MobileProjectsList projects={filteredProjects} kpis={kpis} onDelete={openDeleteDialog} onComplete={handleComplete} onCancel={handleCancel} isUpdating={updateProject.isPending} />
 
-        <DeleteProjectDialog
-          open={deleteDialogOpen}
-          onOpenChange={setDeleteDialogOpen}
-          projectName={projectToDelete?.nome || ""}
-          onConfirm={confirmDelete}
-          isDeleting={deleteProjectMutation.isPending}
-        />
-      </div>
-    );
+        <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} />
+      </div>;
   }
 
   // DESKTOP LAYOUT
-  return (
-    <div className="w-full space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-3 py-2 sm:py-4 lg:py-6">
-      <PageHeader
-        title="Gerenciamento de Projetos e Obras"
-        action={
-          <div className="flex gap-2">
+  return <div className="w-full space-y-3 sm:space-y-4 lg:space-y-6 px-1 sm:px-2 lg:px-3 py-2 sm:py-4 lg:py-6">
+      <PageHeader title="Gerenciamento de Projetos e Obras" action={<div className="flex gap-2">
             <ProjectImportModal />
             <ProjectModal />
-          </div>
-        }
-        className="pb-2 sm:pb-4"
-      />
+          </div>} className="pb-2 sm:pb-4" />
 
       <ProjectsKPISection projects={projects} />
       
-      <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)} className="w-full">
+      <Tabs value={statusFilter} onValueChange={v => setStatusFilter(v as any)} className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="todos">Todos ({counts.todos})</TabsTrigger>
           <TabsTrigger value="Em Andamento">Em Andamento ({counts.andamento})</TabsTrigger>
@@ -229,22 +258,10 @@ export function RefactoredProjetosPage() {
         </TabsList>
       </Tabs>
       
-      <ProjectsTable 
-        projects={filteredProjects}
-        kpis={kpis}
-        onDelete={openDeleteDialog}
-        isDeleting={deleteProjectMutation.isPending}
-      />
+      <ProjectsTable projects={filteredProjects} kpis={kpis} onDelete={openDeleteDialog} isDeleting={deleteProjectMutation.isPending} />
 
-      <ProjectKPICards projects={projects} kpis={kpis} />
+      
 
-      <DeleteProjectDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        projectName={projectToDelete?.nome || ""}
-        onConfirm={confirmDelete}
-        isDeleting={deleteProjectMutation.isPending}
-      />
-    </div>
-  );
+      <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} />
+    </div>;
 }
