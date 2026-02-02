@@ -1,47 +1,60 @@
 
-# Plano: Ajustar Posicionamento do Botao do Agente no Mobile
+
+# Plano: Reposicionar Botão do Agente no Mobile via JavaScript
 
 ## Problema Identificado
-O botao flutuante do assistente FOA esta a sobrepor parcialmente a barra de navegacao inferior no mobile, dificultando o acesso ao item "Mais" da navegacao.
+A abordagem CSS com media query não está a funcionar porque:
+1. O n8n chat injeta estilos inline directamente no elemento
+2. Os estilos inline têm maior especificidade que CSS externo
+3. O botão é criado dinamicamente após o nosso CSS ser carregado
 
-## Analise Tecnica
+## Nova Abordagem: Manipulação DOM Directa
 
-### Estrutura Atual
-- **Barra de navegacao**: `h-16` (64px) + `safe-area-bottom` (para iPhones com notch)
-- **Posicao atual do botao**: `bottom: 80px`
-- **Tamanho do botao**: 64px (variavel `--chat--toggle--size`)
+Em vez de depender apenas de CSS, vamos usar um `MutationObserver` para detectar quando o botão do chat é criado e aplicar os estilos directamente via JavaScript.
 
-### Motivo do Problema
-O valor de 80px nao e suficiente considerando:
-- Altura da barra: 64px
-- Safe area em iPhones: ~34px
-- Espaco de respiro visual
+### Lógica da Solução
 
-## Solucao Proposta
+1. Criar um observer que monitora o DOM
+2. Quando o botão `.chat-toggle` aparecer, aplicar `style.bottom` directamente
+3. Verificar se estamos em mobile usando `window.innerWidth`
+4. Reagir a mudanças de tamanho de janela (resize)
 
-Atualizar os estilos CSS no componente `FOAAssistant.tsx`:
+### Código a Implementar
 
-```css
-@media (max-width: 768px) {
-  .n8n-chat .chat-toggle,
-  .n8n-chat button.chat-toggle,
-  [class*="chat-toggle"],
-  .n8n-chat [class*="toggle"] {
-    bottom: 100px !important;  /* Aumentar de 80px para 100px */
-    right: 16px !important;    /* Afastar ligeiramente da borda */
+```javascript
+// Função para ajustar posição do botão no mobile
+const adjustTogglePosition = () => {
+  const isMobile = window.innerWidth <= 768;
+  const toggleButton = document.querySelector('.n8n-chat button, [class*="chat-toggle"]');
+  
+  if (toggleButton && isMobile) {
+    toggleButton.style.setProperty('bottom', '100px', 'important');
+    toggleButton.style.setProperty('right', '16px', 'important');
   }
-}
-```
+};
 
-### Valores Calculados
-- **Novo bottom**: 100px (64px barra + 20px margem + 16px safe area buffer)
-- **Right**: 16px para alinhar melhor com o layout mobile
+// Observer para detectar quando o botão é criado
+const positionObserver = new MutationObserver(() => {
+  adjustTogglePosition();
+});
+positionObserver.observe(document.body, { childList: true, subtree: true });
+
+// Reagir a mudanças de tamanho
+window.addEventListener('resize', adjustTogglePosition);
+```
 
 ## Ficheiro a Modificar
 
-| Ficheiro | Alteracao |
+| Ficheiro | Alteração |
 |----------|-----------|
-| `src/components/chat/FOAAssistant.tsx` | Atualizar media query mobile (linhas 137-144) |
+| `src/components/chat/FOAAssistant.tsx` | Adicionar MutationObserver e listener de resize para ajustar posição do botão dinamicamente |
+
+## Detalhes Técnicos
+
+- **MutationObserver**: Detecta quando elementos são adicionados ao DOM
+- **style.setProperty**: Permite aplicar estilos com `!important` via JavaScript
+- **Cleanup**: Remover listeners e observers no cleanup do useEffect
 
 ## Resultado Esperado
-O botao do agente ficara posicionado claramente acima da barra de navegacao inferior, sem obstruir nenhum elemento de navegacao e mantendo boa acessibilidade em todos os dispositivos mobile.
+O botão do agente será reposicionado automaticamente para `bottom: 100px` em dispositivos mobile, independentemente dos estilos inline que o n8n chat aplique.
+
