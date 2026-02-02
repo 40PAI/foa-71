@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, FileText, Trash2, Download } from "lucide-react";
+import { Upload, FileText, Trash2, Download, Paperclip } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   useFornecedorDocumentos,
@@ -79,7 +79,8 @@ export function FornecedorDocumentUpload({ fornecedorId }: FornecedorDocumentUpl
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold flex items-center gap-2">
-        📎 Documentos do Fornecedor
+        <Paperclip className="h-5 w-5 text-primary" />
+        Documentos do Fornecedor
       </h3>
 
       {/* Upload Section */}
