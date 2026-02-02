@@ -2796,6 +2796,7 @@ export type Database = {
           id: number
           id_material: number | null
           id_projeto: number | null
+          material_armazem_id: string | null
           nome_comercial_produto: string | null
           observacoes: string | null
           percentual_desconto: number | null
@@ -2835,6 +2836,7 @@ export type Database = {
           id?: number
           id_material?: number | null
           id_projeto?: number | null
+          material_armazem_id?: string | null
           nome_comercial_produto?: string | null
           observacoes?: string | null
           percentual_desconto?: number | null
@@ -2874,6 +2876,7 @@ export type Database = {
           id?: number
           id_material?: number | null
           id_projeto?: number | null
+          material_armazem_id?: string | null
           nome_comercial_produto?: string | null
           observacoes?: string | null
           percentual_desconto?: number | null
@@ -2926,6 +2929,13 @@ export type Database = {
             columns: ["id_material"]
             isOneToOne: false
             referencedRelation: "materiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisicoes_material_armazem_id_fkey"
+            columns: ["material_armazem_id"]
+            isOneToOne: false
+            referencedRelation: "materiais_armazem"
             referencedColumns: ["id"]
           },
         ]
