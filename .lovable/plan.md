@@ -1,160 +1,170 @@
 
-# Plano: Corrigir Botão "Ver Detalhes" na Notificação de Stock Crítico
 
-## Problema Identificado
+# Plano: Melhorar Sistema de Notificações - Descrições Detalhadas e Acções Funcionais
 
-Quando o utilizador clica no botão "Ver detalhes" do toast de stock crítico, nada acontece porque:
+## Problemas Identificados
 
-1. **O utilizador já está na página `/armazem`** - o `window.location.href = '/armazem'` não muda nada visível
-2. **Uso de `window.location.href`** em vez de navegação do React Router pode causar reload ou comportamento inesperado
+### 1. Notificações Vagas
+O toast actual mostra apenas:
+- **Título**: "8 material(s) com stock crítico"
+- **Descrição**: "Verifique os materiais com menos de 10 unidades em stock."
+
+Não especifica **quais materiais**, **quantas unidades têm**, nem **que acção tomar**.
+
+### 2. Botão "Ver Detalhes" Não Funciona
+Quando o utilizador clica no botão, a página recarrega e nada acontece visualmente porque:
+- Usa `window.location.href = '/armazem?filter=critical'` que causa reload
+- Se já está em `/armazem`, o reload apaga o estado do filtro antes de ser aplicado
 
 ## Solução Proposta
 
-Em vez de simplesmente navegar para `/armazem`, implementar uma acção mais útil:
+### Parte 1: Notificações Mais Descritivas
 
-1. **Se já estiver em `/armazem`**: Filtrar automaticamente os materiais para mostrar apenas os com stock crítico
-2. **Se estiver noutra página**: Navegar para `/armazem` com um parâmetro de query (`?filter=critical`) que activa o filtro
+Melhorar as mensagens do toast para incluir informação actionable:
 
-```text
-FLUXO ACTUAL (não funciona):
-┌─────────────────────────────────────┐
-│ Toast: "8 materiais com stock crítico" │
-│        [Ver detalhes]               │
-└─────────────────────────────────────┘
-         ↓ clica
-window.location.href = '/armazem'
-         ↓
-(já está em /armazem → nada acontece)
-
-
-FLUXO MELHORADO:
-┌─────────────────────────────────────┐
-│ Toast: "8 materiais com stock crítico" │
-│        [Ver detalhes]               │
-└─────────────────────────────────────┘
-         ↓ clica
-navigate('/armazem?filter=critical')
-         ↓
-ArmazemPage lê URL params
-         ↓
-Filtra tabela para stock < 10
-         ↓
-Utilizador vê materiais críticos!
+**Toast Actual:**
+```
+⚠️ 8 material(s) com stock crítico
+   Verifique os materiais com menos de 10 unidades em stock.
+   [Ver detalhes]
 ```
 
-## Alterações Técnicas
+**Toast Melhorado:**
+```
+⚠️ Stock Crítico - Acção Necessária
+   
+   📦 3 materiais urgentes (0 unidades):
+   • Pedreiro (MOB-031)
+   • Pedreiro (MOB-041)
+   • Pedreiro (MOB-001)
+   
+   ⚠️ 5 materiais em alerta (< 10 unidades):
+   • Betoneira 400L (2 un.)
+   • Portão metálico 3x2m (2 un.)
+   • Janelas de Caixilharia (6 un.)
+   ...
+   
+   [Encomendar Agora] [Ver Lista Completa]
+```
 
-### 1. Ficheiro: `src/hooks/useCriticalStock.ts`
+### Parte 2: Navegação com React Router
 
-Modificar o handler do toast para:
-- Usar `window.location.search` para detectar se já está em `/armazem`
-- Navegar com query parameter `?filter=critical`
+Substituir `window.location.href` por navegação do React Router para evitar reloads:
 
 ```typescript
 // ANTES
 onClick: () => {
-  window.location.href = '/armazem';
+  window.location.href = '/armazem?filter=critical';
 }
 
-// DEPOIS
+// DEPOIS - usar navigate do React Router
+// Ou criar evento customizado que o ArmazemPage escuta
 onClick: () => {
-  // Se já está em /armazem, apenas adiciona parâmetro de filtro
+  // Se já está em /armazem, despacha evento para activar filtro
   if (window.location.pathname === '/armazem') {
-    window.location.href = '/armazem?filter=critical';
+    window.dispatchEvent(new CustomEvent('activate-critical-filter'));
   } else {
+    // Navegar para /armazem com parâmetro
     window.location.href = '/armazem?filter=critical';
   }
 }
 ```
 
-### 2. Ficheiro: `src/pages/ArmazemPage.tsx`
+## Implementação Técnica
 
-Adicionar leitura dos parâmetros de URL e aplicar filtro automático:
+### Ficheiro 1: `src/hooks/useCriticalStock.ts`
+
+Alterar a função `checkAndAlert` para:
+
+1. **Separar materiais por urgência** (0 unidades vs < 10 unidades)
+2. **Listar materiais específicos** no corpo do toast
+3. **Usar CustomEvent** para comunicar com ArmazemPage quando já está na página
 
 ```typescript
-import { useSearchParams } from 'react-router-dom';
+// Organizar materiais por urgência
+const urgentItems = criticalItems.filter(i => i.stock_atual === 0);
+const warningItems = criticalItems.filter(i => i.stock_atual > 0 && i.stock_atual < 10);
 
-// No início do componente
-const [searchParams, setSearchParams] = useSearchParams();
+// Construir descrição detalhada
+let description = '';
+if (urgentItems.length > 0) {
+  description += `🔴 ${urgentItems.length} em ruptura: ${urgentItems.slice(0, 3).map(i => i.nome).join(', ')}`;
+  if (urgentItems.length > 3) description += ` e +${urgentItems.length - 3} mais`;
+  description += '\n';
+}
+if (warningItems.length > 0) {
+  description += `⚠️ ${warningItems.length} em alerta: ${warningItems.slice(0, 3).map(i => `${i.nome} (${i.stock_atual} un.)`).join(', ')}`;
+  if (warningItems.length > 3) description += ` e +${warningItems.length - 3} mais`;
+}
 
-// Adicionar estado para filtro de stock crítico
-const [showCriticalOnly, setShowCriticalOnly] = useState(false);
-
-// useEffect para ler URL params
-useEffect(() => {
-  const filter = searchParams.get('filter');
-  if (filter === 'critical') {
-    setShowCriticalOnly(true);
-    // Opcional: limpar o parâmetro da URL após aplicar
-    searchParams.delete('filter');
-    setSearchParams(searchParams, { replace: true });
+toast.warning('Stock Crítico - Acção Necessária', {
+  description: description,
+  duration: 15000, // Mais tempo para ler
+  action: {
+    label: 'Ver detalhes',
+    onClick: () => {
+      if (window.location.pathname === '/armazem') {
+        // Despachar evento para activar filtro sem reload
+        window.dispatchEvent(new CustomEvent('activate-critical-filter'));
+      } else {
+        window.location.href = '/armazem?filter=critical';
+      }
+    }
   }
-}, [searchParams]);
-
-// Modificar filteredMaterials para incluir filtro crítico
-const filteredMaterials = useMemo(() => {
-  let filtered = materials || [];
-  
-  // Filtro de stock crítico
-  if (showCriticalOnly) {
-    filtered = filtered.filter(m => m.quantidade_stock < 10);
-  }
-  
-  // Outros filtros existentes...
-  return filtered.filter(material => {
-    const matchesSearch = ...;
-    const matchesStatus = ...;
-    return matchesSearch && matchesStatus;
-  });
-}, [materials, searchTerm, filterStatus, showCriticalOnly]);
+});
 ```
 
-### 3. Adicionar Toggle Visual para Filtro Crítico
+### Ficheiro 2: `src/pages/ArmazemPage.tsx`
 
-Na interface, adicionar um botão/badge que indica quando o filtro está activo:
+Adicionar listener para o CustomEvent:
 
 ```typescript
-{/* Toggle para filtro de stock crítico */}
-{showCriticalOnly && (
-  <Badge 
-    variant="destructive" 
-    className="cursor-pointer"
-    onClick={() => setShowCriticalOnly(false)}
-  >
-    <AlertTriangle className="h-3 w-3 mr-1" />
-    Mostrando apenas stock crítico
-    <X className="h-3 w-3 ml-1" />
-  </Badge>
+// Escutar evento para activar filtro (quando já está na página)
+useEffect(() => {
+  const handleActivateFilter = () => {
+    setShowCriticalOnly(true);
+    // Scroll para o topo da tabela de materiais
+    document.querySelector('[data-materials-table]')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  window.addEventListener('activate-critical-filter', handleActivateFilter);
+  
+  return () => {
+    window.removeEventListener('activate-critical-filter', handleActivateFilter);
+  };
+}, []);
+```
+
+### Ficheiro 3: Melhorar Notificações no Painel (Opcional)
+
+No `NotificationPanel.tsx`, melhorar a apresentação:
+
+```typescript
+// Mostrar mais detalhes na notificação
+<p className="text-xs text-muted-foreground mt-0.5">
+  {notification.mensagem}
+</p>
+
+// Se for stock crítico, mostrar lista de materiais
+{notification.tipo === 'stock_critico' && notification.entidade_tipo === 'material' && (
+  <div className="mt-2 text-xs">
+    <span className="text-red-500 font-medium">Acção sugerida:</span>
+    <span> Verificar fornecedor e criar requisição de compra</span>
+  </div>
 )}
 ```
 
-## Alternativa Simplificada
+## Resumo das Alterações
 
-Se preferir uma solução mais simples, podemos fazer o toast scroll para o banner de alerta de stock crítico que já existe na página:
-
-```typescript
-onClick: () => {
-  if (window.location.pathname === '/armazem') {
-    // Scroll para o banner de alerta (já na página)
-    const alertBanner = document.querySelector('[data-critical-stock-banner]');
-    alertBanner?.scrollIntoView({ behavior: 'smooth' });
-  } else {
-    window.location.href = '/armazem?highlight=critical';
-  }
-}
-```
+| Ficheiro | Alteração |
+|----------|-----------|
+| `src/hooks/useCriticalStock.ts` | Toast com descrição detalhada dos materiais, acção com CustomEvent |
+| `src/pages/ArmazemPage.tsx` | Listener para CustomEvent que activa filtro sem reload |
 
 ## Resultado Esperado
 
-| Localização Actual | Acção ao Clicar "Ver detalhes" |
-|--------------------|--------------------------------|
-| Qualquer página (não /armazem) | Navega para `/armazem?filter=critical` → Mostra só materiais críticos |
-| Já em `/armazem` | Activa filtro de stock crítico → Tabela mostra só materiais < 10 unidades |
-| Filtro já activo | Scroll para topo da tabela (já está a ver os dados) |
+1. **Toast mostra informação útil**: Quais materiais, quantas unidades, urgência
+2. **Botão "Ver detalhes" funciona**: Activa filtro de stock crítico mesmo quando já está na página
+3. **Experiência fluida**: Sem reloads desnecessários, scroll automático para a tabela
+4. **Acções claras**: Utilizador sabe exactamente o que precisa fazer
 
-## Benefícios
-
-- O botão "Ver detalhes" agora tem um efeito visível e útil
-- Utilizador vê imediatamente os materiais que precisam de atenção
-- Badge visual permite desactivar o filtro facilmente
-- Funciona tanto se estiver noutra página como se já estiver em `/armazem`
