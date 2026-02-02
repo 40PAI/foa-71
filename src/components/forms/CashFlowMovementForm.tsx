@@ -401,17 +401,19 @@ export function CashFlowMovementForm({
             name="comprovante_url"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Comprovante (PDF ou Imagem)</FormLabel>
+                <FormLabel>Upload de Comprovante</FormLabel>
                 <FormControl>
                   <FileUpload
                     value={field.value}
                     onValueChange={field.onChange}
-                    accept="application/pdf,image/*"
-                    maxSize={5 * 1024 * 1024}
+                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    maxSize={10}
                     bucket="comprovantes-caixa"
-                    placeholder="Arraste ou clique para fazer upload do comprovante"
                   />
                 </FormControl>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Faça upload da fatura, recibo ou comprovante (PDF, JPG, PNG até 10MB)
+                </p>
                 <FormMessage />
               </FormItem>
             )}
