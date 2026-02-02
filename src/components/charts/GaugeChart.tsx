@@ -113,7 +113,7 @@ export function GaugeChart({ value, title, unit = "%" }: GaugeChartProps) {
             </TooltipProvider>
           </div>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="flex flex-col items-center justify-center space-y-2">
           <ChartContent expanded={false} />
           <ValueDisplay expanded={false} />
         </CardContent>
