@@ -3415,7 +3415,7 @@ export type Database = {
       check_budget_thresholds: { Args: never; Returns: undefined }
       delete_project_safely: { Args: { project_id: number }; Returns: Json }
       detect_financial_discrepancies: {
-        Args: { project_id: number }
+        Args: { p_project_id: number }
         Returns: {
           categoria: string
           discrepancia: number
@@ -3464,7 +3464,7 @@ export type Database = {
         Returns: Json
       }
       get_detailed_expense_breakdown: {
-        Args: { project_id: number }
+        Args: { p_project_id: number }
         Returns: {
           categoria: string
           discrepancia: number

@@ -40,7 +40,7 @@ export function useFinancialAudit(projectId: number | null) {
 
       // Chamar a função RPC corrigida
       const { data, error } = await supabase.rpc("detect_financial_discrepancies", {
-        project_id: projectId,
+        p_project_id: projectId,
       });
 
       if (error) {
@@ -111,7 +111,7 @@ export function useDetailedExpenseBreakdownV2(projectId: number | null) {
       }
 
       const { data, error } = await supabase.rpc("get_detailed_expense_breakdown", {
-        project_id: projectId,
+        p_project_id: projectId,
       });
 
       if (error) {
