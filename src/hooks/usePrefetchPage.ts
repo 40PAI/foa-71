@@ -147,7 +147,7 @@ export function usePrefetchPage() {
           .from("incidentes")
           .select("*")
           .eq("id_projeto", selectedProjectId)
-          .order("data_incidente", { ascending: false });
+          .order("data", { ascending: false });
         if (error) throw error;
         return data;
       },
@@ -165,7 +165,7 @@ export function usePrefetchPage() {
           .from("tarefas_lean")
           .select("*")
           .eq("id_projeto", selectedProjectId)
-          .order("data_inicio_prevista", { ascending: true });
+          .order("prazo", { ascending: true });
         if (error) throw error;
         return data;
       },
