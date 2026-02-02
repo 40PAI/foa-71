@@ -43,7 +43,7 @@ export function useDetailedExpenseBreakdown(projectId: number) {
     queryKey: ["detailed-expense-breakdown", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('get_detailed_expense_breakdown', { project_id: projectId });
+        .rpc('get_detailed_expense_breakdown', { p_project_id: projectId });
       
       if (error) throw error;
       return data as DetailedExpenseBreakdown[];

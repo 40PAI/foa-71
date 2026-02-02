@@ -23,7 +23,7 @@ export function useFinancialDiscrepancies(projectId: number) {
     queryKey: ["financial-discrepancies", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('detect_financial_discrepancies', { project_id: projectId });
+        .rpc('detect_financial_discrepancies', { p_project_id: projectId });
       
       if (error) throw error;
       return data;

@@ -69,7 +69,7 @@ export function useOptimizedFinancialDiscrepancies(projectId?: number) {
       if (!projectId) return [];
       
       const { data, error } = await supabase
-        .rpc('detect_financial_discrepancies', { project_id: projectId });
+        .rpc('detect_financial_discrepancies', { p_project_id: projectId });
       
       if (error) {
         console.error('Financial discrepancies error:', error);
