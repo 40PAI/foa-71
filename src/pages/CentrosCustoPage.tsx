@@ -184,10 +184,12 @@ export default function CentrosCustoPage() {
         )}
 
         {/* Movimentações Financeiras */}
-        <MovimentacoesFinanceirasCard 
-          projectId={selectedProjectId}
-          centroCustoId={selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined}
-        />
+        {selectedProjectId && (
+          <MovimentacoesFinanceirasCard 
+            projectId={selectedProjectId}
+            centroCustoId={selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined}
+          />
+        )}
 
         <CentroCustoModal
           open={modalOpen}

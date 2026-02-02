@@ -9,7 +9,7 @@ import { useGastosObra, useGastosObraSummary, GastoObra } from "@/hooks/useGasto
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MovimentacoesFinanceirasCardProps {
-  projectId: number;
+  projectId: number | null | undefined;
   selectedMonth?: number;
   selectedYear?: number;
   filterType?: "all" | "month";
@@ -26,9 +26,12 @@ export function MovimentacoesFinanceirasCard({
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGasto, setEditingGasto] = useState<GastoObra | undefined>();
 
-  const { data: gastos, isLoading: gastosLoading } = useGastosObra(projectId, centroCustoId);
+  // Garantir que só buscamos dados se projectId for válido
+  const validProjectId = projectId || 0;
+  
+  const { data: gastos, isLoading: gastosLoading } = useGastosObra(validProjectId, centroCustoId);
   const { data: summary, isLoading: summaryLoading } = useGastosObraSummary(
-    projectId,
+    validProjectId,
     filterType === "month" ? selectedMonth : undefined,
     filterType === "month" ? selectedYear : undefined,
     centroCustoId
@@ -104,13 +107,15 @@ export function MovimentacoesFinanceirasCard({
         </CardContent>
       </Card>
 
-      <GastoObraModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        projectId={projectId}
-        gasto={editingGasto}
-        defaultCentroCustoId={centroCustoId}
-      />
+      {projectId && (
+        <GastoObraModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          projectId={projectId}
+          gasto={editingGasto}
+          defaultCentroCustoId={centroCustoId}
+        />
+      )}
     </div>
   );
 }

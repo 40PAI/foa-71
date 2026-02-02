@@ -50,7 +50,8 @@ export function useGastosObra(projectId: number, centroCustoId?: string) {
         .select("*")
         .eq("projeto_id", projectId);
       
-      if (centroCustoId) {
+      // Só filtrar por centro_custo_id se explicitamente fornecido
+      if (centroCustoId && centroCustoId !== "") {
         query = query.eq("centro_custo_id", centroCustoId);
       }
       
@@ -59,7 +60,7 @@ export function useGastosObra(projectId: number, centroCustoId?: string) {
       if (error) throw error;
       return data as GastoObra[];
     },
-    enabled: !!projectId,
+    enabled: !!projectId && projectId > 0,
   });
 }
 
