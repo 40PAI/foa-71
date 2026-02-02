@@ -56,12 +56,10 @@ const requisitionSchema = z.object({
   // Informações do requisitante
   requisitante: z.string().min(1, "Nome do requisitante é obrigatório"),
   
-  // Detalhes do produto - 3 níveis hierárquicos
-  categoria_principal: z.enum(categoriasPrincipais, {
-    required_error: "Selecione uma categoria principal",
-  }),
-  categoria_secundaria: z.string().min(1, "Selecione uma categoria secundária"),
-  subcategoria: z.string().min(1, "Selecione uma subcategoria"),
+  // Detalhes do produto - 3 níveis hierárquicos (opcionais para alocamento)
+  categoria_principal: z.enum(categoriasPrincipais).optional(),
+  categoria_secundaria: z.string().optional(),
+  subcategoria: z.string().optional(),
   subcategoria_especifica: z.string().optional(),
   codigo_produto: z.string().optional(),
   nome_comercial_produto: z.string().min(1, "Nome do produto é obrigatório"),
@@ -93,15 +91,6 @@ const requisitionSchema = z.object({
   
   // Aprovação
   aprovacao_cliente_engenheiro: z.boolean().default(false),
-}).refine((data) => {
-  // Se a subcategoria for "Outros", então subcategoria_especifica é obrigatória
-  if (data.subcategoria === "Outros" && (!data.subcategoria_especifica || data.subcategoria_especifica.trim() === "")) {
-    return false;
-  }
-  return true;
-}, {
-  message: "Especifique a subcategoria quando selecionar 'Outros'",
-  path: ["subcategoria_especifica"],
 });
 
 type RequisitionFormData = z.infer<typeof requisitionSchema>;
@@ -213,19 +202,52 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
   };
 
   const onSubmit = async (data: RequisitionFormData) => {
+    // Validação específica para alocamento
+    if (tipoRequisicao === "alocamento" && !selectedMaterialArmazem) {
+      toast({
+        title: "Erro",
+        description: "Selecione um material do armazém para alocamento",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validação específica para compra
+    if (tipoRequisicao === "compra" && !data.categoria_principal) {
+      toast({
+        title: "Erro",
+        description: "Selecione a categoria principal do produto",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar stock disponível para alocamento
+    if (tipoRequisicao === "alocamento" && selectedMaterialArmazem) {
+      const material = materiaisArmazem.find(m => m.id === selectedMaterialArmazem);
+      if (material && data.quantidade_requisitada > material.quantidade_stock) {
+        toast({
+          title: "Erro",
+          description: `Quantidade solicitada (${data.quantidade_requisitada}) excede o stock disponível (${material.quantidade_stock})`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const submitData = {
         requisitante: data.requisitante,
-        categoria_principal: data.categoria_principal,
-        subcategoria: data.subcategoria,
+        categoria_principal: data.categoria_principal || "Material",
+        subcategoria: data.subcategoria || "",
         codigo_produto: data.codigo_produto || null,
         nome_comercial_produto: data.nome_comercial_produto,
         descricao_tecnica: data.descricao_tecnica || null,
         quantidade_requisitada: data.quantidade_requisitada,
         unidade_medida: data.unidade_medida,
-        valor_unitario: data.valor_unitario,
-        valor: valorTotalState,
+        valor_unitario: tipoRequisicao === "alocamento" ? 0 : data.valor_unitario,
+        valor: tipoRequisicao === "alocamento" ? 0 : valorTotalState,
         percentual_imposto: data.percentual_imposto || 0,
         valor_imposto: data.valor_imposto || 0,
         percentual_desconto: data.percentual_desconto || 0,
@@ -236,6 +258,8 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         observacoes: data.observacoes || null,
         id_projeto: projectId,
         tipo_requisicao: tipoRequisicao,
+        // Adicionar referência ao material do armazém para alocamentos
+        material_armazem_id: tipoRequisicao === "alocamento" ? selectedMaterialArmazem : null,
       };
 
       if (requisition) {
@@ -267,17 +291,131 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
     }
   };
 
+  // Filter materials from warehouse that have stock available
+  const materiaisDisponiveis = materiaisArmazem.filter(m => 
+    m.quantidade_stock > 0 && m.status_item === "Disponível"
+  );
+
+  // Handle material selection from warehouse
+  const handleMaterialArmazemSelect = (materialId: string) => {
+    const material = materiaisArmazem.find(m => m.id === materialId);
+    if (material) {
+      setSelectedMaterialArmazem(materialId);
+      form.setValue("nome_comercial_produto", material.nome_material);
+      form.setValue("codigo_produto", material.codigo_interno);
+      form.setValue("descricao_tecnica", material.descricao_tecnica || "");
+      // Map category from warehouse material
+      if (material.categoria_principal) {
+        const catMap: Record<string, typeof categoriasPrincipais[number]> = {
+          "Material": "Material",
+          "Mao de Obra": "Mão de Obra",
+          "Patrimonio": "Património",
+          "Custos Indiretos": "Custos Indiretos",
+          "Seguranca": "Segurança e Higiene no Trabalho"
+        };
+        const mappedCat = catMap[material.categoria_principal] || "Material";
+        form.setValue("categoria_principal", mappedCat);
+      }
+      if (material.subcategoria) {
+        form.setValue("subcategoria", material.subcategoria);
+      }
+      // Set unit of measure
+      if (material.unidade_medida) {
+        const unidadeMap: Record<string, typeof unidadesMedida[number]> = {
+          "Saco": "saco",
+          "M3": "m³",
+          "Metro": "m",
+          "Kg": "kg",
+          "Litro": "litro",
+          "Unidade": "unidade"
+        };
+        const mappedUnidade = unidadeMap[material.unidade_medida] || "unidade";
+        form.setValue("unidade_medida", mappedUnidade);
+      }
+      // For allocation, set value to 0 (no purchase)
+      form.setValue("valor_unitario", 0);
+    }
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Seção 0: Tipo de Requisição */}
         <RequisitionTypeSelector
           value={tipoRequisicao}
-          onChange={setTipoRequisicao}
+          onChange={(value) => {
+            setTipoRequisicao(value);
+            // Reset material selection when changing type
+            setSelectedMaterialArmazem(null);
+            if (value === "alocamento") {
+              // For allocation, reset value fields
+              form.setValue("valor_unitario", 0);
+            }
+          }}
           disabled={!!requisition}
         />
 
         <Separator />
+
+        {/* Seção ALOCAMENTO: Seleção de Material do Armazém */}
+        {tipoRequisicao === "alocamento" && (
+          <>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Selecionar Material do Armazém</h3>
+              
+              {materiaisDisponiveis.length === 0 ? (
+                <div className="p-4 bg-muted rounded-lg text-center text-muted-foreground">
+                  Não há materiais disponíveis no armazém. Use "Compra de Material" para requisitar novos materiais.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <FormLabel>Material Disponível *</FormLabel>
+                  <Select
+                    value={selectedMaterialArmazem || ""}
+                    onValueChange={handleMaterialArmazemSelect}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um material do armazém" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {materiaisDisponiveis.map((material) => (
+                        <SelectItem key={material.id} value={material.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{material.nome_material}</span>
+                            <span className="text-muted-foreground text-xs">
+                              ({material.codigo_interno}) - Stock: {material.quantidade_stock} {material.unidade_medida}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {selectedMaterialArmazem && (
+                    <div className="mt-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      {(() => {
+                        const material = materiaisArmazem.find(m => m.id === selectedMaterialArmazem);
+                        if (!material) return null;
+                        return (
+                          <div className="text-sm space-y-1">
+                            <p><strong>Material:</strong> {material.nome_material}</p>
+                            <p><strong>Código:</strong> {material.codigo_interno}</p>
+                            <p><strong>Stock Disponível:</strong> {material.quantidade_stock} {material.unidade_medida}</p>
+                            {material.localizacao_fisica && (
+                              <p><strong>Localização:</strong> {material.localizacao_fisica}</p>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <Separator />
+          </>
+        )}
 
         {/* Seção 1: Informações do Requisitante */}
         <div className="space-y-4">
@@ -300,129 +438,133 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
 
         <Separator />
 
-        {/* Seção 2: Detalhes do Produto - Seleção Hierárquica */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Categorização do Produto</h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="categoria_principal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>1. Categoria Principal *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a categoria principal" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categoriasPrincipais.map((categoria) => (
-                        <SelectItem key={categoria} value={categoria}>
-                          {categoria}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Seção 2: Detalhes do Produto - Seleção Hierárquica (apenas para COMPRA) */}
+        {tipoRequisicao === "compra" && (
+          <>
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Categorização do Produto</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="categoria_principal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>1. Categoria Principal *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione a categoria principal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categoriasPrincipais.map((categoria) => (
+                            <SelectItem key={categoria} value={categoria}>
+                              {categoria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="categoria_secundaria"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>2. Categoria Secundária *</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={!categoriaPrincipal || loadingCategorias}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={
-                          !categoriaPrincipal 
-                            ? "Primeiro selecione a categoria principal" 
-                            : loadingCategorias 
-                            ? "Carregando..." 
-                            : "Selecione a categoria secundária"
-                        } />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categoriasSecundarias?.map((categoria) => (
-                        <SelectItem key={categoria.categoria_secundaria} value={categoria.categoria_secundaria}>
-                          {categoria.categoria_secundaria}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="categoria_secundaria"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>2. Categoria Secundária *</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!categoriaPrincipal || loadingCategorias}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                              !categoriaPrincipal 
+                                ? "Primeiro selecione a categoria principal" 
+                                : loadingCategorias 
+                                ? "Carregando..." 
+                                : "Selecione a categoria secundária"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categoriasSecundarias?.map((categoria) => (
+                            <SelectItem key={categoria.categoria_secundaria} value={categoria.categoria_secundaria}>
+                              {categoria.categoria_secundaria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="subcategoria"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>3. Subcategoria *</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                    disabled={!categoriaSecundaria || loadingSubcategorias}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={
-                          !categoriaSecundaria 
-                            ? "Primeiro selecione a categoria secundária" 
-                            : loadingSubcategorias 
-                            ? "Carregando..." 
-                            : "Selecione a subcategoria"
-                        } />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {subcategorias?.map((subcategoria) => (
-                        <SelectItem key={subcategoria.id} value={subcategoria.nome_subcategoria}>
-                          {subcategoria.nome_subcategoria}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+                <FormField
+                  control={form.control}
+                  name="subcategoria"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>3. Subcategoria *</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!categoriaSecundaria || loadingSubcategorias}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                              !categoriaSecundaria 
+                                ? "Primeiro selecione a categoria secundária" 
+                                : loadingSubcategorias 
+                                ? "Carregando..." 
+                                : "Selecione a subcategoria"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {subcategorias?.map((subcategoria) => (
+                            <SelectItem key={subcategoria.id} value={subcategoria.nome_subcategoria}>
+                              {subcategoria.nome_subcategoria}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              {/* Campo de especificação quando "Outros" é selecionado */}
+              {subcategoria === "Outros" && (
+                <FormField
+                  control={form.control}
+                  name="subcategoria_especifica"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Especifique a Subcategoria *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Descreva a subcategoria específica"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               )}
-            />
-          </div>
-          
-          {/* Campo de especificação quando "Outros" é selecionado */}
-          {subcategoria === "Outros" && (
-            <FormField
-              control={form.control}
-              name="subcategoria_especifica"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Especifique a Subcategoria *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Descreva a subcategoria específica"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
+            </div>
 
-        <Separator />
+            <Separator />
+          </>
+        )}
 
         {/* Seção 3: Informações do Produto */}
         <div className="space-y-4">
