@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeProjectMetrics } from "./useRealtimeProjectMetrics";
@@ -29,14 +28,15 @@ export function useProjectMetrics(projectId: number) {
       const completedTasks = tasks?.filter(task => task.status === "Concluído").length || 0;
       const physicalProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-      // Calculate financial progress (% Financeiro)
-      const { data: finances } = await supabase
-        .from("financas")
-        .select("*")
-        .eq("id_projeto", projectId);
+      // Calculate financial progress (% Financeiro) - usando movimentos_financeiros (ledger atual)
+      const { data: movements } = await supabase
+        .from("movimentos_financeiros")
+        .select("valor")
+        .eq("projeto_id", projectId)
+        .eq("tipo_movimento", "saida");
 
       const totalBudget = project.orcamento || 0;
-      const totalSpent = finances?.reduce((acc, finance) => acc + finance.gasto, 0) || 0;
+      const totalSpent = movements?.reduce((acc, m) => acc + (m.valor || 0), 0) || 0;
       const financialProgress = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
 
       // Calculate time progress (% Tempo)

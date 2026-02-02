@@ -147,7 +147,7 @@ export function useIntegratedFinancialProgressV2(projectId: number | null) {
       }
 
       const { data, error } = await supabase.rpc("calculate_integrated_financial_progress", {
-        p_project_id: projectId,
+        p_projeto_id: projectId,
       });
 
       if (error) {
@@ -160,17 +160,19 @@ export function useIntegratedFinancialProgressV2(projectId: number | null) {
         return null;
       }
 
+      // A nova função RPC retorna: total_gasto, percentual_progresso, orcamento_total
+      // Mapeamos para a interface esperada com valores derivados
       return {
-        total_budget: Number(result.total_budget) || 0,
-        material_expenses: Number(result.material_expenses) || 0,
-        payroll_expenses: Number(result.payroll_expenses) || 0,
-        patrimony_expenses: Number(result.patrimony_expenses) || 0,
-        indirect_expenses: Number(result.indirect_expenses) || 0,
-        total_expenses: Number(result.total_expenses) || 0,
-        financial_progress: Number(result.financial_progress) || 0,
-        task_material_cost: Number(result.task_material_cost) || 0,
-        task_labor_cost: Number(result.task_labor_cost) || 0,
-        task_real_expenses: Number(result.task_real_expenses) || 0,
+        total_budget: Number(result.orcamento_total) || 0,
+        material_expenses: 0, // Não disponível na nova RPC
+        payroll_expenses: 0,
+        patrimony_expenses: 0,
+        indirect_expenses: 0,
+        total_expenses: Number(result.total_gasto) || 0,
+        financial_progress: Number(result.percentual_progresso) || 0,
+        task_material_cost: 0,
+        task_labor_cost: 0,
+        task_real_expenses: Number(result.total_gasto) || 0,
       };
     },
     enabled: !!projectId,

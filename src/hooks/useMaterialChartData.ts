@@ -49,6 +49,7 @@ export interface MovementTimelineData {
 }
 
 // Hook for material flow over time (stacked area chart)
+// Expandido para incluir todos os tipos de movimentação
 export function useMaterialFlow(projectId?: number, days: number = 90) {
   return useQuery({
     queryKey: ["material-flow", projectId, days],
@@ -88,19 +89,18 @@ export function useMaterialFlow(projectId?: number, days: number = 90) {
         }
 
         const qty = mov.quantidade || 0;
-        switch (mov.tipo_movimentacao) {
-          case "entrada":
-            weeklyData[weekKey].entradas += qty;
-            break;
-          case "saida":
-            weeklyData[weekKey].saidas += qty;
-            break;
-          case "consumo":
-            weeklyData[weekKey].consumos += qty;
-            break;
-          case "devolucao":
-            weeklyData[weekKey].devolucoes += qty;
-            break;
+        const tipo = mov.tipo_movimentacao?.toLowerCase() || '';
+        
+        // Mapear todos os tipos de movimentação incluindo 'transferencia'
+        if (tipo === 'entrada') {
+          weeklyData[weekKey].entradas += qty;
+        } else if (tipo === 'saida' || tipo === 'transferencia') {
+          // Transferências são tratadas como saídas do armazém
+          weeklyData[weekKey].saidas += qty;
+        } else if (tipo === 'consumo') {
+          weeklyData[weekKey].consumos += qty;
+        } else if (tipo === 'devolucao') {
+          weeklyData[weekKey].devolucoes += qty;
         }
       });
 
