@@ -23,8 +23,8 @@ export function MainContent() {
   const { open: sidebarOpen } = useSidebar();
   
   return (
-    <main className="flex-1 min-w-0 w-full overflow-x-hidden">
-      <div className="h-full overflow-y-auto">
+    <main className="flex-1 min-w-0 w-full">
+      <div className="h-full">
         <Suspense fallback={<PageLoadingFallback />}>
           <Routes>
             <Route path="/" element={<DashboardGeralPage />} />
