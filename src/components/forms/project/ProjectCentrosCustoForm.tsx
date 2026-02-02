@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
@@ -150,7 +151,11 @@ export function ProjectCentrosCustoForm({
 
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Orçamento Mensal (AOA)</label>
-              <Input type="number" step="0.01" min="0" value={centro.orcamento_mensal} onChange={e => updateCentroCusto(index, "orcamento_mensal", parseFloat(e.target.value) || 0)} placeholder="0.00" />
+              <CurrencyInput 
+                value={centro.orcamento_mensal} 
+                onValueChange={value => updateCentroCusto(index, "orcamento_mensal", value)} 
+                placeholder="0,00" 
+              />
               <p className="text-xs text-muted-foreground mt-1">
                 Valor máximo de gastos mensais para este centro de custo
               </p>
