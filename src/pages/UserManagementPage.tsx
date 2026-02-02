@@ -10,9 +10,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { UserPlus, Users, Settings, Shield, AlertTriangle } from "lucide-react";
+import { UserPlus, Users, Settings, Shield, AlertTriangle, Building2 } from "lucide-react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { UserProjectAssignmentModal } from "@/components/modals/UserProjectAssignmentModal";
 
 const roleLabels = {
   diretor_tecnico: 'Diretor Técnico',
@@ -31,13 +32,14 @@ const roleColors = {
 };
 
 export function UserManagementPage() {
-  const { isDirector } = useAuth();
+  const { canManageUsers, isDirector } = useAuth();
   const { data: profiles, isLoading } = useProfiles();
   const updateProfile = useUpdateProfile();
   const inviteUser = useInviteUser();
   
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
+  const [projectAssignmentOpen, setProjectAssignmentOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   
   const [inviteForm, setInviteForm] = useState({
@@ -46,14 +48,14 @@ export function UserManagementPage() {
     cargo: 'encarregado_obra'
   });
 
-  if (!isDirector()) {
+  if (!canManageUsers()) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <Shield className="h-12 w-12 text-destructive mb-4" />
+          <Shield className="h-12 w-12 text-destructive mb-4 mx-auto" />
           <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
           <p className="text-muted-foreground">
-            Apenas Diretores Técnicos podem gerenciar usuários.
+            Apenas Diretores Técnicos e Coordenação podem gerenciar usuários.
           </p>
         </div>
       </div>
@@ -209,16 +211,32 @@ export function UserManagementPage() {
                         {new Date(profile.created_at).toLocaleDateString('pt-BR')}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedUser(profile);
-                            setEditUserModalOpen(true);
-                          }}
-                        >
-                          <Settings className="h-4 w-4" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(profile);
+                              setEditUserModalOpen(true);
+                            }}
+                            title="Editar"
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          {profile.cargo === 'encarregado_obra' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedUser(profile);
+                                setProjectAssignmentOpen(true);
+                              }}
+                              title="Atribuir Projetos"
+                            >
+                              <Building2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -278,6 +296,12 @@ export function UserManagementPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Project Assignment Modal */}
+        <UserProjectAssignmentModal
+          open={projectAssignmentOpen}
+          onOpenChange={setProjectAssignmentOpen}
+          user={selectedUser}
+        />
         {/* Permissions Info Card */}
         <Card>
           <CardHeader>

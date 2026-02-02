@@ -19,11 +19,13 @@ import {
 } from "@/components/ui/form";
 import { useCreateRequisition, useUpdateRequisition } from "@/hooks/useRequisitions";
 import { useMaterials } from "@/hooks/useMaterials";
+import { useMaterialsArmazem } from "@/hooks/useMaterialsArmazem";
 import { useToast } from "@/hooks/use-toast";
 import { Calculator, Percent, DollarSign, Clock } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { useSubcategorias } from "@/hooks/useSubcategorias";
 import { useCategoriaSecundaria } from "@/hooks/useCategoriaSecundaria";
+import { RequisitionTypeSelector, type RequisitionType } from "./RequisitionTypeSelector";
 
 // Categories and options
 const categoriasPrincipais = [
@@ -113,10 +115,15 @@ interface RequisitionFormProps {
 export function RequisitionForm({ projectId, requisition, onSuccess }: RequisitionFormProps) {
   const { toast } = useToast();
   const { data: materials = [] } = useMaterials();
+  const { data: materiaisArmazem = [] } = useMaterialsArmazem();
   const createMutation = useCreateRequisition();
   const updateMutation = useUpdateRequisition();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [valorTotal, setValorTotal] = useState<number>(0);
+  const [tipoRequisicao, setTipoRequisicao] = useState<RequisitionType>(
+    (requisition?.tipo_requisicao as RequisitionType) || "compra"
+  );
+  const [selectedMaterialArmazem, setSelectedMaterialArmazem] = useState<string | null>(null);
 
   const form = useForm<RequisitionFormData>({
     resolver: zodResolver(requisitionSchema),
@@ -228,6 +235,7 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         urgencia_prioridade: data.urgencia_prioridade,
         observacoes: data.observacoes || null,
         id_projeto: projectId,
+        tipo_requisicao: tipoRequisicao,
       };
 
       if (requisition) {
@@ -262,6 +270,15 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* Seção 0: Tipo de Requisição */}
+        <RequisitionTypeSelector
+          value={tipoRequisicao}
+          onChange={setTipoRequisicao}
+          disabled={!!requisition}
+        />
+
+        <Separator />
+
         {/* Seção 1: Informações do Requisitante */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Informações do Requisitante</h3>

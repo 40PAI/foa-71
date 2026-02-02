@@ -337,7 +337,7 @@ export function AppSidebar() {
             );
           })}
 
-          {isDirector() && (
+          {canAccessModule('user_management') && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild

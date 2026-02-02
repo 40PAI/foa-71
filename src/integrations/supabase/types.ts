@@ -2805,6 +2805,9 @@ export type Database = {
           requisitante: string
           status_fluxo: Database["public"]["Enums"]["status_fluxo"]
           subcategoria: string | null
+          tipo_requisicao:
+            | Database["public"]["Enums"]["tipo_requisicao_enum"]
+            | null
           unidade_medida:
             | Database["public"]["Enums"]["unidade_medida_enum"]
             | null
@@ -2841,6 +2844,9 @@ export type Database = {
           requisitante: string
           status_fluxo?: Database["public"]["Enums"]["status_fluxo"]
           subcategoria?: string | null
+          tipo_requisicao?:
+            | Database["public"]["Enums"]["tipo_requisicao_enum"]
+            | null
           unidade_medida?:
             | Database["public"]["Enums"]["unidade_medida_enum"]
             | null
@@ -2877,6 +2883,9 @@ export type Database = {
           requisitante?: string
           status_fluxo?: Database["public"]["Enums"]["status_fluxo"]
           subcategoria?: string | null
+          tipo_requisicao?:
+            | Database["public"]["Enums"]["tipo_requisicao_enum"]
+            | null
           unidade_medida?:
             | Database["public"]["Enums"]["unidade_medida_enum"]
             | null
@@ -3081,6 +3090,68 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "vw_resumo_foa"
             referencedColumns: ["projeto_id"]
+          },
+        ]
+      }
+      user_project_access: {
+        Row: {
+          atribuido_por: string | null
+          created_at: string
+          data_atribuicao: string
+          id: string
+          projeto_id: number
+          tipo_acesso: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          atribuido_por?: string | null
+          created_at?: string
+          data_atribuicao?: string
+          id?: string
+          projeto_id: number
+          tipo_acesso?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          atribuido_por?: string | null
+          created_at?: string
+          data_atribuicao?: string
+          id?: string
+          projeto_id?: number
+          tipo_acesso?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_project_access_atribuido_por_fkey"
+            columns: ["atribuido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_project_access_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_project_access_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "vw_resumo_foa"
+            referencedColumns: ["projeto_id"]
+          },
+          {
+            foreignKeyName: "user_project_access_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3621,6 +3692,10 @@ export type Database = {
           tarefas_programadas: number
         }[]
       }
+      has_project_access: {
+        Args: { _projeto_id: number; _user_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3769,6 +3844,7 @@ export type Database = {
         | "Industrial"
         | "Infraestrutura"
         | "Reforma"
+      tipo_requisicao_enum: "alocamento" | "compra"
       tipo_tarefa_lean:
         | "Residencial"
         | "Comercial"
@@ -4006,6 +4082,7 @@ export const Constants = {
         "Infraestrutura",
         "Reforma",
       ],
+      tipo_requisicao_enum: ["alocamento", "compra"],
       tipo_tarefa_lean: [
         "Residencial",
         "Comercial",
