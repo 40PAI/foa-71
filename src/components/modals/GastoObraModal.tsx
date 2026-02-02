@@ -7,13 +7,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useCentrosCusto } from "@/hooks/useCentrosCusto";
 import { useProfiles } from "@/hooks/useProfiles";
 import { useProjectStages } from "@/hooks/useProjectStages";
 import { useTasks } from "@/hooks/useTasks";
 import { useCreateGastoObra, useUpdateGastoObra, GastoObra, SubtipoEntrada } from "@/hooks/useGastosObra";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, Receipt, Wallet, ClipboardList } from "lucide-react";
+import { Receipt, Wallet, ClipboardList } from "lucide-react";
 
 interface GastoObraModalProps {
   open: boolean;
@@ -41,6 +42,7 @@ interface FormDataType {
   fornecedor: string;
   forma_pagamento: string;
   numero_documento: string;
+  comprovante_url: string;
 }
 
 const CATEGORIAS = [
@@ -98,6 +100,7 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
     fornecedor: "",
     forma_pagamento: "",
     numero_documento: "",
+    comprovante_url: gasto?.comprovante_url || "",
   });
 
   const [formData, setFormData] = useState<FormDataType>(getInitialFormData);
@@ -162,6 +165,9 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
       }
       if (formData.numero_documento?.trim()) {
         gastoData.numero_documento = formData.numero_documento;
+      }
+      if (formData.comprovante_url?.trim()) {
+        gastoData.comprovante_url = formData.comprovante_url;
       }
       // Guardar fornecedor no metadata
       if (formData.fornecedor?.trim()) {
@@ -493,14 +499,17 @@ export function GastoObraModal({ open, onOpenChange, projectId, gasto, defaultCe
               />
             </div>
 
-            <div className="p-4 bg-muted/50 rounded-lg space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4" />
-                Upload de Comprovante
-              </div>
+            <div className="space-y-2">
+              <Label>Upload de Comprovante</Label>
+              <FileUpload
+                value={formData.comprovante_url}
+                onValueChange={(url) => setFormData({ ...formData, comprovante_url: url })}
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                maxSize={10}
+                bucket="comprovantes"
+              />
               <p className="text-xs text-muted-foreground">
-                Funcionalidade de upload será adicionada em breve. 
-                Por agora, pode adicionar o link do documento nas observações.
+                Faça upload da fatura, recibo ou comprovante (PDF, JPG, PNG até 10MB)
               </p>
             </div>
           </TabsContent>
