@@ -16,7 +16,8 @@ export function useRequisitions() {
         .select(`
           *,
           material:materiais!fk_requisicoes_material(id, nome, codigo),
-          projeto:projetos!fk_requisicoes_projeto(id, nome)
+          projeto:projetos!fk_requisicoes_projeto(id, nome),
+          projeto_destino:projetos!requisicoes_projeto_destino_id_fkey(id, nome, cliente)
         `)
         .order("created_at", { ascending: false });
       
