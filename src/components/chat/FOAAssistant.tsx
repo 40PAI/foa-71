@@ -132,6 +132,16 @@ export function FOAAssistant() {
       .n8n-chat {
         z-index: 9999 !important;
       }
+
+      /* Mobile: mover botão para cima da barra de navegação inferior */
+      @media (max-width: 768px) {
+        .n8n-chat .chat-toggle,
+        .n8n-chat button.chat-toggle,
+        [class*="chat-toggle"],
+        .n8n-chat [class*="toggle"] {
+          bottom: 80px !important;
+        }
+      }
     `;
     document.head.appendChild(style);
 
