@@ -35,46 +35,44 @@ export function DataTable<T extends { id?: number | string }>({
   renderRow
 }: DataTableProps<T>) {
   const content = (
-    <div className="overflow-x-auto">
-      <div style={{ minWidth }} className="w-full">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {columns.map((column, index) => (
-                <TableHead 
-                  key={index}
-                  className={cn(
-                    column.minWidth && `min-w-[${column.minWidth}]`,
-                    column.className
-                  )}
-                >
-                  {column.header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((item, index) => {
-              if (renderRow) {
-                return renderRow(item, index);
-              }
-              
-              return (
-                <TableRow key={item.id || index}>
-                  {columns.map((column, colIndex) => (
-                    <td key={colIndex} className="p-2">
-                      {typeof column.accessor === 'function' 
-                        ? column.accessor(item)
-                        : String(item[column.accessor] || '')
-                      }
-                    </td>
-                  ))}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+    <div style={{ minWidth }} className="w-full">
+      <Table scrollIndicators={false}>
+        <TableHeader>
+          <TableRow>
+            {columns.map((column, index) => (
+              <TableHead 
+                key={index}
+                className={cn(
+                  column.minWidth && `min-w-[${column.minWidth}]`,
+                  column.className
+                )}
+              >
+                {column.header}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((item, index) => {
+            if (renderRow) {
+              return renderRow(item, index);
+            }
+            
+            return (
+              <TableRow key={item.id || index}>
+                {columns.map((column, colIndex) => (
+                  <td key={colIndex} className="p-2">
+                    {typeof column.accessor === 'function' 
+                      ? column.accessor(item)
+                      : String(item[column.accessor] || '')
+                    }
+                  </td>
+                ))}
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
     </div>
   );
 
