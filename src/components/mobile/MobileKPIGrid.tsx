@@ -75,7 +75,7 @@ export function MobileKPIGrid({ items, isLoading, columns = 2, className }: Mobi
                     {item.label}
                   </p>
                   <p className={cn(
-                    "text-base font-bold mt-0.5 truncate",
+                    "text-base font-bold mt-0.5 break-all leading-tight",
                     colorClasses[color]
                   )}>
                     {item.value}

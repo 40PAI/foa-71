@@ -137,7 +137,7 @@ export function ResponsiveKPICard({
       <CardContent className="p-2 sm:p-3 lg:p-4 pt-0 space-y-1">
         <div className="flex items-start justify-between min-w-0 gap-1">
           <div className={cn(
-            "text-base sm:text-lg lg:text-xl xl:text-2xl font-bold truncate flex-1",
+            "text-base sm:text-lg lg:text-xl xl:text-2xl font-bold break-all leading-tight flex-1",
             "min-w-0"
           )} title={String(value)}>
             {value}
