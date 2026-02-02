@@ -171,10 +171,10 @@ export function useProjectTimelineData({
       ];
     }
     
-    // IMPORTANTE: Sempre mostrar histórico completo do projeto
-    // displayEndDate = data_fim_prevista (para ver evolução completa)
-    // Não limitamos pelo 'today' para projectos já terminados
-    const displayEndDate = endDate;
+    // IMPORTANTE: Sempre mostrar histórico completo do projeto até hoje ou data_fim
+    // Para projectos passados, mostramos até data_fim
+    // Para projectos em curso, mostramos até hoje
+    const displayEndDate = isAfter(today, endDate) ? endDate : today;
     
     const months = eachMonthOfInterval({
       start: startOfMonth(startDate),
@@ -189,43 +189,44 @@ export function useProjectTimelineData({
       ];
     }
     
-    // Calcular número total de meses do projeto para baseline ideal
-    const totalProjectMonths = months.length;
+    // Calcular número total de meses do projecto (do início até data_fim_prevista)
+    const allProjectMonths = eachMonthOfInterval({
+      start: startOfMonth(startDate),
+      end: startOfMonth(endDate),
+    });
+    const totalProjectMonths = allProjectMonths.length;
+    
+    // Para cada tarefa, distribuir linearmente pelos meses do projecto
+    // Cada tarefa deve ser "removida" do planejado num mês específico
+    const tasksWithDeadlines = tasks.map((task, index) => {
+      // Se a tarefa tem prazo, usar o prazo
+      if (task.prazo) {
+        return { ...task, deadlineMonth: parseISO(task.prazo) };
+      }
+      // Se não tem prazo, distribuir uniformemente ao longo do projecto
+      const monthIndex = Math.floor((index + 1) / totalTasks * totalProjectMonths) - 1;
+      const assignedMonth = allProjectMonths[Math.max(0, Math.min(monthIndex, allProjectMonths.length - 1))];
+      return { ...task, deadlineMonth: endOfMonth(assignedMonth) };
+    });
     
     return months.map((month, index) => {
       const monthEnd = endOfMonth(month);
-      // Para meses futuros relativamente a hoje, usar monthEnd
-      // Para meses passados, usar monthEnd (data histórica)
       const referenceDate = monthEnd;
       
-      // Planejado: decréscimo linear baseado na duração total do projeto
-      const idealProgress = Math.min(1, (index + 1) / totalProjectMonths);
-      const planejado = Math.round(totalTasks * (1 - idealProgress));
+      // Planejado: quantas tarefas ainda deveriam estar "restantes" neste mês
+      // Uma tarefa é "planejada restante" se seu prazo é DEPOIS deste mês
+      const planejado = tasksWithDeadlines.filter(task => {
+        return isAfter(task.deadlineMonth, monthEnd);
+      }).length;
       
-      // Real: Calcular DINAMICAMENTE quantas tarefas restavam neste mês
-      // Uma tarefa é "restante" no mês M se:
-      // 1. Seu prazo é DEPOIS do fim do mês M (ainda não deveria estar concluída)
-      // 2. OU seu prazo é ANTES/IGUAL ao fim do mês M MAS não está concluída (atrasada)
+      // Real: quantas tarefas estão realmente restantes (não concluídas)
+      // Para meses no passado: mostrar o estado actual das tarefas
+      // (não temos histórico de quando cada tarefa foi concluída)
       const tarefasRestantes = tasks.filter(task => {
         // Tarefas 100% concluídas NÃO contam como restantes
         if (task.status === 'Concluído' || task.percentual_conclusao >= 100) {
           return false;
         }
-        
-        // Se não tem prazo, considerar sempre como restante
-        if (!task.prazo) {
-          return true;
-        }
-        
-        const taskDeadline = parseISO(task.prazo);
-        
-        // Tarefa com prazo DEPOIS deste mês = ainda não deveria estar concluída = restante (normal)
-        if (isAfter(taskDeadline, monthEnd)) {
-          return true;
-        }
-        
-        // Tarefa com prazo ANTES/IGUAL a este mês mas não concluída = restante (atrasada!)
-        // Isto mostra atraso real no gráfico
         return true;
       }).length;
       
