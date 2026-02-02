@@ -6,7 +6,12 @@ import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2 } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Trash2, CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 interface ProjectStage {
   numero_etapa: number;
   nome_etapa: string;
@@ -146,14 +151,68 @@ export function ProjectStagesForm({
               </Select>
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">Data de Início</label>
-              <Input type="date" value={stage.data_inicio_etapa} onChange={e => updateStage(index, "data_inicio_etapa", e.target.value)} />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !stage.data_inicio_etapa && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {stage.data_inicio_etapa ? (
+                      format(parseISO(stage.data_inicio_etapa), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={stage.data_inicio_etapa ? parseISO(stage.data_inicio_etapa) : undefined}
+                    onSelect={(date) => updateStage(index, "data_inicio_etapa", date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
-            <div>
+            <div className="flex flex-col gap-1.5">
               <label className="text-sm font-medium">Data Fim Prevista</label>
-              <Input type="date" value={stage.data_fim_prevista_etapa} onChange={e => updateStage(index, "data_fim_prevista_etapa", e.target.value)} />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !stage.data_fim_prevista_etapa && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {stage.data_fim_prevista_etapa ? (
+                      format(parseISO(stage.data_fim_prevista_etapa), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={stage.data_fim_prevista_etapa ? parseISO(stage.data_fim_prevista_etapa) : undefined}
+                    onSelect={(date) => updateStage(index, "data_fim_prevista_etapa", date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
