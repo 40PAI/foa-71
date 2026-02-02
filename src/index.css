@@ -50,10 +50,20 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
-    /* Chart colors - Sistema inteligente de cores */
-    --chart-1: 210 100% 50%;    /* Azul principal - Planejado/Orçado */
-    --chart-2: 25 100% 50%;     /* Laranja - Real/Gasto */
-    --chart-3: 142 76% 36%;     /* Verde - Concluído/Aprovado */
+    /* ==========================================================
+       PADRÃO SEMÂNTICO DE CORES PARA GRÁFICOS
+       ==========================================================
+       Todos os gráficos de projeto devem seguir este padrão:
+       - chart-1 (Azul):    Baseline / Planejado / Orçado / Ideal / Linear
+       - chart-2 (Laranja): Avanço Físico / Real / Executado
+       - chart-3 (Verde):   Avanço Financeiro / Aprovado / Concluído
+       - chart-4 (Amarelo): Em andamento / Atenção
+       - chart-5 (Vermelho): Atrasado / Crítico
+       - chart-6 (Roxo):    Premium / Especial
+       ========================================================== */
+    --chart-1: 210 100% 50%;    /* Azul - Baseline/Planejado/Ideal */
+    --chart-2: 25 100% 50%;     /* Laranja - Físico/Real */
+    --chart-3: 142 76% 36%;     /* Verde - Financeiro/Aprovado */
     --chart-4: 45 93% 58%;      /* Amarelo - Em andamento */
     --chart-5: 0 84% 60%;       /* Vermelho - Atrasado/Crítico */
     --chart-6: 280 100% 70%;    /* Roxo - Premium/Especial */

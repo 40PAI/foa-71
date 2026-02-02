@@ -28,21 +28,57 @@ export function useIntegratedFinancialProgress(projectId: number) {
   return useQuery({
     queryKey: ["integrated-financial-progress", projectId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Buscar dados gerais da RPC
+      const { data: rpcData, error: rpcError } = await supabase
         .rpc('calculate_integrated_financial_progress', { p_projeto_id: projectId });
       
-      if (error) throw error;
+      if (rpcError) throw rpcError;
       
-      // Mapear a nova resposta da RPC para IntegratedFinancialData
-      const result = data?.[0];
+      const result = rpcData?.[0];
       if (!result) return null;
+      
+      // Buscar despesas por categoria de movimentos_financeiros
+      // Filtrar apenas saídas (tipo_movimento = 'saida')
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('movimentos_financeiros')
+        .select('categoria, valor, tipo_movimento')
+        .eq('projeto_id', projectId)
+        .eq('tipo_movimento', 'saida')
+        .not('valor', 'is', null);
+      
+      if (categoryError) {
+        console.error('Erro ao buscar categorias:', categoryError);
+      }
+      
+      // Agregar por categoria principal
+      let material_expenses = 0;
+      let payroll_expenses = 0;
+      let patrimony_expenses = 0;
+      let indirect_expenses = 0;
+      
+      if (categoryData) {
+        categoryData.forEach(mov => {
+          const value = Number(mov.valor) || 0;
+          const cat = (mov.categoria || '').toLowerCase();
+          
+          if (cat.includes('material') || cat.includes('materia')) {
+            material_expenses += value;
+          } else if (cat.includes('mão de obra') || cat.includes('mao de obra') || cat.includes('salário') || cat.includes('salario') || cat.includes('pessoal')) {
+            payroll_expenses += value;
+          } else if (cat.includes('patrimônio') || cat.includes('patrimonio') || cat.includes('equipamento') || cat.includes('veículo') || cat.includes('veiculo')) {
+            patrimony_expenses += value;
+          } else {
+            indirect_expenses += value;
+          }
+        });
+      }
       
       return {
         total_budget: Number(result.orcamento_total) || 0,
-        material_expenses: 0,
-        payroll_expenses: 0,
-        patrimony_expenses: 0,
-        indirect_expenses: 0,
+        material_expenses,
+        payroll_expenses,
+        patrimony_expenses,
+        indirect_expenses,
         total_expenses: Number(result.total_gasto) || 0,
         financial_progress: Number(result.percentual_progresso) || 0,
       } as IntegratedFinancialData;
