@@ -3357,7 +3357,7 @@ export type Database = {
         Returns: string
       }
       calculate_integrated_financial_progress: {
-        Args: { project_id: number }
+        Args: { p_project_id: number }
         Returns: {
           financial_progress: number
           indirect_expenses: number
