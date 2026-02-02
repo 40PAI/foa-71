@@ -48,6 +48,23 @@ export function ArmazemPage() {
     }
   }, [searchParams, setSearchParams]);
 
+  // Escutar evento CustomEvent para activar filtro (quando já está na página)
+  useEffect(() => {
+    const handleActivateFilter = () => {
+      setShowCriticalOnly(true);
+      // Scroll para a tabela de materiais
+      setTimeout(() => {
+        document.querySelector('[data-critical-stock-banner]')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    };
+
+    window.addEventListener('activate-critical-filter', handleActivateFilter);
+    
+    return () => {
+      window.removeEventListener('activate-critical-filter', handleActivateFilter);
+    };
+  }, []);
+
   const filteredMaterials = useMemo(() => {
     if (!materials) return [];
     
