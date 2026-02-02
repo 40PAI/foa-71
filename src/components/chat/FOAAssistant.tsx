@@ -11,75 +11,105 @@ export function FOAAssistant() {
     // Verificar se já foi carregado
     if (document.getElementById('n8n-chat-script')) return;
 
-    // Adicionar estilos customizados FOA
+    // Adicionar link do CSS do n8n chat PRIMEIRO
+    const cssLink = document.createElement('link');
+    cssLink.id = 'n8n-chat-css';
+    cssLink.rel = 'stylesheet';
+    cssLink.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css';
+    document.head.appendChild(cssLink);
+
+    // Adicionar estilos customizados FOA DEPOIS do CSS do n8n (para sobrescrever)
     const style = document.createElement('style');
     style.id = 'n8n-chat-styles';
     style.textContent = `
       :root {
         /* Cores oficiais FOA */
-        --chat--color-primary: #002D8B;
-        --chat--color-primary-shade-50: #002472;
-        --chat--color-primary-shade-100: #001B59;
+        --chat--color-primary: #002D8B !important;
+        --chat--color-primary-shade-50: #002472 !important;
+        --chat--color-primary-shade-100: #001B59 !important;
 
-        --chat--color-secondary: #A65628;
-        --chat--color-secondary-shade-50: #8F4822;
+        --chat--color-secondary: #A65628 !important;
+        --chat--color-secondary-shade-50: #8F4822 !important;
 
-        --chat--color-white: #ffffff;
-        --chat--color-dark: #0A0E25;
-        --chat--color-light: #F4F6FA;
-        --chat--color-light-shade-50: #E6E9F1;
-        --chat--color-light-shade-100: #C2C5CC;
-        --chat--color-medium: #D2D4D9;
-        --chat--color-disabled: #777980;
-        --chat--color-typing: #404040;
+        --chat--color-white: #ffffff !important;
+        --chat--color-dark: #0A0E25 !important;
+        --chat--color-light: #F4F6FA !important;
+        --chat--color-light-shade-50: #E6E9F1 !important;
+        --chat--color-light-shade-100: #C2C5CC !important;
+        --chat--color-medium: #D2D4D9 !important;
+        --chat--color-disabled: #777980 !important;
+        --chat--color-typing: #404040 !important;
 
         /* Layout */
-        --chat--spacing: 1rem;
-        --chat--border-radius: 0.5rem;
-        --chat--transition-duration: 0.15s;
+        --chat--spacing: 1rem !important;
+        --chat--border-radius: 0.5rem !important;
+        --chat--transition-duration: 0.15s !important;
 
-        --chat--window--width: 400px;
-        --chat--window--height: 600px;
+        --chat--window--width: 400px !important;
+        --chat--window--height: 600px !important;
 
         /* Header */
-        --chat--header-height: auto;
-        --chat--header--padding: var(--chat--spacing);
-        --chat--header--background: var(--chat--color-primary);
-        --chat--header--color: var(--chat--color-white);
-        --chat--header--border-top: none;
-        --chat--header--border-bottom: 3px solid var(--chat--color-secondary);
-        --chat--heading--font-size: 1.8em;
-        --chat--subtitle--font-size: inherit;
-        --chat--subtitle--line-height: 1.6;
+        --chat--header-height: auto !important;
+        --chat--header--padding: var(--chat--spacing) !important;
+        --chat--header--background: var(--chat--color-primary) !important;
+        --chat--header--color: var(--chat--color-white) !important;
+        --chat--header--border-top: none !important;
+        --chat--header--border-bottom: 3px solid var(--chat--color-secondary) !important;
+        --chat--heading--font-size: 1.8em !important;
+        --chat--subtitle--font-size: inherit !important;
+        --chat--subtitle--line-height: 1.6 !important;
 
         /* Área de digitação */
-        --chat--textarea--height: 50px;
+        --chat--textarea--height: 50px !important;
 
         /* Mensagens */
-        --chat--message--font-size: 1rem;
-        --chat--message--padding: var(--chat--spacing);
-        --chat--message--border-radius: var(--chat--border-radius);
-        --chat--message-line-height: 1.6;
+        --chat--message--font-size: 1rem !important;
+        --chat--message--padding: var(--chat--spacing) !important;
+        --chat--message--border-radius: var(--chat--border-radius) !important;
+        --chat--message-line-height: 1.6 !important;
 
         /* Mensagem do BOT */
-        --chat--message--bot--background: var(--chat--color-white);
-        --chat--message--bot--color: var(--chat--color-dark);
-        --chat--message--bot--border: 1px solid var(--chat--color-primary);
+        --chat--message--bot--background: var(--chat--color-white) !important;
+        --chat--message--bot--color: var(--chat--color-dark) !important;
+        --chat--message--bot--border: 1px solid var(--chat--color-primary) !important;
 
         /* Mensagem do USUÁRIO */
-        --chat--message--user--background: var(--chat--color-secondary);
-        --chat--message--user--color: var(--chat--color-white);
-        --chat--message--user--border: none;
+        --chat--message--user--background: var(--chat--color-secondary) !important;
+        --chat--message--user--color: var(--chat--color-white) !important;
+        --chat--message--user--border: none !important;
 
         /* Bloco pré-formatado */
-        --chat--message--pre--background: rgba(0, 45, 139, 0.05);
+        --chat--message--pre--background: rgba(0, 45, 139, 0.05) !important;
 
         /* Botão flutuante */
-        --chat--toggle--background: var(--chat--color-secondary);
-        --chat--toggle--hover--background: #8F4822;
-        --chat--toggle--active--background: #72391C;
-        --chat--toggle--color: var(--chat--color-white);
-        --chat--toggle--size: 64px;
+        --chat--toggle--background: #A65628 !important;
+        --chat--toggle--hover--background: #8F4822 !important;
+        --chat--toggle--active--background: #72391C !important;
+        --chat--toggle--color: var(--chat--color-white) !important;
+        --chat--toggle--size: 64px !important;
+      }
+
+      /* Forçar cor castanha no botão toggle com seletores específicos */
+      .n8n-chat .chat-toggle,
+      .n8n-chat button.chat-toggle,
+      [class*="chat-toggle"],
+      .n8n-chat [class*="toggle"] {
+        background-color: #A65628 !important;
+        background: #A65628 !important;
+      }
+
+      .n8n-chat .chat-toggle:hover,
+      .n8n-chat button.chat-toggle:hover,
+      [class*="chat-toggle"]:hover {
+        background-color: #8F4822 !important;
+        background: #8F4822 !important;
+      }
+
+      .n8n-chat .chat-toggle:active,
+      .n8n-chat button.chat-toggle:active,
+      [class*="chat-toggle"]:active {
+        background-color: #72391C !important;
+        background: #72391C !important;
       }
 
       /* Remoção de branding e rodapés */
@@ -105,19 +135,6 @@ export function FOAAssistant() {
     `;
     document.head.appendChild(style);
 
-    // Remoção dinâmica de branding
-    const brandingObserver = new MutationObserver(() => {
-      document.querySelectorAll('.powered-by, [class*="powered"], footer, #footer, [class*="branding"], a[href*="n8n"]').forEach(el => el.remove());
-    });
-    brandingObserver.observe(document.body, { childList: true, subtree: true });
-
-    // Adicionar link do CSS do n8n chat
-    const cssLink = document.createElement('link');
-    cssLink.id = 'n8n-chat-css';
-    cssLink.rel = 'stylesheet';
-    cssLink.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/style.css';
-    document.head.appendChild(cssLink);
-
     // Criar container do chat
     let chatContainer = document.getElementById('n8n-chat');
     if (!chatContainer) {
@@ -125,6 +142,12 @@ export function FOAAssistant() {
       chatContainer.id = 'n8n-chat';
       document.body.appendChild(chatContainer);
     }
+
+    // Remoção dinâmica de branding
+    const brandingObserver = new MutationObserver(() => {
+      document.querySelectorAll('.powered-by, [class*="powered"], footer, #footer, [class*="branding"], a[href*="n8n"]').forEach(el => el.remove());
+    });
+    brandingObserver.observe(document.body, { childList: true, subtree: true });
 
     // Carregar script do n8n chat
     const script = document.createElement('script');
