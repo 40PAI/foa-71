@@ -26,11 +26,11 @@ export function DashboardFinancasSection({
         <div className="grid grid-cols-2 gap-1.5">
           <div className="p-1.5 border rounded bg-muted/30">
             <p className="text-[9px] text-muted-foreground leading-tight">Orçamento Total</p>
-            <p className="text-xs font-bold">{formatCurrency(orcamentoTotal)}</p>
+            <p className="text-xs font-bold break-all leading-tight">{formatCurrency(orcamentoTotal)}</p>
           </div>
           <div className="p-1.5 border rounded bg-muted/30">
             <p className="text-[9px] text-muted-foreground leading-tight">Gasto Total</p>
-            <p className="text-xs font-bold">{formatCurrency(gastoTotal)}</p>
+            <p className="text-xs font-bold break-all leading-tight">{formatCurrency(gastoTotal)}</p>
             <p className="text-[8px] text-muted-foreground">{percentualGasto}%</p>
           </div>
         </div>

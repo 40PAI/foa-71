@@ -89,7 +89,7 @@ export function SmartKPICard({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-1 sm:space-y-2">
-          <div className={`text-base sm:text-xl lg:text-2xl font-bold ${getValueColor()} ${animated ? 'animate-fade-in' : ''} break-words leading-tight`}>
+          <div className={`text-base sm:text-xl lg:text-2xl font-bold ${getValueColor()} ${animated ? 'animate-fade-in' : ''} break-all leading-tight`}>
             {value}
           </div>
           

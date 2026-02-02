@@ -38,8 +38,8 @@ export function KPICard({ title, value, subtitle, trend, alert, icon }: KPICardP
         {icon && <div className="text-muted-foreground shrink-0 ml-1">{icon}</div>}
       </CardHeader>
       <CardContent size="sm" className="space-y-0.5">
-        <div className="flex items-center justify-between min-w-0 gap-1">
-          <div className="text-sm sm:text-base lg:text-lg font-bold min-w-0 flex-1 truncate">
+        <div className="flex items-start justify-between min-w-0 gap-1">
+          <div className="text-sm sm:text-base lg:text-lg font-bold min-w-0 flex-1 break-all leading-tight">
             {value}
           </div>
           <div className="shrink-0 flex items-center gap-1">
