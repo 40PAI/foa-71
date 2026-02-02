@@ -35,7 +35,7 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
       // Fetch integrated financial progress from tasks
       const { data: integrated, error: integratedError } = await supabase
         .rpc('calculate_integrated_financial_progress', { 
-          project_id: projectId 
+          p_project_id: projectId 
         });
 
       if (integratedError) {
