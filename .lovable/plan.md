@@ -1,290 +1,191 @@
 
-# Plano: Sistema Completo de Permissoes e Workflow de Requisicoes
+# Plano: Correcao da Sincronizacao de Dados e Graficos
 
-## Resumo Executivo
+## Resumo dos Problemas Identificados
 
-Este plano implementa um sistema robusto de permissoes baseado em perfis, com ancoragem de utilizadores a projetos especificos e dois tipos distintos de requisicoes (alocamento vs compra), incluindo workflow de notificacoes automaticas.
+Apos analise extensiva da base de dados e codigo frontend, identifiquei os seguintes problemas criticos:
+
+### 1. Funcao RPC com Nome de Coluna Errado (CRITICO)
+A funcao `calculate_integrated_financial_progress` usa `p.orcamento_total` mas a coluna real chama-se `orcamento`. Isto faz com que todos os calculos financeiros retornem 0% de progresso.
+
+### 2. Hook `useProjectMetrics` Usa Tabela Legacy
+O hook le dados da tabela `financas` (legacy) em vez de `movimentos_financeiros` (ledger atual). Resultado: gastos mostram 0 quando ha milhoes registados.
+
+### 3. Funcao RPC com Nome de FK Errado
+A funcao usa `t.projeto_id` na tabela `tarefas_lean` mas a coluna chama-se `id_projeto`.
+
+### 4. Datas de Projeto Desatualizadas
+O projeto VALODIA (id=52) tem `data_fim_prevista: 2025-12-31` (passado!) causando atraso de 100%.
+
+### 5. Loop Infinito no UserProjectAssignmentModal
+O `useEffect` esta a causar re-renders infinitos por dependencias mal configuradas.
 
 ---
 
-## Fase 1: Tabela de Ancoragem de Utilizadores a Projetos
+## Fase 1: Corrigir Funcoes RPC no Supabase
 
-### Objetivo
-Permitir que "Encarregados de Obra" vejam apenas os projetos aos quais estao atribuidos.
-
-### Alteracoes na Base de Dados
+### Migracao SQL para Corrigir `calculate_integrated_financial_progress`
 
 ```text
-+----------------------------+
-|   user_project_access      |
-+----------------------------+
-| id: uuid (PK)              |
-| user_id: uuid (FK profiles)|
-| projeto_id: integer (FK)   |
-| tipo_acesso: text          |
-| data_atribuicao: date      |
-| atribuido_por: uuid        |
-| created_at: timestamptz    |
-+----------------------------+
+Alteracoes:
+- p.orcamento_total -> p.orcamento
+- t.projeto_id -> t.id_projeto
 ```
 
-**Politicas RLS:**
-- Diretor/Coordenacao: Acesso total para gerir atribuicoes
-- Encarregado: Ve apenas os seus projetos atribuidos
-- Assistente Compras: Ve todos os projetos (para gestao de requisicoes)
+A funcao corrigida ira:
+1. Ler corretamente o orcamento do projeto
+2. Agregar gastos de `movimentos_financeiros`
+3. Incluir requisicoes aprovadas
+4. Incluir gastos detalhados aprovados
+5. Retornar progresso financeiro correto
 
 ---
 
-## Fase 2: Atualizacao da Matriz de Permissoes
+## Fase 2: Corrigir Hook useProjectMetrics
 
-### Tabela de Permissoes por Perfil
+### Problema Atual
+```javascript
+// Le da tabela legacy
+const { data: finances } = await supabase
+  .from("financas")
+  .select("*")
+  .eq("id_projeto", projectId);
 
-| Modulo | Diretor Tecnico | Coordenacao/Direcao | Encarregado Obra | Assistente Compras | HST |
-|--------|-----------------|---------------------|------------------|--------------------|-----|
-| Dashboard | Total | Total | Ancorado | Parcial | Parcial |
-| Projetos | Total | Total | Ancorado (leitura) | Leitura | - |
-| Tarefas | Total | Total | Ancorado (gestao) | - | - |
-| Requisicoes | Total | Total | Ancorado (criar) | Total | Criar |
-| Compras | Total | Total | - | Total | Total |
-| Armazem | Total | Total | Ancorado (leitura) | Total | - |
-| Financas | Total | Total | - | - | - |
-| RH | Total | Total | - | - | - |
-| Seguranca | Total | Total | - | - | Total |
-| Gestao Usuarios | Total | Total | - | - | - |
+const totalSpent = finances?.reduce((acc, f) => acc + f.gasto, 0) || 0;
+```
 
-### Ficheiros a Modificar
+### Solucao
+```javascript
+// Ler de movimentos_financeiros (ledger atual)
+const { data: movements } = await supabase
+  .from("movimentos_financeiros")
+  .select("valor")
+  .eq("projeto_id", projectId)
+  .eq("tipo_movimento", "saida");
 
-1. **`src/contexts/AuthContext.tsx`**
-   - Atualizar funcao `canAccessModule()` com novas regras
-   - Adicionar funcao `canAccessProject(projectId)` para ancoragem
-
-2. **`src/hooks/useUserPermissions.ts`**
-   - Adicionar permissoes granulares: `canEdit`, `canCreate`, `canDelete` por modulo
-   - Adicionar `isAnchored` e `getAnchoredProjects()`
-
-3. **`src/components/AppSidebar.tsx`**
-   - Atualizar filtros de menu baseados nas novas permissoes
+const totalSpent = movements?.reduce((acc, m) => acc + m.valor, 0) || 0;
+```
 
 ---
 
-## Fase 3: Dois Tipos de Requisicao
+## Fase 3: Corrigir Loop Infinito no Modal
 
-### Novo Campo na Tabela `requisicoes`
+### Problema Atual
+```javascript
+useEffect(() => {
+  if (userAccess.length > 0) {
+    setSelectedProjects(userAccess.map(a => a.projeto_id));
+  } else {
+    setSelectedProjects([]);
+  }
+}, [userAccess]); // userAccess muda -> setState -> re-render -> loop
+```
+
+### Solucao
+Usar `useMemo` para derivar o estado inicial em vez de `useEffect`:
+```javascript
+const initialSelection = useMemo(() => 
+  userAccess.map(a => a.projeto_id), 
+  [userAccess]
+);
+
+const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
+
+// Sincronizar apenas quando userAccess muda E ha dados
+useEffect(() => {
+  if (userAccess && userAccess.length >= 0 && !loadingAccess) {
+    setSelectedProjects(userAccess.map(a => a.projeto_id));
+  }
+}, [userAccess, loadingAccess]);
+```
+
+---
+
+## Fase 4: Sincronizar Dados do Projeto
+
+### Criar Funcao de Sincronizacao em Massa
+
+Uma funcao RPC que atualiza todos os projetos de uma vez:
 
 ```sql
-ALTER TABLE requisicoes 
-ADD COLUMN tipo_requisicao tipo_requisicao_enum 
-DEFAULT 'compra'::tipo_requisicao_enum;
-
-CREATE TYPE tipo_requisicao_enum AS ENUM ('alocamento', 'compra');
-```
-
-### Workflow por Tipo
-
-**Requisicao de Alocamento (material existente):**
-```text
-Encarregado cria requisicao
-       |
-       v
-+------------------+
-| Assistente       |
-| Compras recebe   |
-| notificacao      |
-+------------------+
-       |
-       v
-Material disponivel? --Sim--> Aloca ao projeto
-       |
-       No
-       v
-Converte para Requisicao de Compra
-```
-
-**Requisicao de Compra (material novo):**
-```text
-Assistente/Encarregado cria requisicao
-       |
-       v
-Valor > limite aprovacao?
-       |
-       Sim --> Aprovacao Direcao
-       |
-       No --> Cotacoes
-       |
-       v
-Processo normal de compra
-```
-
-### Alteracoes na UI
-
-**`src/components/modals/RequisitionModal.tsx`**
-- Adicionar selecao de tipo de requisicao
-- Para "Alocamento": Mostrar apenas materiais disponiveis no armazem
-- Para "Compra": Formulario completo de nova compra
-
-**`src/components/forms/RequisitionForm.tsx`**
-- Formulario dinamico baseado no tipo selecionado
-- Para alocamento: Selector de materiais do armazem com stock disponivel
-- Para compra: Campos completos de especificacao
-
----
-
-## Fase 4: Sistema de Notificacoes Automaticas
-
-### Triggers a Criar/Atualizar
-
-1. **Requisicao de Alocamento Criada:**
-   - Notificar: `assistente_compras`
-   - Mensagem: "Nova requisicao de alocamento de [material] para projeto [nome]"
-
-2. **Requisicao de Compra Criada:**
-   - Notificar: `assistente_compras`, `coordenacao_direcao` (se valor > limite)
-   - Mensagem: "Nova requisicao de compra de [material] - [valor]"
-
-3. **Requisicao Pendente Aprovacao:**
-   - Notificar: `diretor_tecnico`, `coordenacao_direcao`
-   - Mensagem: "Requisicao [ID] aguarda aprovacao - [valor]"
-
-4. **Requisicao Aprovada/Rejeitada:**
-   - Notificar: Requisitante original
-   - Mensagem: "Sua requisicao [ID] foi [aprovada/rejeitada]"
-
-### Funcao Atualizada
-
-```sql
-CREATE OR REPLACE FUNCTION notify_requisicao()
-RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION sync_all_project_metrics()
+RETURNS void AS $$
+DECLARE
+  p_rec RECORD;
 BEGIN
-  -- Logica baseada em tipo_requisicao e estado
-  IF NEW.tipo_requisicao = 'alocamento' THEN
-    -- Notificar assistente de compras
-    INSERT INTO notificacoes (...)
-    VALUES ('alocamento', ..., ARRAY['assistente_compras']);
-  ELSIF NEW.tipo_requisicao = 'compra' THEN
-    -- Notificar com base no valor
-    INSERT INTO notificacoes (...)
-    VALUES ('compra', ..., 
-      CASE WHEN NEW.valor > limite THEN 
-        ARRAY['diretor_tecnico', 'coordenacao_direcao', 'assistente_compras']
-      ELSE 
-        ARRAY['assistente_compras']
-      END
-    );
-  END IF;
-  RETURN NEW;
+  FOR p_rec IN SELECT id FROM projetos LOOP
+    PERFORM update_project_metrics_with_integrated_finance(p_rec.id);
+  END LOOP;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ---
 
-## Fase 5: Atualizacao de Politicas RLS
+## Fase 5: Melhorar Graficos de Armazem
 
-### Projetos (com ancoragem)
+### MaterialFlowChart
+- Aumentar periodo padrao de 30 para 90 dias
+- Filtrar movimentacoes por projeto quando selecionado
+- Mostrar mensagem informativa quando sem dados
 
-```sql
--- Encarregados veeem apenas projetos atribuidos
-CREATE POLICY projetos_select_encarregado ON projetos
-FOR SELECT USING (
-  has_role(auth.uid(), 'encarregado_obra') AND 
-  EXISTS (
-    SELECT 1 FROM user_project_access 
-    WHERE user_id = auth.uid() AND projeto_id = projetos.id
-  )
-  OR has_role(auth.uid(), 'diretor_tecnico')
-  OR has_role(auth.uid(), 'coordenacao_direcao')
-  OR has_role(auth.uid(), 'assistente_compras')
-);
-```
-
-### Tarefas (com ancoragem)
-
-```sql
-CREATE POLICY tarefas_select_encarregado ON tarefas_lean
-FOR SELECT USING (
-  has_role(auth.uid(), 'encarregado_obra') AND 
-  EXISTS (
-    SELECT 1 FROM user_project_access 
-    WHERE user_id = auth.uid() AND projeto_id = tarefas_lean.projeto_id
-  )
-  -- ... outras roles
-);
-```
+### Verificar Tipos de Movimentacao
+A consulta filtra por `tipo_movimentacao` em ['entrada', 'saida', 'consumo', 'devolucao'] mas os dados mostram 'transferencia'. Corrigir para incluir todos os tipos.
 
 ---
 
-## Fase 6: Interface de Gestao de Atribuicoes
+## Fase 6: Importacao Excel Robusta
 
-### Novo Componente
+### Ficheiros a Verificar/Atualizar
 
-**`src/components/modals/UserProjectAssignmentModal.tsx`**
-- Lista de utilizadores com role `encarregado_obra`
-- Para cada utilizador: Checkbox list de projetos
-- Botao de guardar atribuicoes
+1. **src/utils/excelParser.ts** - Parser atual
+2. **src/services/projectImport.ts** - Servico de importacao
 
-### Integracao
-
-**`src/pages/UserManagementPage.tsx`**
-- Adicionar coluna "Projetos Atribuidos"
-- Botao para gerir atribuicoes
-
----
-
-## Detalhes Tecnicos
-
-### Migracao SQL Completa
-
-A migracao incluira:
-1. Criacao do enum `tipo_requisicao_enum`
-2. Alteracao da tabela `requisicoes` com novo campo
-3. Criacao da tabela `user_project_access`
-4. Politicas RLS para a nova tabela
-5. Atualizacao das politicas existentes
-6. Atualizacao do trigger de notificacoes
-
-### Ficheiros Frontend a Modificar
-
-| Ficheiro | Alteracao |
-|----------|-----------|
-| `AuthContext.tsx` | Funcoes de ancoragem e permissoes |
-| `useUserPermissions.ts` | Hook com permissoes granulares |
-| `AppSidebar.tsx` | Filtros de menu atualizados |
-| `RequisitionModal.tsx` | Selector de tipo de requisicao |
-| `RequisitionForm.tsx` | Formulario dinamico |
-| `ComprasPage.tsx` | Filtros por tipo de requisicao |
-| `ArmazemPage.tsx` | Modo leitura para encarregados |
-| `UserManagementPage.tsx` | Gestao de atribuicoes |
-
-### Novo Hook
-
-**`src/hooks/useUserProjectAccess.ts`**
-- Query para projetos atribuidos ao utilizador
-- Mutation para atribuir/remover acesso
-- Cache com React Query
+### Template Excel Estruturado
+Garantir que o template tem as abas:
+- Dados do Projeto (informacoes basicas)
+- Etapas (fases do projeto)
+- Tarefas (tarefas por etapa)
 
 ---
 
 ## Ordem de Implementacao
 
-1. **Migracao DB**: Criar estruturas de dados
-2. **AuthContext**: Logica de ancoragem
-3. **Hook de permissoes**: Permissoes granulares
-4. **Sidebar**: Filtros de menu
-5. **Requisicoes**: Dois tipos + formularios
-6. **Triggers**: Notificacoes automaticas
-7. **Gestao de atribuicoes**: UI para diretores
-8. **Testes**: Validar fluxos por perfil
+1. **Migracao DB** - Corrigir funcoes RPC com nomes de colunas corretos
+2. **useProjectMetrics** - Ler de movimentos_financeiros
+3. **UserProjectAssignmentModal** - Corrigir loop infinito
+4. **Sincronizar Projetos** - Executar update em massa
+5. **Graficos de Materiais** - Expandir tipos de movimentacao
+6. **Testar** - Validar calculos e graficos
 
 ---
 
-## Resultado Esperado
+## Detalhes Tecnicos
+
+### Ficheiros a Modificar
+
+| Ficheiro | Alteracao |
+|----------|-----------|
+| `supabase/migrations/nova.sql` | Corrigir funcoes RPC |
+| `src/hooks/useProjectMetrics.ts` | Usar movimentos_financeiros |
+| `src/components/modals/UserProjectAssignmentModal.tsx` | Corrigir useEffect |
+| `src/hooks/useMaterialChartData.ts` | Incluir tipo 'transferencia' |
+
+### Validacao Esperada
 
 Apos implementacao:
+- Projeto VALODIA mostrara gasto real de ~57M Kz
+- Progresso financeiro sera calculado corretamente (gasto/orcamento * 100)
+- Graficos de materiais mostrarao movimentacoes de transferencia
+- Modal de atribuicao de projetos funcionara sem loops
 
-- **HST**: Ve apenas Compras e Seguranca, pode criar requisicoes
-- **Encarregado**: Ve apenas projetos atribuidos, gere tarefas e cria requisicoes de alocamento
-- **Assistente Compras**: Acesso total a Compras e Armazem, recebe notificacoes de alocamento
-- **Coordenador**: Acesso total de visualizacao e gestao de utilizadores
-- **Diretor**: Acesso completo a tudo, incluindo alteracao de permissoes
+---
 
-O workflow de requisicoes seguira o fluxo: Pedido -> Verificacao de stock -> Alocamento ou Compra -> Aprovacao (se necessario) -> Execucao, com notificacoes automaticas em cada etapa.
+## Impacto
+
+Esta correcao afeta:
+- Dashboard Geral (KPIs consolidados)
+- Pagina de Graficos (todas as areas)
+- Pagina de Financas (totais e progressos)
+- Detalhes de Projeto (metricas)
+- Sistema de Permissoes (modal de atribuicao)
