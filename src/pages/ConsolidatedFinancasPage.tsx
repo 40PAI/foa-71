@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { formatCurrency } from "@/utils/formatters";
 import { useProjectContext } from "@/contexts/ProjectContext";
-import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Search, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
+import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
 import { GastoObraModal } from "@/components/modals/GastoObraModal";
 import { useConsolidatedFinancialData } from "@/hooks/useConsolidatedFinancialData";
 import { useRequisitions } from "@/hooks/useRequisitions";
@@ -36,9 +36,6 @@ const TaskVsRealityAnalysis = lazy(() => import("@/components/financial/TaskVsRe
 })));
 const OptimizedApprovalInterface = lazy(() => import("@/components/OptimizedApprovalInterface").then(m => ({
   default: m.OptimizedApprovalInterface
-})));
-const DiscrepancyReport = lazy(() => import("@/components/DiscrepancyReport").then(m => ({
-  default: m.DiscrepancyReport
 })));
 const ContasCorrentesSection = lazy(() => import("@/components/financial/ContasCorrentesSection").then(m => ({
   default: m.ContasCorrentesSection
@@ -247,11 +244,6 @@ export function ConsolidatedFinancasPage() {
             </Suspense>
           </CollapsibleFinancialSection>
 
-          <CollapsibleFinancialSection value="audit" title="Auditoria" icon={Search}>
-            <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <DiscrepancyReport projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
         </Accordion>
         <GastoObraModal
           open={gastoModalOpen}
@@ -427,14 +419,6 @@ export function ConsolidatedFinancasPage() {
           </Suspense>
         </CollapsibleFinancialSection>
 
-        <CollapsibleFinancialSection value="audit" title="Auditoria e Discrepâncias" icon={Search} badge={(consolidatedData?.discrepancies?.length || 0) > 0 ? {
-        text: `${consolidatedData?.discrepancies?.length || 0}`,
-        variant: "destructive"
-      } : undefined}>
-          <Suspense fallback={<SectionLoadingFallback rows={3} />}>
-            <DiscrepancyReport projectId={selectedProjectId} />
-          </Suspense>
-        </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection value="clientes" title="Contas Correntes - Clientes" icon={Users} badge={{
         text: `${consolidatedData?.clientes?.length || 0} clientes`,
