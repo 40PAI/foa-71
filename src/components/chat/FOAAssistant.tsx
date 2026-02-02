@@ -23,65 +23,89 @@ export function FOAAssistant() {
     // Adicionar estilos customizados FOA
     const style = document.createElement('style');
     style.id = 'n8n-chat-styles';
-    style.textContent = `
-      :root {
-        --chat--color-primary: #002D8B;
-        --chat--color-primary-shade-50: #002472;
-        --chat--color-primary-shade-100: #001B59;
-        --chat--color-secondary: #A65628;
-        --chat--color-secondary-shade-50: #8F4822;
-        --chat--color-white: #ffffff;
-        --chat--color-dark: #0A0E25;
-        --chat--color-light: #F4F6FA;
-        --chat--color-light-shade-50: #E6E9F1;
-        --chat--color-light-shade-100: #C2C5CC;
-        --chat--color-medium: #D2D4D9;
-        --chat--color-disabled: #777980;
-        --chat--color-typing: #404040;
-        --chat--spacing: 1rem;
-        --chat--border-radius: 0.5rem;
-        --chat--transition-duration: 0.15s;
-        --chat--window--width: 400px;
-        --chat--window--height: 600px;
-        --chat--header-height: auto;
-        --chat--header--padding: var(--chat--spacing);
-        --chat--header--background: var(--chat--color-primary);
-        --chat--header--color: var(--chat--color-white);
-        --chat--header--border-top: none;
-        --chat--header--border-bottom: 3px solid var(--chat--color-secondary);
-        --chat--heading--font-size: 1.8em;
-        --chat--subtitle--font-size: inherit;
-        --chat--subtitle--line-height: 1.6;
-        --chat--textarea--height: 50px;
-        --chat--message--font-size: 1rem;
-        --chat--message--padding: var(--chat--spacing);
-        --chat--message--border-radius: var(--chat--border-radius);
-        --chat--message-line-height: 1.6;
-        --chat--message--bot--background: var(--chat--color-white);
-        --chat--message--bot--color: var(--chat--color-dark);
-        --chat--message--bot--border: 1px solid var(--chat--color-primary);
-        --chat--message--user--background: var(--chat--color-secondary);
-        --chat--message--user--color: var(--chat--color-white);
-        --chat--message--user--border: none;
-        --chat--message--pre--background: rgba(0, 45, 139, 0.05);
-        --chat--toggle--background: var(--chat--color-secondary);
-        --chat--toggle--hover--background: #8F4822;
-        --chat--toggle--active--background: #72391C;
-        --chat--toggle--color: var(--chat--color-white);
-        --chat--toggle--size: 64px;
-      }
+     :root {
+      /* Cores oficiais FOA */
+      --chat--color-primary: #002D8B;               /* Azul escuro FOA */
+      --chat--color-primary-shade-50: #002472;
+      --chat--color-primary-shade-100: #001B59;
 
-      .powered-by,
-      [class*="powered"],
-      [class*="branding"],
-      a[href*="n8n.io"],
-      a[href*="n8n.cloud"] {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-        height: 0 !important;
-        pointer-events: none !important;
-      }
+      --chat--color-secondary: #A65628;             /* Castanho alaranjado FOA */
+      --chat--color-secondary-shade-50: #8F4822;
+
+      --chat--color-white: #ffffff;
+      --chat--color-dark: #0A0E25;
+      --chat--color-light: #F4F6FA;
+      --chat--color-light-shade-50: #E6E9F1;
+      --chat--color-light-shade-100: #C2C5CC;
+      --chat--color-medium: #D2D4D9;
+      --chat--color-disabled: #777980;
+      --chat--color-typing: #404040;
+
+      /* Layout */
+      --chat--spacing: 1rem;
+      --chat--border-radius: 0.5rem;
+      --chat--transition-duration: 0.15s;
+
+      --chat--window--width: 400px;
+      --chat--window--height: 600px;
+
+      /* Header */
+      --chat--header-height: auto;
+      --chat--header--padding: var(--chat--spacing);
+      --chat--header--background: var(--chat--color-primary);
+      --chat--header--color: var(--chat--color-white);
+      --chat--header--border-top: none;
+      --chat--header--border-bottom: 3px solid var(--chat--color-secondary);
+      --chat--heading--font-size: 1.8em;
+      --chat--subtitle--font-size: inherit;
+      --chat--subtitle--line-height: 1.6;
+
+      /* Área de digitação */
+      --chat--textarea--height: 50px;
+
+      /* Mensagens */
+      --chat--message--font-size: 1rem;
+      --chat--message--padding: var(--chat--spacing);
+      --chat--message--border-radius: var(--chat--border-radius);
+      --chat--message-line-height: 1.6;
+
+      /* Mensagem do BOT */
+      --chat--message--bot--background: var(--chat--color-white);
+      --chat--message--bot--color: var(--chat--color-dark);
+      --chat--message--bot--border: 1px solid var(--chat--color-primary);
+
+      /* Mensagem do USUÁRIO */
+      --chat--message--user--background: var(--chat--color-secondary);
+      --chat--message--user--color: var(--chat--color-white);
+      --chat--message--user--border: none;
+
+      /* Bloco pré-formatado */
+      --chat--message--pre--background: rgba(0, 45, 139, 0.05);
+
+      /* Botão flutuante */
+      --chat--toggle--background: var(--chat--color-secondary);
+      --chat--toggle--hover--background: #8F4822;
+      --chat--toggle--active--background: #72391C;
+      --chat--toggle--color: var(--chat--color-white);
+      --chat--toggle--size: 64px;
+    }
+
+    /* Remoção de branding e rodapés */
+    .powered-by,
+    [class*="powered"],
+    footer,
+    footer *,
+    #footer,
+    [class*="branding"],
+    a[href*="n8n.io"],
+    a[href*="n8n.cloud"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      pointer-events: none !important;
+    }
+  </style>
 
       /* Ajustes para não conflitar com a sidebar */
       .n8n-chat {
