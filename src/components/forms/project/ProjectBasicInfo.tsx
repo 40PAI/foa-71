@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import type { ProjectFormDataType } from "./types";
 
 interface ProjectBasicInfoProps {
@@ -88,11 +95,38 @@ export function ProjectBasicInfo({ form }: ProjectBasicInfoProps) {
           control={form.control}
           name="data_inicio"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Data de Início *</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(parseISO(field.value), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione a data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? parseISO(field.value) : undefined}
+                    onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -102,11 +136,38 @@ export function ProjectBasicInfo({ form }: ProjectBasicInfoProps) {
           control={form.control}
           name="data_fim_prevista"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Data Fim Prevista *</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(parseISO(field.value), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione a data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value ? parseISO(field.value) : undefined}
+                    onSelect={(date) => field.onChange(date ? format(date, "yyyy-MM-dd") : "")}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
