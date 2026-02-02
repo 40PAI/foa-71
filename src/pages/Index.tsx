@@ -6,6 +6,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileLayout } from "@/components/layout/MobileLayout";
+import { FOAAssistant } from "@/components/chat/FOAAssistant";
 
 const DesktopLayout = () => {
   const { state } = useSidebar();
@@ -32,13 +33,19 @@ const Index = () => {
 
   // Mobile: Use dedicated mobile layout with bottom navigation
   if (isMobile) {
-    return <MobileLayout />;
+    return (
+      <>
+        <MobileLayout />
+        <FOAAssistant />
+      </>
+    );
   }
 
   // Desktop/Tablet: Use sidebar layout
   return (
     <SidebarProvider defaultOpen={false}>
       <DesktopLayout />
+      <FOAAssistant />
     </SidebarProvider>
   );
 };
