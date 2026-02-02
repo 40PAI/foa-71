@@ -142,20 +142,41 @@ export function useProjectChartData(projectId: number) {
           ];
 
       // Usar dados de burndown do hook de timeline (dados reais mensais)
-      // Se não tiver dados suficientes, usar fallback baseado em tarefas
-      const burndownData = hasEnoughData && timelineBurndownData.length >= 2
+      // Se não tiver dados suficientes, usar fallback temporal simplificado
+      const burndownData = timelineBurndownData.length >= 2
         ? timelineBurndownData.map(point => ({
             tarefa: point.periodo,
             planejado: point.planejado,
             real: point.real,
             status: point.tarefasRestantes > 0 ? 'Em Andamento' : 'Concluído'
           }))
-        : tasks.map((task, index) => ({
-            tarefa: `Tarefa ${index + 1}`,
-            planejado: Math.round(tasks.length - ((index + 1) / tasks.length) * tasks.length),
-            real: task.status === 'Concluído' ? 0 : 1,
-            status: task.status
-          }));
+        : (() => {
+            // Fallback: gerar 3 pontos temporais claros (Início, Atual, Meta)
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(t => t.status === 'Concluído' || t.percentual_conclusao >= 100).length;
+            const remainingTasks = totalTasks - completedTasks;
+            
+            // Calcular progresso esperado baseado no tempo decorrido
+            const project = projectDetails?.project;
+            let expectedProgress = 0.5; // Default: metade do projeto
+            
+            if (project?.data_inicio && project?.data_fim_prevista) {
+              const startDate = new Date(project.data_inicio);
+              const endDate = new Date(project.data_fim_prevista);
+              const today = new Date();
+              const totalDuration = endDate.getTime() - startDate.getTime();
+              const elapsed = today.getTime() - startDate.getTime();
+              expectedProgress = Math.max(0, Math.min(1, elapsed / totalDuration));
+            }
+            
+            const expectedRemaining = Math.round(totalTasks * (1 - expectedProgress));
+            
+            return [
+              { tarefa: "Início", planejado: totalTasks, real: totalTasks, status: "Normal" },
+              { tarefa: "Atual", planejado: expectedRemaining, real: remainingTasks, status: remainingTasks > expectedRemaining ? "Atrasado" : "Normal" },
+              { tarefa: "Meta", planejado: 0, real: 0, status: "Concluído" }
+            ];
+          })();
 
       // Dados financeiros por categoria
       const financeData = finances?.map(finance => ({

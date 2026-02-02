@@ -152,54 +152,80 @@ export function useProjectTimelineData({
   
   const burndownData = useMemo((): BurndownDataPoint[] => {
     if (!dataInicio || !dataFimPrevista) return [];
-    if (tasks.length === 0) return [];
     
+    const totalTasks = tasks.length;
     const startDate = parseISO(dataInicio);
     const endDate = parseISO(dataFimPrevista);
     const today = new Date();
     
-    const lastDisplayDate = isAfter(today, endDate) ? endDate : today;
+    // Contar tarefas restantes AGORA (para fallback e ponto final)
+    const remainingNow = tasks.filter(task => 
+      task.status !== 'Concluído' && task.percentual_conclusao < 100
+    ).length;
+    
+    // Se não há tarefas, retornar fallback mínimo
+    if (totalTasks === 0) {
+      return [
+        { periodo: "Início", dataReferencia: startDate, planejado: 0, real: 0, tarefasRestantes: 0 },
+        { periodo: "Atual", dataReferencia: today, planejado: 0, real: 0, tarefasRestantes: 0 }
+      ];
+    }
+    
+    // IMPORTANTE: Sempre mostrar histórico completo do projeto
+    // displayEndDate = data_fim_prevista (para ver evolução completa)
+    // Não limitamos pelo 'today' para projectos já terminados
+    const displayEndDate = endDate;
     
     const months = eachMonthOfInterval({
       start: startOfMonth(startDate),
-      end: startOfMonth(lastDisplayDate),
+      end: startOfMonth(displayEndDate),
     });
     
-    if (months.length === 0) return [];
-    
-    const totalTasks = tasks.length;
+    // Fallback se o intervalo gerar 0 meses (datas inválidas)
+    if (months.length === 0) {
+      return [
+        { periodo: "Início", dataReferencia: startDate, planejado: totalTasks, real: totalTasks, tarefasRestantes: totalTasks },
+        { periodo: "Atual", dataReferencia: today, planejado: 0, real: remainingNow, tarefasRestantes: remainingNow }
+      ];
+    }
     
     // Calcular número total de meses do projeto para baseline ideal
-    const projectMonths = eachMonthOfInterval({
-      start: startOfMonth(startDate),
-      end: startOfMonth(endDate),
-    });
-    const totalProjectMonths = projectMonths.length;
+    const totalProjectMonths = months.length;
     
     return months.map((month, index) => {
       const monthEnd = endOfMonth(month);
-      const referenceDate = isAfter(monthEnd, today) ? today : monthEnd;
+      // Para meses futuros relativamente a hoje, usar monthEnd
+      // Para meses passados, usar monthEnd (data histórica)
+      const referenceDate = monthEnd;
       
       // Planejado: decréscimo linear baseado na duração total do projeto
       const idealProgress = Math.min(1, (index + 1) / totalProjectMonths);
       const planejado = Math.round(totalTasks * (1 - idealProgress));
       
-      // Real: Contar tarefas restantes baseado no prazo e percentual de conclusão
-      // Uma tarefa é "restante" se:
-      // 1. Seu prazo é após a data de referência (ainda não deveria estar concluída) OU
-      // 2. Seu prazo é antes/igual à data de referência MAS não está 100% concluída
+      // Real: Calcular DINAMICAMENTE quantas tarefas restavam neste mês
+      // Uma tarefa é "restante" no mês M se:
+      // 1. Seu prazo é DEPOIS do fim do mês M (ainda não deveria estar concluída)
+      // 2. OU seu prazo é ANTES/IGUAL ao fim do mês M MAS não está concluída (atrasada)
       const tarefasRestantes = tasks.filter(task => {
-        // Tarefas 100% concluídas não são restantes
+        // Tarefas 100% concluídas NÃO contam como restantes
         if (task.status === 'Concluído' || task.percentual_conclusao >= 100) {
           return false;
         }
         
-        // Se não tem prazo, considerar como restante
+        // Se não tem prazo, considerar sempre como restante
         if (!task.prazo) {
           return true;
         }
         
-        // Tarefa com prazo - é restante se ainda não está concluída
+        const taskDeadline = parseISO(task.prazo);
+        
+        // Tarefa com prazo DEPOIS deste mês = ainda não deveria estar concluída = restante (normal)
+        if (isAfter(taskDeadline, monthEnd)) {
+          return true;
+        }
+        
+        // Tarefa com prazo ANTES/IGUAL a este mês mas não concluída = restante (atrasada!)
+        // Isto mostra atraso real no gráfico
         return true;
       }).length;
       
