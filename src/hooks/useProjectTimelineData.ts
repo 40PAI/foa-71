@@ -152,6 +152,7 @@ export function useProjectTimelineData({
   
   const burndownData = useMemo((): BurndownDataPoint[] => {
     if (!dataInicio || !dataFimPrevista) return [];
+    if (tasks.length === 0) return [];
     
     const startDate = parseISO(dataInicio);
     const endDate = parseISO(dataFimPrevista);
@@ -167,28 +168,39 @@ export function useProjectTimelineData({
     if (months.length === 0) return [];
     
     const totalTasks = tasks.length;
-    const totalMonths = months.length;
+    
+    // Calcular número total de meses do projeto para baseline ideal
+    const projectMonths = eachMonthOfInterval({
+      start: startOfMonth(startDate),
+      end: startOfMonth(endDate),
+    });
+    const totalProjectMonths = projectMonths.length;
     
     return months.map((month, index) => {
       const monthEnd = endOfMonth(month);
       const referenceDate = isAfter(monthEnd, today) ? today : monthEnd;
       
-      // Planejado: decréscimo linear de tarefas restantes
-      const idealProgress = (index + 1) / totalMonths;
+      // Planejado: decréscimo linear baseado na duração total do projeto
+      const idealProgress = Math.min(1, (index + 1) / totalProjectMonths);
       const planejado = Math.round(totalTasks * (1 - idealProgress));
       
-      // Real: tarefas não concluídas até esta data
+      // Real: Contar tarefas restantes baseado no prazo e percentual de conclusão
+      // Uma tarefa é "restante" se:
+      // 1. Seu prazo é após a data de referência (ainda não deveria estar concluída) OU
+      // 2. Seu prazo é antes/igual à data de referência MAS não está 100% concluída
       const tarefasRestantes = tasks.filter(task => {
-        // Tarefa ainda não concluída até esta data
-        if (task.status !== 'Concluído' && task.percentual_conclusao < 100) {
+        // Tarefas 100% concluídas não são restantes
+        if (task.status === 'Concluído' || task.percentual_conclusao >= 100) {
+          return false;
+        }
+        
+        // Se não tem prazo, considerar como restante
+        if (!task.prazo) {
           return true;
         }
-        // Verificar se foi concluída após esta data
-        if (task.updated_at) {
-          const updatedDate = parseISO(task.updated_at);
-          return isAfter(updatedDate, referenceDate);
-        }
-        return false;
+        
+        // Tarefa com prazo - é restante se ainda não está concluída
+        return true;
       }).length;
       
       return {

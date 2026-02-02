@@ -17,17 +17,18 @@ interface SCurveChartProps {
   }>;
 }
 
+// Padrão semântico: chart-1=Baseline, chart-2=Físico, chart-3=Financeiro
 const chartConfig = {
+  tempo: {
+    label: "Baseline Linear",
+    color: "hsl(var(--chart-1))",
+  },
   fisico: {
     label: "Avanço Físico",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--chart-2))",
   },
   financeiro: {
     label: "Avanço Financeiro",
-    color: "hsl(var(--chart-2))",
-  },
-  tempo: {
-    label: "Baseline Linear",
     color: "hsl(var(--chart-3))",
   },
 };
@@ -52,12 +53,12 @@ export function SCurveChart({ data }: SCurveChartProps) {
         <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
           <defs>
             <linearGradient id="colorFisico" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
-            </linearGradient>
-            <linearGradient id="colorFinanceiro" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3}/>
               <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+            </linearGradient>
+            <linearGradient id="colorFinanceiro" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3}/>
+              <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />

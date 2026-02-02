@@ -15,25 +15,59 @@ interface TopMaterialsChartProps {
   title?: string;
 }
 
-const COLORS = [
-  "hsl(217, 91%, 60%)",
-  "hsl(217, 91%, 65%)",
-  "hsl(217, 91%, 70%)",
-  "hsl(217, 85%, 75%)",
-  "hsl(217, 80%, 78%)",
-  "hsl(217, 75%, 80%)",
-  "hsl(217, 70%, 82%)",
-  "hsl(217, 65%, 84%)",
-  "hsl(217, 60%, 86%)",
-  "hsl(217, 55%, 88%)",
+// Cores por categoria semântica usando o padrão do design system
+const CATEGORY_COLORS: Record<string, string> = {
+  // Materiais de construção - Verde (chart-3)
+  "construção": "hsl(142, 76%, 36%)",
+  "cimento": "hsl(142, 76%, 36%)",
+  "areia": "hsl(142, 70%, 42%)",
+  "ferro": "hsl(142, 65%, 48%)",
+  "tijolo": "hsl(142, 60%, 52%)",
+  // Equipamentos - Azul (chart-1)
+  "equipamento": "hsl(210, 100%, 50%)",
+  "ferramenta": "hsl(210, 90%, 55%)",
+  "máquina": "hsl(210, 80%, 60%)",
+  // Consumíveis - Laranja (chart-2)
+  "consumível": "hsl(25, 100%, 50%)",
+  "tinta": "hsl(25, 90%, 55%)",
+  "químico": "hsl(25, 80%, 60%)",
+  // Default - Roxo (chart-6)
+  "default": "hsl(280, 70%, 60%)",
+};
+
+// Paleta gradiente para materiais sem categoria específica
+const DEFAULT_PALETTE = [
+  "hsl(210, 100%, 50%)",  // Azul
+  "hsl(142, 76%, 36%)",   // Verde
+  "hsl(25, 100%, 50%)",   // Laranja
+  "hsl(280, 70%, 60%)",   // Roxo
+  "hsl(45, 93%, 58%)",    // Amarelo
+  "hsl(190, 100%, 45%)",  // Ciano
+  "hsl(330, 80%, 55%)",   // Rosa
+  "hsl(160, 70%, 45%)",   // Verde-azulado
+  "hsl(30, 90%, 55%)",    // Laranja escuro
+  "hsl(260, 70%, 55%)",   // Roxo claro
 ];
 
 const chartConfig = {
   total_movimentado: {
     label: "Quantidade Movimentada",
-    color: "hsl(217, 91%, 60%)",
+    color: "hsl(var(--chart-1))",
   },
 };
+
+// Função para obter cor baseada no nome/categoria do material
+function getMaterialColor(nome: string, index: number): string {
+  const nomeLower = nome.toLowerCase();
+  
+  for (const [key, color] of Object.entries(CATEGORY_COLORS)) {
+    if (nomeLower.includes(key)) {
+      return color;
+    }
+  }
+  
+  return DEFAULT_PALETTE[index % DEFAULT_PALETTE.length];
+}
 
 export function TopMaterialsChart({ projectId, limit = 10, title = "Top Materiais Movimentados" }: TopMaterialsChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -118,13 +152,13 @@ export function TopMaterialsChart({ projectId, limit = 10, title = "Top Materiai
           />
           <Bar dataKey="total_movimentado" radius={[0, 4, 4, 0]}>
             {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={getMaterialColor(entry.nome, index)} />
             ))}
             <LabelList 
               dataKey="total_movimentado" 
               position="right" 
               formatter={(value: number) => value.toLocaleString()}
-              style={{ fontSize: expanded ? 12 : 11 }}
+              style={{ fontSize: expanded ? 12 : 11, fill: 'hsl(var(--foreground))' }}
             />
           </Bar>
         </BarChart>
