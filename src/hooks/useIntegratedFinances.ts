@@ -29,7 +29,7 @@ export function useIntegratedFinancialProgress(projectId: number) {
     queryKey: ["integrated-financial-progress", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('calculate_integrated_financial_progress', { project_id: projectId });
+        .rpc('calculate_integrated_financial_progress', { p_project_id: projectId });
       
       if (error) throw error;
       return data?.[0] as IntegratedFinancialData;

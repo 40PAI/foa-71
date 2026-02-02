@@ -147,7 +147,7 @@ export function useIntegratedFinancialProgressV2(projectId: number | null) {
       }
 
       const { data, error } = await supabase.rpc("calculate_integrated_financial_progress", {
-        project_id: projectId,
+        p_project_id: projectId,
       });
 
       if (error) {
