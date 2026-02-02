@@ -19,10 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Star } from "lucide-react";
+import { 
+  Star, 
+  Building2, 
+  Phone, 
+  MapPin, 
+  Tag, 
+  Activity, 
+  FileText 
+} from "lucide-react";
 import type { Fornecedor } from "@/types/contasCorrentes";
 import { FornecedorDocumentUpload } from "./FornecedorDocumentUpload";
-
 const fornecedorSchema = z.object({
   nome: z.string().trim().min(1, "Nome obrigatório").max(100, "Nome deve ter no máximo 100 caracteres"),
   nif: z.string().trim().optional().or(z.literal("")),
@@ -107,7 +114,8 @@ export function FornecedorForm({
         {/* Informações Básicas */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            📋 Informações Básicas
+            <Building2 className="h-5 w-5 text-primary" />
+            Informações Básicas
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -167,7 +175,8 @@ export function FornecedorForm({
         {/* Contacto */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            📞 Contacto
+            <Phone className="h-5 w-5 text-primary" />
+            Contacto
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -203,7 +212,8 @@ export function FornecedorForm({
         {/* Localização */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            📍 Localização
+            <MapPin className="h-5 w-5 text-primary" />
+            Localização
           </h3>
           <FormField
             control={form.control}
@@ -264,7 +274,8 @@ export function FornecedorForm({
         {/* Classificação */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            🏷️ Classificação
+            <Tag className="h-5 w-5 text-primary" />
+            Classificação
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField
@@ -335,7 +346,8 @@ export function FornecedorForm({
         {/* Status */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            📊 Status
+            <Activity className="h-5 w-5 text-primary" />
+            Status
           </h3>
           <FormField
             control={form.control}
@@ -364,7 +376,8 @@ export function FornecedorForm({
         {/* Observações */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            📝 Observações
+            <FileText className="h-5 w-5 text-primary" />
+            Observações
           </h3>
           <FormField
             control={form.control}
