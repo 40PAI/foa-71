@@ -1,186 +1,177 @@
 
-# Plano: Padronizacao de Cores e Correcao de Graficos
+# Plano: Correcao do Grafico Burndown de Tarefas
 
-## ✅ IMPLEMENTADO - 2026-02-02
+## Problema Identificado
 
-### 1. Burndown de Tarefas Vazio (0 tarefas)
-O projeto CATETE (#54) tem 8 tarefas reais com dados, mas o Burndown mostra 0. O problema esta na logica de calculo em `useProjectTimelineData.ts`:
-- As tarefas existem (prazo de 2025-01-20 a 2025-11-15)
-- O projeto vai de 2025-05-01 a 2026-01-01
-- A logica de `burndownData` conta tarefas "restantes" baseado em `updated_at`, mas isso nao reflete corretamente o estado ao longo do tempo
+### Dados Reais na Base de Dados
 
-### 2. Inconsistencia de Cores entre Graficos
-Sistema atual de cores CSS definido em `index.css`:
-```text
---chart-1: Azul (210 100% 50%)    - Usado para Planejado/Orcado
---chart-2: Laranja (25 100% 50%) - Usado para Real/Gasto
---chart-3: Verde (142 76% 36%)   - Usado para Concluido/Aprovado
-```
+**Projeto KIFANGONDO (id=53):**
+- Inicio: 2025-01-15
+- Fim Previsto: 2025-12-31
+- 8 tarefas (todas Pendentes, 0%)
 
-Problema: Os graficos nao seguem este padrao:
-- S-Curve: chart-1=fisico, chart-2=financeiro, chart-3=baseline (ERRADO)
-- TimelineChart: chart-1=linear, chart-2=fisico, chart-3=financeiro (ERRADO)
-- Burndown: chart-1=ideal, chart-2=real (CORRETO)
+**Projeto CATETE (id=54):**
+- Inicio: 2025-05-01
+- Fim Previsto: 2026-01-01
+- 8 tarefas (1 Concluida, 3 Em Andamento, 4 Pendentes)
 
-### 3. Cards de Categoria com Valores Zero
-Na "Visao Geral Financeira Integrada", os cards mostram 0,00 Kz porque:
-- `useIntegratedFinances.ts` retorna valores fixos de 0 para `material_expenses`, `payroll_expenses`, etc.
-- A RPC `calculate_integrated_financial_progress` nao calcula por categoria
-- Os dados existem em `movimentos_financeiros` com campo `categoria`
+### Causa Raiz
 
-### 4. Grafico "Top Materiais" Pouco Intuitivo
-- Usa apenas uma cor azul solida para todas as barras
-- Nao agrupa por categoria de material
-- Layout horizontal dificulta leitura de nomes longos
+O problema esta na logica de geracao de meses em `useProjectTimelineData.ts`:
+
+1. O intervalo de meses usa `data_inicio` do projeto (Mai/2025 para CATETE)
+2. A funcao `eachMonthOfInterval` gera: Mai/25, Jun/25, Jul/25... Jan/26
+3. PROBLEMA: A data atual e Fev/2026, que esta DEPOIS da data_fim_prevista (Jan/26)
+4. A logica `lastDisplayDate = isAfter(today, endDate) ? endDate : today` limita a Jan/26
+5. Mas se `startDate > lastDisplayDate` (impossivel neste caso), retorna array vazio
+
+**Problema Real**: Para KIFANGONDO, o intervalo deveria funcionar (Jan/25 a Dez/25), mas estamos em Fev/2026 - o periodo ja terminou! O grafico mostra ate `endDate` que e Dez/25, mas todos os calculos estao no passado.
+
+O burndown so mostra dados se o projeto esta em andamento dentro do intervalo de datas. Para projectos com datas passadas, a logica falha.
 
 ---
 
-## Fase 1: Padronizar Sistema de Cores
+## Solucao
 
-### Definicao do Padrao Semantico
+### 1. Ajustar Logica de Intervalo de Meses
 
-| Variavel | Cor | Uso Semantico |
-|----------|-----|---------------|
-| chart-1 | Azul | Baseline/Planejado/Orcado/Linear |
-| chart-2 | Laranja | Avanco Fisico/Real |
-| chart-3 | Verde | Avanco Financeiro/Aprovado |
-| chart-4 | Amarelo | Em Andamento/Atencao |
-| chart-5 | Vermelho | Atrasado/Critico |
+Modificar `useProjectTimelineData.ts` para:
+- Sempre mostrar o historico completo do projeto (inicio ate fim previsto OU ate hoje, o que for maior)
+- Nao limitar pelo `today` se quisermos ver historico passado
 
-### Ficheiros a Atualizar
+### 2. Corrigir Calculo de Tarefas Restantes
 
-1. **SCurveChart.tsx** (linhas 20-33)
-   - chart-1 -> Baseline Linear (manter)
-   - chart-2 -> Avanco Fisico (era financeiro)
-   - chart-3 -> Avanco Financeiro (era tempo)
-
-2. **TimelineChart.tsx** (linhas 21-34)
-   - chart-1 -> Baseline Linear
-   - chart-2 -> Avanco Fisico 
-   - chart-3 -> Avanco Financeiro
-
-3. **BurndownChart.tsx** (linhas 20-29)
-   - chart-1 -> Ideal (Azul - CORRETO)
-   - chart-2 -> Real (Laranja - CORRETO)
-
----
-
-## Fase 2: Corrigir Dados do Burndown
-
-### Problema Identificado
-A funcao `burndownData` em `useProjectTimelineData.ts` conta incorretamente tarefas restantes:
+A logica atual em `burndownData` (linhas 191-204) conta tarefas restantes de forma ESTATICA:
 ```javascript
-// Logica atual (linha 181-192):
+// Problema: Isto retorna o mesmo valor para TODOS os meses
 const tarefasRestantes = tasks.filter(task => {
-  if (task.status !== 'Concluido' && task.percentual_conclusao < 100) {
-    return true; // Sempre conta como restante
-  }
-  // Verifica updated_at - mas isso nao indica quando foi concluida
-});
+  if (task.status === 'Concluido') return false;
+  return true; // Sempre retorna true se nao concluida
+}).length;
 ```
 
-### Solucao
-Melhorar a logica para calcular burndown baseado em:
-1. Tarefas que deveriam estar concluidas ate cada mes (por prazo)
-2. Tarefas efetivamente concluidas ate cada mes
-3. Usar `percentual_conclusao` para interpolacao
-
----
-
-## Fase 3: Corrigir Cards de Categoria Financeira
-
-### Problema
-O hook `useIntegratedFinances.ts` mapeia a resposta RPC mas define zeros:
-```javascript
-// Linha 42-47:
-material_expenses: 0,
-payroll_expenses: 0,
-patrimony_expenses: 0,
-indirect_expenses: 0,
+Deve calcular DINAMICAMENTE para cada mes baseado no prazo:
+```text
+Para cada mes M:
+  tarefasRestantes = contar tarefas onde:
+    - prazo > fim_do_mes_M (ainda nao deveria estar concluida)
+    - OU prazo <= fim_do_mes_M E nao esta 100% concluida (atrasada)
 ```
 
-### Solucao
-Buscar dados de `movimentos_financeiros` agrupados por categoria:
-1. Criar nova query que agrupa por `categoria`
-2. Mapear categorias para as 4 categorias principais:
-   - "Material" / "Materiais" -> material_expenses
-   - "Mao de Obra" -> payroll_expenses
-   - "Patrimonio" / "Equipamento" -> patrimony_expenses
-   - Outros -> indirect_expenses
+### 3. Melhorar Fallback em useProjectChartData.ts
+
+Garantir que sempre ha dados validos para o grafico, mesmo com fallback simplificado.
 
 ---
 
-## Fase 4: Melhorar Grafico de Materiais
-
-### Alteracoes no TopMaterialsChart.tsx
-
-1. **Cores por Categoria de Material**
-   - Usar cores consistentes baseadas na categoria_principal do material
-   - Verde para materiais de construcao
-   - Azul para equipamentos
-   - Laranja para consumiveis
-
-2. **Layout Melhorado**
-   - Aumentar largura do label Y-axis
-   - Adicionar tooltip com detalhes do material
-   - Mostrar categoria no tooltip
-
-3. **Agrupamento Opcional**
-   - Adicionar toggle para ver por categoria vs por material individual
-
----
-
-## Ordem de Implementacao
-
-1. **CSS/Config** - Documentar padrao de cores no index.css
-2. **SCurveChart.tsx** - Trocar chart-2 e chart-3
-3. **TimelineChart.tsx** - Alinhar com S-Curve
-4. **useProjectTimelineData.ts** - Corrigir logica de burndown
-5. **useIntegratedFinances.ts** - Adicionar query de categorias
-6. **TopMaterialsChart.tsx** - Melhorar visualizacao
-
----
-
-## Detalhes Tecnicos
-
-### Ficheiros a Modificar
+## Ficheiros a Modificar
 
 | Ficheiro | Alteracao |
 |----------|-----------|
-| src/index.css | Adicionar comentarios do padrao semantico |
-| src/components/charts/SCurveChart.tsx | Trocar assignacao de cores |
-| src/components/charts/TimelineChart.tsx | Alinhar cores com S-Curve |
-| src/hooks/useProjectTimelineData.ts | Refatorar logica burndown |
-| src/hooks/useIntegratedFinances.ts | Adicionar query de categorias |
-| src/components/financial/CategoryBreakdown.tsx | Usar dados reais |
-| src/components/charts/TopMaterialsChart.tsx | Cores por categoria |
+| src/hooks/useProjectTimelineData.ts | Corrigir intervalo de datas e logica de calculo dinamico |
+| src/hooks/useProjectChartData.ts | Melhorar fallback com dados validos |
 
-### Mapeamento de Cores Final
+---
 
-```text
-Todos os Graficos de Projeto:
-- Azul (chart-1): Baseline/Planejado/Orcado/Ideal
-- Laranja (chart-2): Fisico/Real/Executado
-- Verde (chart-3): Financeiro/Aprovado/Concluido
+## Implementacao Detalhada
 
-Graficos de Armazem:
-- Verde: Entradas/Devolucoes
-- Vermelho: Saidas/Consumos
-- Azul: Transferencias
+### useProjectTimelineData.ts
 
-Cards de Categoria:
-- Azul: Materiais
-- Verde: Mao de Obra
-- Roxo: Patrimonio
-- Laranja: Custos Indiretos
+**Alteracoes na funcao `burndownData`:**
+
+1. **Corrigir intervalo de meses (linhas 157-167):**
+```javascript
+// ANTES: Limita ao menor entre hoje e data_fim
+const lastDisplayDate = isAfter(today, endDate) ? endDate : today;
+
+// DEPOIS: Sempre mostra ate data_fim para ver historico completo
+// Usar a data maior entre hoje e data_fim para projectos em curso
+const displayEndDate = isAfter(endDate, today) ? today : endDate;
+```
+
+2. **Calcular tarefas restantes DINAMICAMENTE para cada mes (linhas 191-204):**
+```javascript
+// ANTES (estatico - mesmo valor para todos os meses):
+const tarefasRestantes = tasks.filter(task => {
+  if (task.status === 'Concluido') return false;
+  return true;
+}).length;
+
+// DEPOIS (dinamico - diferente para cada mes):
+const tarefasRestantes = tasks.filter(task => {
+  // Tarefa 100% concluida nao conta como restante
+  if (task.status === 'Concluido' || task.percentual_conclusao >= 100) {
+    return false;
+  }
+  
+  // Se nao tem prazo, conta como restante
+  if (!task.prazo) return true;
+  
+  const taskDeadline = parseISO(task.prazo);
+  
+  // Tarefa com prazo DEPOIS deste mes = ainda restante (normal)
+  if (isAfter(taskDeadline, monthEnd)) {
+    return true;
+  }
+  
+  // Tarefa com prazo ANTES/IGUAL a este mes mas nao concluida = restante (atrasada)
+  return true;
+}).length;
+```
+
+3. **Adicionar ponto inicial e final para garantir visualizacao:**
+```javascript
+// Garantir pelo menos: ponto inicial (todas tarefas) e ponto atual
+if (months.length === 0) {
+  // Fallback: criar 2 pontos minimos
+  return [
+    { periodo: "Inicio", planejado: totalTasks, real: totalTasks, ... },
+    { periodo: "Atual", planejado: 0, real: remainingNow, ... }
+  ];
+}
+```
+
+### useProjectChartData.ts
+
+**Melhorar fallback (linhas 146-158):**
+
+```javascript
+// ANTES: Fallback gera dados por tarefa individual (confuso)
+const burndownData = hasEnoughData && timelineBurndownData.length >= 2
+  ? timelineBurndownData.map(...)
+  : tasks.map((task, index) => (...)); // Gera 1 ponto por tarefa
+
+// DEPOIS: Fallback gera 3 pontos temporais claros
+const burndownData = timelineBurndownData.length >= 2
+  ? timelineBurndownData.map(...)
+  : generateSimpleBurndown(tasks); // Inicio, Atual, Meta
 ```
 
 ---
 
 ## Resultado Esperado
 
-Apos implementacao:
-1. S-Curve e TimelineChart usarao cores consistentes
-2. Burndown mostrara dados reais das 8 tarefas do projeto
-3. Cards de categoria mostrarao valores reais agregados de movimentos
-4. Grafico de materiais sera mais intuitivo com cores por categoria
+Apos implementacao, o grafico Burndown mostrara:
+
+**Para KIFANGONDO (8 tarefas, todas pendentes):**
+| Mes | Planejado | Real | Status |
+|-----|-----------|------|--------|
+| Jan/25 | 8 | 8 | Normal |
+| Mar/25 | 6 | 8 | Atrasado |
+| Jun/25 | 4 | 8 | Atrasado |
+| Set/25 | 2 | 8 | Atrasado |
+| Dez/25 | 0 | 8 | Muito Atrasado |
+
+**Para CATETE (8 tarefas, 1 concluida, 7 restantes):**
+| Mes | Planejado | Real | Status |
+|-----|-----------|------|--------|
+| Mai/25 | 8 | 8 | Normal |
+| Jul/25 | 6 | 7 | Ligeiro Atraso |
+| Out/25 | 3 | 7 | Atrasado |
+| Jan/26 | 0 | 7 | Muito Atrasado |
+
+O grafico mostrara claramente:
+- Linha Azul (Ideal): Decrescimo linear de 8 para 0
+- Linha Laranja (Real): Evolucao real baseada em conclusoes
+- Badge: "Atrasado" se real > planejado no ultimo ponto
+- Cards: Total (8), Concluidas (X), Restantes (Y)
