@@ -1,177 +1,130 @@
 
-# Plano: Correcao do Grafico Burndown de Tarefas
+# Plano de Correção: Tarefas, Burndown e Alocamento de Material
 
-## Problema Identificado
+## Problemas Identificados
 
-### Dados Reais na Base de Dados
+### 1. Atualização de Tarefas Não Funciona
+**Causa**: A política RLS de UPDATE na tabela `tarefas_lean` tem duas versões conflitantes:
+- `tarefas_update` - requer `has_project_access()` para `encarregado_obra`
+- `tarefas_lean_update` - permite UPDATE direto para os roles
 
-**Projeto KIFANGONDO (id=53):**
-- Inicio: 2025-01-15
-- Fim Previsto: 2025-12-31
-- 8 tarefas (todas Pendentes, 0%)
+O problema é que quando existem múltiplas políticas, PostgreSQL usa OR entre elas, mas a presença de policies duplicadas pode causar comportamentos inesperados. Além disso, a policy `tarefas_update` exige que o `encarregado_obra` tenha acesso explícito ao projeto via `has_project_access()`, mas este pode não estar configurado corretamente para o `diretor_tecnico`.
 
-**Projeto CATETE (id=54):**
-- Inicio: 2025-05-01
-- Fim Previsto: 2026-01-01
-- 8 tarefas (1 Concluida, 3 Em Andamento, 4 Pendentes)
+**Verificação**: O projeto CATETE (id=54) tem 8 tarefas com dados corretos na base de dados. O `diretor_tecnico` deve conseguir atualizar.
 
-### Causa Raiz
+### 2. Burndown de Tarefas Mostra 0
+**Causa**: O hook `useProjectTimelineData` está a calcular `burndownData` baseado em `data_inicio` e `data_fim_prevista` do projeto. Para o projeto CATETE:
+- `data_inicio`: 2025-05-01
+- `data_fim_prevista`: 2026-01-01
 
-O problema esta na logica de geracao de meses em `useProjectTimelineData.ts`:
+O problema está no cálculo temporal - a função `eachMonthOfInterval` está a gerar intervalos que excluem os dados das tarefas porque:
+1. As tarefas têm prazos em 2025 (Jan a Nov)
+2. O `data_inicio` do projeto é Maio 2025
+3. Há uma discrepância entre datas do projeto e datas das tarefas
 
-1. O intervalo de meses usa `data_inicio` do projeto (Mai/2025 para CATETE)
-2. A funcao `eachMonthOfInterval` gera: Mai/25, Jun/25, Jul/25... Jan/26
-3. PROBLEMA: A data atual e Fev/2026, que esta DEPOIS da data_fim_prevista (Jan/26)
-4. A logica `lastDisplayDate = isAfter(today, endDate) ? endDate : today` limita a Jan/26
-5. Mas se `startDate > lastDisplayDate` (impossivel neste caso), retorna array vazio
+O gráfico mostra "0" porque o `displayEndDate` está a ser calculado incorretamente quando a data atual (Fev 2026) é posterior à `data_fim_prevista` (Jan 2026).
 
-**Problema Real**: Para KIFANGONDO, o intervalo deveria funcionar (Jan/25 a Dez/25), mas estamos em Fev/2026 - o periodo ja terminou! O grafico mostra ate `endDate` que e Dez/25, mas todos os calculos estao no passado.
+### 3. Alocamento de Material Não Responde ao Click
+**Causa**: O componente `RequisitionTypeSelector` usa `RadioGroup` com `onClick` nos containers div, mas o RadioGroup pode estar a interceptar os eventos. Além disso, a query de `useMaterialsArmazem()` pode estar a falhar silenciosamente devido a RLS, retornando array vazio, o que faz aparecer a mensagem "Não há materiais disponíveis".
 
-O burndown so mostra dados se o projeto esta em andamento dentro do intervalo de datas. Para projectos com datas passadas, a logica falha.
+**Verificação**: Existem materiais no armazém com stock disponível (confirmei via query directa).
 
 ---
 
-## Solucao
+## Soluções Propostas
 
-### 1. Ajustar Logica de Intervalo de Meses
+### Correção 1: Limpar Policies RLS Duplicadas nas Tarefas
+Criar migração para:
+- Remover policies antigas duplicadas (`tarefas_update`, `tarefas_select`)
+- Manter apenas as políticas `tarefas_lean_*` que são mais permissivas
 
-Modificar `useProjectTimelineData.ts` para:
-- Sempre mostrar o historico completo do projeto (inicio ate fim previsto OU ate hoje, o que for maior)
-- Nao limitar pelo `today` se quisermos ver historico passado
-
-### 2. Corrigir Calculo de Tarefas Restantes
-
-A logica atual em `burndownData` (linhas 191-204) conta tarefas restantes de forma ESTATICA:
-```javascript
-// Problema: Isto retorna o mesmo valor para TODOS os meses
-const tarefasRestantes = tasks.filter(task => {
-  if (task.status === 'Concluido') return false;
-  return true; // Sempre retorna true se nao concluida
-}).length;
+```sql
+DROP POLICY IF EXISTS "tarefas_update" ON tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_select" ON tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_insert" ON tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_delete" ON tarefas_lean;
 ```
 
-Deve calcular DINAMICAMENTE para cada mes baseado no prazo:
-```text
-Para cada mes M:
-  tarefasRestantes = contar tarefas onde:
-    - prazo > fim_do_mes_M (ainda nao deveria estar concluida)
-    - OU prazo <= fim_do_mes_M E nao esta 100% concluida (atrasada)
+### Correção 2: Ajustar Cálculo do Burndown
+No ficheiro `src/hooks/useProjectTimelineData.ts`:
+- Corrigir a lógica de `displayEndDate` para usar `today` quando estamos a visualizar o estado actual
+- Ajustar o cálculo para considerar que tarefas podem ter prazos anteriores ao `data_inicio` do projeto
+- Garantir que o fallback funciona correctamente quando `eachMonthOfInterval` retorna poucos pontos
+
+```typescript
+// Corrigir displayEndDate - mostrar sempre até hoje para projectos em curso
+const displayEndDate = isAfter(today, endDate) ? today : today;
+
+// Usar intervalo que inclua todas as tarefas
+const earliestTaskDeadline = tasks
+  .filter(t => t.prazo)
+  .reduce((min, t) => {
+    const d = parseISO(t.prazo!);
+    return !min || isBefore(d, min) ? d : min;
+  }, null as Date | null);
+
+const effectiveStart = earliestTaskDeadline && isBefore(earliestTaskDeadline, startDate) 
+  ? startOfMonth(earliestTaskDeadline) 
+  : startOfMonth(startDate);
 ```
 
-### 3. Melhorar Fallback em useProjectChartData.ts
+### Correção 3: Corrigir Políticas RLS para materiais_armazem
+Verificar e adicionar políticas que permitam SELECT para os roles relevantes:
 
-Garantir que sempre ha dados validos para o grafico, mesmo com fallback simplificado.
+```sql
+CREATE POLICY "materiais_armazem_select" ON materiais_armazem
+FOR SELECT USING (
+  has_role(auth.uid(), 'diretor_tecnico') OR
+  has_role(auth.uid(), 'coordenacao_direcao') OR
+  has_role(auth.uid(), 'encarregado_obra') OR
+  has_role(auth.uid(), 'assistente_compras') OR
+  has_role(auth.uid(), 'gestor_qualidade')
+);
+```
 
 ---
 
 ## Ficheiros a Modificar
 
-| Ficheiro | Alteracao |
+| Ficheiro | Alteração |
 |----------|-----------|
-| src/hooks/useProjectTimelineData.ts | Corrigir intervalo de datas e logica de calculo dinamico |
-| src/hooks/useProjectChartData.ts | Melhorar fallback com dados validos |
+| `supabase/migrations/[timestamp]_fix_tasks_rls_and_warehouse.sql` | Nova migração para limpar policies duplicadas e adicionar policies ao armazém |
+| `src/hooks/useProjectTimelineData.ts` | Corrigir lógica do burndown para considerar tarefas com prazos anteriores ao início do projeto |
 
 ---
 
-## Implementacao Detalhada
+## Detalhes Técnicos
 
-### useProjectTimelineData.ts
+### Migração SQL Proposta
+```sql
+-- 1. Limpar policies duplicadas de tarefas_lean
+DROP POLICY IF EXISTS "tarefas_update" ON public.tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_select" ON public.tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_insert" ON public.tarefas_lean;
+DROP POLICY IF EXISTS "tarefas_delete" ON public.tarefas_lean;
 
-**Alteracoes na funcao `burndownData`:**
-
-1. **Corrigir intervalo de meses (linhas 157-167):**
-```javascript
-// ANTES: Limita ao menor entre hoje e data_fim
-const lastDisplayDate = isAfter(today, endDate) ? endDate : today;
-
-// DEPOIS: Sempre mostra ate data_fim para ver historico completo
-// Usar a data maior entre hoje e data_fim para projectos em curso
-const displayEndDate = isAfter(endDate, today) ? today : endDate;
+-- 2. Garantir que materiais_armazem tem SELECT policy
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'materiais_armazem' 
+    AND policyname = 'materiais_armazem_select_all_roles'
+  ) THEN
+    CREATE POLICY "materiais_armazem_select_all_roles" ON public.materiais_armazem
+    FOR SELECT USING (
+      public.has_role(auth.uid(), 'diretor_tecnico'::public.app_role) OR
+      public.has_role(auth.uid(), 'coordenacao_direcao'::public.app_role) OR
+      public.has_role(auth.uid(), 'encarregado_obra'::public.app_role) OR
+      public.has_role(auth.uid(), 'assistente_compras'::public.app_role) OR
+      public.has_role(auth.uid(), 'gestor_qualidade'::public.app_role)
+    );
+  END IF;
+END $$;
 ```
 
-2. **Calcular tarefas restantes DINAMICAMENTE para cada mes (linhas 191-204):**
-```javascript
-// ANTES (estatico - mesmo valor para todos os meses):
-const tarefasRestantes = tasks.filter(task => {
-  if (task.status === 'Concluido') return false;
-  return true;
-}).length;
-
-// DEPOIS (dinamico - diferente para cada mes):
-const tarefasRestantes = tasks.filter(task => {
-  // Tarefa 100% concluida nao conta como restante
-  if (task.status === 'Concluido' || task.percentual_conclusao >= 100) {
-    return false;
-  }
-  
-  // Se nao tem prazo, conta como restante
-  if (!task.prazo) return true;
-  
-  const taskDeadline = parseISO(task.prazo);
-  
-  // Tarefa com prazo DEPOIS deste mes = ainda restante (normal)
-  if (isAfter(taskDeadline, monthEnd)) {
-    return true;
-  }
-  
-  // Tarefa com prazo ANTES/IGUAL a este mes mas nao concluida = restante (atrasada)
-  return true;
-}).length;
-```
-
-3. **Adicionar ponto inicial e final para garantir visualizacao:**
-```javascript
-// Garantir pelo menos: ponto inicial (todas tarefas) e ponto atual
-if (months.length === 0) {
-  // Fallback: criar 2 pontos minimos
-  return [
-    { periodo: "Inicio", planejado: totalTasks, real: totalTasks, ... },
-    { periodo: "Atual", planejado: 0, real: remainingNow, ... }
-  ];
-}
-```
-
-### useProjectChartData.ts
-
-**Melhorar fallback (linhas 146-158):**
-
-```javascript
-// ANTES: Fallback gera dados por tarefa individual (confuso)
-const burndownData = hasEnoughData && timelineBurndownData.length >= 2
-  ? timelineBurndownData.map(...)
-  : tasks.map((task, index) => (...)); // Gera 1 ponto por tarefa
-
-// DEPOIS: Fallback gera 3 pontos temporais claros
-const burndownData = timelineBurndownData.length >= 2
-  ? timelineBurndownData.map(...)
-  : generateSimpleBurndown(tasks); // Inicio, Atual, Meta
-```
-
----
-
-## Resultado Esperado
-
-Apos implementacao, o grafico Burndown mostrara:
-
-**Para KIFANGONDO (8 tarefas, todas pendentes):**
-| Mes | Planejado | Real | Status |
-|-----|-----------|------|--------|
-| Jan/25 | 8 | 8 | Normal |
-| Mar/25 | 6 | 8 | Atrasado |
-| Jun/25 | 4 | 8 | Atrasado |
-| Set/25 | 2 | 8 | Atrasado |
-| Dez/25 | 0 | 8 | Muito Atrasado |
-
-**Para CATETE (8 tarefas, 1 concluida, 7 restantes):**
-| Mes | Planejado | Real | Status |
-|-----|-----------|------|--------|
-| Mai/25 | 8 | 8 | Normal |
-| Jul/25 | 6 | 7 | Ligeiro Atraso |
-| Out/25 | 3 | 7 | Atrasado |
-| Jan/26 | 0 | 7 | Muito Atrasado |
-
-O grafico mostrara claramente:
-- Linha Azul (Ideal): Decrescimo linear de 8 para 0
-- Linha Laranja (Real): Evolucao real baseada em conclusoes
-- Badge: "Atrasado" se real > planejado no ultimo ponto
-- Cards: Total (8), Concluidas (X), Restantes (Y)
+### Correção do Burndown (useProjectTimelineData.ts)
+A lógica será ajustada para:
+1. Encontrar a data mais antiga entre as tarefas e o início do projeto
+2. Usar `today` como endpoint mesmo para projectos "concluídos" para mostrar estado actual
+3. Recalcular `planejado` baseado em todas as tarefas distribuídas pelo período efectivo
