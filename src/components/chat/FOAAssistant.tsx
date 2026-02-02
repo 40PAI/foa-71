@@ -154,11 +154,35 @@ export function FOAAssistant() {
       document.body.appendChild(chatContainer);
     }
 
-    // Remoção dinâmica de branding
-    const brandingObserver = new MutationObserver(() => {
+    // Função para ajustar posição do botão no mobile
+    const adjustTogglePosition = () => {
+      const isMobile = window.innerWidth <= 768;
+      const toggleButton = document.querySelector('.n8n-chat button, [class*="chat-toggle"]') as HTMLElement;
+      
+      if (toggleButton && isMobile) {
+        toggleButton.style.setProperty('bottom', '100px', 'important');
+        toggleButton.style.setProperty('right', '16px', 'important');
+      } else if (toggleButton && !isMobile) {
+        // Reset para desktop
+        toggleButton.style.removeProperty('bottom');
+        toggleButton.style.removeProperty('right');
+      }
+    };
+
+    // Observer combinado: branding + posicionamento
+    const combinedObserver = new MutationObserver(() => {
+      // Remoção de branding
       document.querySelectorAll('.powered-by, [class*="powered"], footer, #footer, [class*="branding"], a[href*="n8n"]').forEach(el => el.remove());
+      // Ajustar posição do botão
+      adjustTogglePosition();
     });
-    brandingObserver.observe(document.body, { childList: true, subtree: true });
+    combinedObserver.observe(document.body, { childList: true, subtree: true });
+
+    // Listener de resize para manter posição correcta
+    window.addEventListener('resize', adjustTogglePosition);
+    
+    // Ajustar imediatamente se já existir
+    adjustTogglePosition();
 
     // Carregar script do n8n chat
     const script = document.createElement('script');
@@ -198,7 +222,8 @@ export function FOAAssistant() {
 
     // Cleanup ao desmontar ou logout
     return () => {
-      brandingObserver.disconnect();
+      combinedObserver.disconnect();
+      window.removeEventListener('resize', adjustTogglePosition);
       document.getElementById('n8n-chat-script')?.remove();
       document.getElementById('n8n-chat-styles')?.remove();
       document.getElementById('n8n-chat-css')?.remove();
