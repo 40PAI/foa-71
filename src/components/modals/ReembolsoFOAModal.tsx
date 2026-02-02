@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { useCreateReembolso, useUpdateReembolso, type ReembolsoFOA } from "@/hooks/useReembolsosFOA";
 import { useProjects } from "@/hooks/useProjects";
 import { useFornecedores } from "@/hooks/useFornecedores";
 import { FONTE_CREDITO_LABELS, TIPO_MOVIMENTO_LABELS, type FonteCredito, type TipoMovimentoDivida } from "@/types/dividas";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Landmark, Users, HelpCircle } from "lucide-react";
+import { Building2, Landmark, Users, HelpCircle, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ReembolsoFOAModalProps {
   open: boolean;
@@ -280,15 +286,36 @@ export function ReembolsoFOAModal({ open, onOpenChange, reembolso, projectId }: 
               </Select>
             </div>
             
-            <div>
-              <Label htmlFor="data_reembolso">Data*</Label>
-              <Input
-                id="data_reembolso"
-                type="date"
-                value={formData.data_reembolso}
-                onChange={(e) => setFormData({ ...formData, data_reembolso: e.target.value })}
-                required
-              />
+            <div className="space-y-2">
+              <Label>Data*</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.data_reembolso && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.data_reembolso ? (
+                      format(parseISO(formData.data_reembolso), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.data_reembolso ? parseISO(formData.data_reembolso) : undefined}
+                    onSelect={(date) => setFormData({ ...formData, data_reembolso: date ? format(date, "yyyy-MM-dd") : "" })}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
           
@@ -304,27 +331,45 @@ export function ReembolsoFOAModal({ open, onOpenChange, reembolso, projectId }: 
           </div>
           
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="valor">Valor (AOA)*</Label>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
+            <div className="space-y-2">
+              <Label>Valor (AOA)*</Label>
+              <CurrencyInput
                 value={formData.valor}
-                onChange={(e) => setFormData({ ...formData, valor: parseFloat(e.target.value) || 0 })}
-                placeholder="0.00"
-                required
+                onValueChange={(value) => setFormData({ ...formData, valor: value })}
+                placeholder="0,00"
               />
             </div>
             
-            <div>
-              <Label htmlFor="data_vencimento">Data de Vencimento</Label>
-              <Input
-                id="data_vencimento"
-                type="date"
-                value={formData.data_vencimento}
-                onChange={(e) => setFormData({ ...formData, data_vencimento: e.target.value })}
-              />
+            <div className="space-y-2">
+              <Label>Data de Vencimento</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !formData.data_vencimento && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.data_vencimento ? (
+                      format(parseISO(formData.data_vencimento), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                    ) : (
+                      <span>Selecione a data</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={formData.data_vencimento ? parseISO(formData.data_vencimento) : undefined}
+                    onSelect={(date) => setFormData({ ...formData, data_vencimento: date ? format(date, "yyyy-MM-dd") : "" })}
+                    initialFocus
+                    locale={ptBR}
+                    className="pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
 
