@@ -114,6 +114,12 @@ export function FOAAssistant() {
     `;
     document.head.appendChild(style);
 
+    // Remoção dinâmica de branding (antes de carregar o chat)
+    const brandingObserver = new MutationObserver(() => {
+      document.querySelectorAll('.powered-by, [class*="powered"], footer, #footer, [class*="branding"], a[href*="n8n"]').forEach(el => el.remove());
+    });
+    brandingObserver.observe(document.body, { childList: true, subtree: true });
+
     // Adicionar link do CSS do n8n chat
     const cssLink = document.createElement('link');
     cssLink.id = 'n8n-chat-css';
@@ -136,7 +142,7 @@ export function FOAAssistant() {
     script.textContent = `
       import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js';
 
-      window.n8nChatInstance = createChat({
+      createChat({
         webhookUrl: 'https://automacoes.plenuz.co.ao/webhook/971ff544-131e-4182-b709-7f9606c3d9f5/chat',
         webhookConfig: {
           method: 'POST',
@@ -162,17 +168,12 @@ export function FOAAssistant() {
           },
         },
       });
-
-      // Remover branding após inicialização
-      const observer = new MutationObserver(() => {
-        document.querySelectorAll('.powered-by, [class*="powered"], [class*="branding"], a[href*="n8n"]').forEach(el => el.remove());
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
     `;
     document.body.appendChild(script);
 
     // Cleanup ao desmontar ou logout
     return () => {
+      brandingObserver.disconnect();
       const scriptEl = document.getElementById('n8n-chat-script');
       const styleEl = document.getElementById('n8n-chat-styles');
       const cssEl = document.getElementById('n8n-chat-css');
