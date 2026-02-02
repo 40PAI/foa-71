@@ -1,113 +1,227 @@
 
+# Plano: Zoom Fluido com Ctrl+Scroll no Gráfico Expandido
 
-# Plano: Adicionar Zoom Interactivo ao Gráfico de Evolução Temporal
+## Objectivo
 
-## Problema Identificado
+Substituir a interação actual por um sistema de zoom fluido e suave, onde o utilizador pode:
+- **Ctrl + Scroll para cima**: Aproximar (zoom in) de forma suave
+- **Ctrl + Scroll para baixo**: Afastar (zoom out) de forma suave
+- Animações fluidas em todas as transições
 
-O gráfico "Evolução Temporal - Entradas, Saídas e Saldo" mostra demasiados pontos de dados quando há muitos movimentos financeiros, resultando em:
-- Datas sobrepostas no eixo X
-- Labels de valores aglomerados e ilegíveis
-- Dificuldade em identificar valores exactos em datas específicas
+## Abordagem Técnica
 
-## Solução: Componente Brush do Recharts
-
-O Recharts já inclui um componente `Brush` que adiciona uma barra de navegação na parte inferior do gráfico, permitindo:
-- **Seleccionar um intervalo de datas** arrastando as extremidades
-- **Ver apenas os dados seleccionados** no gráfico principal
-- **Navegar temporalmente** movendo a janela de selecção
+O Recharts não suporta nativamente zoom fluido com animações CSS. A solução é criar uma camada de gestão de estado que:
+1. Captura eventos de wheel quando Ctrl está pressionado
+2. Calcula os novos índices de forma incremental
+3. Aplica transições suaves via CSS transitions e requestAnimationFrame
 
 ```text
-ANTES (gráfico congestionado):
-┌────────────────────────────────────┐
-│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
-│ Valores: +24M +23M +21M +19M ...   │  ← Ilegível
-│ 05/12 06/11 07/10 ... 08/01        │  ← Datas sobrepostas
-└────────────────────────────────────┘
+INTERAÇÃO PRETENDIDA:
 
-DEPOIS (com Brush - visão ampliada):
-┌────────────────────────────────────┐
-│     ▓       ▓       ▓       ▓      │
-│   +24.9M  +23.8M  +22.1M  +19.8M   │  ← Valores claros
-│   25/08   28/08   01/09   05/09    │  ← Datas legíveis
-├────────────────────────────────────┤
-│ ░░░░░░░░[▓▓▓▓▓▓]░░░░░░░░░░░░░░░░░ │  ← Brush (seleccionar período)
-└────────────────────────────────────┘
-        ↑         ↑
-      Início     Fim do zoom
+┌────────────────────────────────────────────────┐
+│  Ctrl + 🖱️⬆️ Scroll Up = Zoom In (aproximar)   │
+│  ┌──────────────────────────────────────────┐  │
+│  │ ▓   ▓   ▓   ▓   ▓   ▓   ▓   ▓   ▓   ▓    │  │
+│  │ Dados ampliam suavemente                 │  │
+│  └──────────────────────────────────────────┘  │
+│                                                │
+│  Ctrl + 🖱️⬇️ Scroll Down = Zoom Out (afastar)  │
+│  ┌──────────────────────────────────────────┐  │
+│  │▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│  │
+│  │ Mostra mais dados suavemente             │  │
+│  └──────────────────────────────────────────┘  │
+└────────────────────────────────────────────────┘
 ```
 
-## Implementação Técnica
+## Implementação
 
-### Ficheiro a Modificar
+### Ficheiro: `src/components/financial/GraficoLinhaMovimentos.tsx`
 
-`src/components/financial/GraficoLinhaMovimentos.tsx`
+### 1. Adicionar Estado para Zoom Fluido
 
-### Alterações
-
-1. **Importar o componente Brush**:
 ```typescript
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Brush } from "recharts";
+// Nível de zoom: 1 = vista completa, valores maiores = mais zoom
+const [zoomLevel, setZoomLevel] = useState(1);
+const [zoomCenter, setZoomCenter] = useState(0.5); // Centro do zoom (0-1)
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 10;
+const ZOOM_SPEED = 0.15; // Velocidade do zoom
 ```
 
-2. **Adicionar Brush ao BarChart**:
+### 2. Handler para Wheel Event com Ctrl
+
 ```typescript
-<BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 50 }}>
-  {/* ... componentes existentes ... */}
+const handleWheel = useCallback((event: WheelEvent) => {
+  // Só funciona com Ctrl pressionado
+  if (!event.ctrlKey) return;
   
-  <Brush 
-    dataKey="data" 
-    height={30} 
-    stroke="hsl(var(--primary))"
-    fill="hsl(var(--muted))"
-    travellerWidth={10}
-    startIndex={Math.max(0, dados.length - 15)}  // Mostrar últimos 15 pontos inicialmente
-  />
-</BarChart>
+  event.preventDefault();
+  
+  // Determinar direcção do scroll
+  const delta = event.deltaY > 0 ? -1 : 1; // Scroll up = zoom in
+  
+  setZoomLevel(prev => {
+    const newZoom = prev + (delta * ZOOM_SPEED);
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+  });
+}, []);
 ```
 
-3. **Ajustar margem inferior** para acomodar o Brush:
+### 3. Cálculo de Índices Baseado no Zoom
+
 ```typescript
-margin={{ top: 30, right: 30, left: 20, bottom: 50 }}
+const getVisibleRange = useMemo(() => {
+  const totalPoints = dados.length;
+  
+  // Quantos pontos mostrar baseado no nível de zoom
+  const visiblePoints = Math.max(3, Math.floor(totalPoints / zoomLevel));
+  
+  // Calcular início e fim baseado no centro
+  const centerIndex = Math.floor(totalPoints * zoomCenter);
+  const halfVisible = Math.floor(visiblePoints / 2);
+  
+  let start = Math.max(0, centerIndex - halfVisible);
+  let end = Math.min(totalPoints - 1, start + visiblePoints - 1);
+  
+  // Ajustar se passar dos limites
+  if (end >= totalPoints - 1) {
+    end = totalPoints - 1;
+    start = Math.max(0, end - visiblePoints + 1);
+  }
+  
+  return { start, end };
+}, [dados.length, zoomLevel, zoomCenter]);
 ```
 
-4. **Adicionar botão "Reset Zoom"** para voltar à vista completa:
-```typescript
-const [brushRange, setBrushRange] = useState<{startIndex?: number, endIndex?: number}>({});
+### 4. Aplicar CSS Transitions para Suavidade
 
-<Button 
-  variant="ghost" 
-  size="sm"
-  onClick={() => setBrushRange({})}
-  className="text-xs"
+```typescript
+// Adicionar classe CSS para transições suaves
+const chartContainerRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+  const container = chartContainerRef.current;
+  if (!container) return;
+  
+  container.addEventListener('wheel', handleWheel, { passive: false });
+  
+  return () => {
+    container.removeEventListener('wheel', handleWheel);
+  };
+}, [handleWheel]);
+```
+
+### 5. Container com Cursor Indicativo
+
+```typescript
+<div 
+  ref={chartContainerRef}
+  className="relative cursor-zoom-in transition-all duration-300 ease-out"
+  style={{
+    // Mudar cursor quando Ctrl está pressionado
+    cursor: isCtrlPressed ? (zoomLevel < MAX_ZOOM ? 'zoom-in' : 'zoom-out') : 'default'
+  }}
 >
-  <ZoomOut className="h-3 w-3 mr-1" />
-  Reset
-</Button>
+  <ChartContent visibleRange={getVisibleRange} />
+</div>
 ```
 
-### Props do Componente Brush
+### 6. Actualizar ChartContent para Usar Slice de Dados
 
-| Propriedade | Valor | Descrição |
-|-------------|-------|-----------|
-| `dataKey` | `"data"` | Campo usado para labels no Brush |
-| `height` | `30` | Altura da barra de navegação |
-| `stroke` | `hsl(var(--primary))` | Cor da borda dos travellers |
-| `fill` | `hsl(var(--muted))` | Cor de fundo do Brush |
-| `travellerWidth` | `10` | Largura das alças de arrasto |
-| `startIndex` | calculado | Índice inicial da selecção |
+```typescript
+const ChartContent = ({ height, visibleRange }: { height: number; visibleRange: { start: number; end: number } }) => {
+  // Filtrar dados para o range visível
+  const visibleData = dados.slice(visibleRange.start, visibleRange.end + 1);
+  
+  return (
+    <ResponsiveContainer width="100%" height={height}>
+      <BarChart 
+        data={visibleData} 
+        margin={{ top: 30, right: 30, left: 20, bottom: 40 }}
+        // Animação suave nativa do Recharts
+        isAnimationActive={true}
+        animationDuration={300}
+        animationEasing="ease-out"
+      >
+        {/* ... restante do gráfico ... */}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+```
 
-### Comportamento Esperado
+### 7. Indicador Visual de Zoom
 
-1. **Vista Inicial**: Gráfico mostra os últimos 15 movimentos (ou menos se não existirem tantos)
-2. **Navegação**: Utilizador arrasta as extremidades do Brush para seleccionar período
-3. **Zoom Automático**: Gráfico principal actualiza mostrando apenas o período seleccionado
-4. **Labels Legíveis**: Com menos pontos visíveis, valores e datas ficam claros
-5. **Reset**: Botão para voltar à vista completa
+```typescript
+// Mostrar nível de zoom actual
+{zoomLevel > 1 && (
+  <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs text-muted-foreground border">
+    🔍 {Math.round(zoomLevel * 100)}%
+  </div>
+)}
+```
+
+### 8. Detectar Tecla Ctrl Pressionada
+
+```typescript
+const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+
+useEffect(() => {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Control') setIsCtrlPressed(true);
+  };
+  const handleKeyUp = (e: KeyboardEvent) => {
+    if (e.key === 'Control') setIsCtrlPressed(false);
+  };
+  
+  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keyup', handleKeyUp);
+  
+  return () => {
+    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('keyup', handleKeyUp);
+  };
+}, []);
+```
+
+### 9. Tooltip de Instrução
+
+```typescript
+// No modal expandido, mostrar dica de uso
+<p className="text-xs text-muted-foreground mb-2">
+  💡 Use <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl</kbd> + scroll para zoom suave
+</p>
+```
+
+## Comportamento Final
+
+| Acção | Resultado |
+|-------|-----------|
+| `Ctrl + Scroll ⬆️` | Aproxima suavemente, mostra menos pontos com mais detalhe |
+| `Ctrl + Scroll ⬇️` | Afasta suavemente, mostra mais pontos |
+| `Ctrl + Scroll` (no limite) | Para suavemente sem saltar |
+| Soltar `Ctrl` | Scroll normal da página volta a funcionar |
+| Duplo-clique | Reset para vista inicial |
+
+## Animação CSS
+
+```css
+/* Transições suaves para o gráfico */
+.chart-zoom-container {
+  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Animação do indicador de zoom */
+.zoom-indicator {
+  animation: fadeIn 200ms ease-out;
+}
+```
 
 ## Resultado Esperado
 
-- Utilizador consegue fazer zoom arrastando as extremidades da barra de navegação
-- Valores e datas ficam claramente visíveis quando ampliados
-- Funcionalidade disponível tanto no card normal quanto no modal expandido
-- Experiência intuitiva sem necessidade de instruções
-
+- Zoom fluido e suave ao usar Ctrl+scroll
+- Animações nativas do Recharts (300ms ease-out)
+- Indicador visual do nível de zoom actual
+- Cursor muda para indicar possibilidade de zoom
+- Comportamento intuitivo e responsivo
+- Mantém a barra Brush para navegação alternativa
