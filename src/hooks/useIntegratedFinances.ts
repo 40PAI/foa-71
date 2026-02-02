@@ -29,10 +29,23 @@ export function useIntegratedFinancialProgress(projectId: number) {
     queryKey: ["integrated-financial-progress", projectId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .rpc('calculate_integrated_financial_progress', { p_project_id: projectId });
+        .rpc('calculate_integrated_financial_progress', { p_projeto_id: projectId });
       
       if (error) throw error;
-      return data?.[0] as IntegratedFinancialData;
+      
+      // Mapear a nova resposta da RPC para IntegratedFinancialData
+      const result = data?.[0];
+      if (!result) return null;
+      
+      return {
+        total_budget: Number(result.orcamento_total) || 0,
+        material_expenses: 0,
+        payroll_expenses: 0,
+        patrimony_expenses: 0,
+        indirect_expenses: 0,
+        total_expenses: Number(result.total_gasto) || 0,
+        financial_progress: Number(result.percentual_progresso) || 0,
+      } as IntegratedFinancialData;
     },
     enabled: !!projectId,
   });

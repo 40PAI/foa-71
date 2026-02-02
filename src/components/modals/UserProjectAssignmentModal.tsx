@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useProjects } from "@/hooks/useProjects";
@@ -36,15 +35,26 @@ export function UserProjectAssignmentModal({
   const bulkAssign = useBulkAssignProjects();
   
   const [selectedProjects, setSelectedProjects] = useState<number[]>([]);
+  
+  // Use ref to track if we've already initialized from userAccess
+  const hasInitialized = useRef(false);
+  const prevUserId = useRef<string | undefined>();
 
-  // Inicializar seleção com projetos já atribuídos
+  // Reset initialization flag when user changes or modal closes
   useEffect(() => {
-    if (userAccess.length > 0) {
-      setSelectedProjects(userAccess.map(a => a.projeto_id));
-    } else {
-      setSelectedProjects([]);
+    if (!open || user?.id !== prevUserId.current) {
+      hasInitialized.current = false;
+      prevUserId.current = user?.id;
     }
-  }, [userAccess]);
+  }, [open, user?.id]);
+
+  // Initialize selection once when userAccess loads
+  useEffect(() => {
+    if (!loadingAccess && !hasInitialized.current && open) {
+      setSelectedProjects(userAccess.map(a => a.projeto_id));
+      hasInitialized.current = true;
+    }
+  }, [loadingAccess, userAccess, open]);
 
   const handleToggleProject = (projectId: number) => {
     setSelectedProjects(prev => 

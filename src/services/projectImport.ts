@@ -125,7 +125,7 @@ export class ProjectImportService {
       // 5. Atualizar métricas do projeto
       const { error: metricsError } = await supabase.rpc(
         'update_project_metrics_with_integrated_finance',
-        { project_id: projetoId }
+        { p_projeto_id: projetoId }
       );
 
       if (metricsError) {

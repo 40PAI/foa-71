@@ -38,8 +38,9 @@ const chartConfig = {
   },
 };
 
-export function MaterialFlowChart({ projectId, days = 30, title = "Fluxo de Materiais" }: MaterialFlowChartProps) {
+export function MaterialFlowChart({ projectId, days = 90, title = "Fluxo de Materiais" }: MaterialFlowChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  // Usar período padrão de 90 dias para mais dados
   const { data, isLoading } = useMaterialFlow(projectId, days);
 
   if (isLoading) {

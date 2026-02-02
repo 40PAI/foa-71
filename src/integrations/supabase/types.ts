@@ -3428,18 +3428,11 @@ export type Database = {
         Returns: string
       }
       calculate_integrated_financial_progress: {
-        Args: { p_project_id: number }
+        Args: { p_projeto_id: number }
         Returns: {
-          financial_progress: number
-          indirect_expenses: number
-          material_expenses: number
-          patrimony_expenses: number
-          payroll_expenses: number
-          task_labor_cost: number
-          task_material_cost: number
-          task_real_expenses: number
-          total_budget: number
-          total_expenses: number
+          orcamento_total: number
+          percentual_progresso: number
+          total_gasto: number
         }[]
       }
       calculate_material_expenses: {
@@ -3750,8 +3743,15 @@ export type Database = {
         Args: { project_id: number }
         Returns: undefined
       }
+      sync_all_project_metrics: {
+        Args: never
+        Returns: {
+          projeto_id: number
+          status: string
+        }[]
+      }
       update_project_metrics_with_integrated_finance: {
-        Args: { project_id: number }
+        Args: { p_projeto_id: number }
         Returns: undefined
       }
       update_project_metrics_with_ppc: {

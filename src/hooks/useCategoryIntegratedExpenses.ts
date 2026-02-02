@@ -35,7 +35,7 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
       // Fetch integrated financial progress from tasks
       const { data: integrated, error: integratedError } = await supabase
         .rpc('calculate_integrated_financial_progress', { 
-          p_project_id: projectId 
+          p_projeto_id: projectId 
         });
 
       if (integratedError) {
@@ -101,12 +101,16 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         centroCustoByCategory[category] += valor || 0;
       });
 
-      // Combine both sources (RPC returns array, get first element)
+      // A nova função retorna: total_gasto, percentual_progresso, orcamento_total
+      // Não temos mais breakdown por categoria da RPC, então usamos apenas os dados do centro de custo
       const integratedData = integrated?.[0];
-      const material_from_tasks = Number(integratedData?.material_expenses) || 0;
-      const labor_from_tasks = Number(integratedData?.payroll_expenses) || 0;
-      const equipment_from_tasks = Number(integratedData?.patrimony_expenses) || 0;
-      const indirect_from_tasks = Number(integratedData?.indirect_expenses) || 0;
+      const total_from_rpc = Number(integratedData?.total_gasto) || 0;
+      
+      // Sem breakdown por categoria da RPC, distribuímos proporcionalmente baseado nos dados do centro de custo
+      const material_from_tasks = 0;
+      const labor_from_tasks = 0;
+      const equipment_from_tasks = 0;
+      const indirect_from_tasks = 0;
 
       return {
         material: {

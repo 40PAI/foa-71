@@ -13,7 +13,7 @@ export function useUpdateProjectMetrics() {
       
       // Use the updated integrated financial function
       const { error } = await supabase
-        .rpc('update_project_metrics_with_integrated_finance', { project_id: projectId });
+        .rpc('update_project_metrics_with_integrated_finance', { p_projeto_id: projectId });
 
       if (error) {
         console.error('Erro ao atualizar métricas:', error);
