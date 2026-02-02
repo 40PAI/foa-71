@@ -1,14 +1,20 @@
 import { useState } from "react";
+import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { BaseModal } from "@/components/shared/BaseModal";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { useCreateLancamento, useContasFornecedores } from "@/hooks/useContasFornecedores";
 import { formatCurrency } from "@/utils/currency";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface AmortizacaoFornecedorModalProps {
   open: boolean;
@@ -105,13 +111,35 @@ export function AmortizacaoFornecedorModal({ open, onOpenChange, projectId }: Am
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="data">Data da Amortização *</Label>
-          <Input
-            id="data"
-            type="date"
-            value={dataAmortizacao}
-            onChange={(e) => setDataAmortizacao(e.target.value)}
-          />
+          <Label>Data da Amortização *</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dataAmortizacao && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataAmortizacao ? (
+                  format(parseISO(dataAmortizacao), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                ) : (
+                  <span>Selecione a data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
+              <Calendar
+                mode="single"
+                selected={dataAmortizacao ? parseISO(dataAmortizacao) : undefined}
+                onSelect={(date) => setDataAmortizacao(date ? format(date, "yyyy-MM-dd") : "")}
+                initialFocus
+                locale={ptBR}
+                className="pointer-events-auto"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
