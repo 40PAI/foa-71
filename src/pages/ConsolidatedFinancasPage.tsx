@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { formatCurrency } from "@/utils/formatters";
 import { useProjectContext } from "@/contexts/ProjectContext";
-import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Search, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2 } from "lucide-react";
-import { FinanceModal } from "@/components/modals/FinanceModal";
+import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Search, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
+import { GastoObraModal } from "@/components/modals/GastoObraModal";
 import { useConsolidatedFinancialData } from "@/hooks/useConsolidatedFinancialData";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { useProjects } from "@/hooks/useProjects";
@@ -130,6 +130,7 @@ export function ConsolidatedFinancasPage() {
     data: requisitions = []
   } = useRequisitions();
   const [expandedDashboardOpen, setExpandedDashboardOpen] = useState(false);
+  const [gastoModalOpen, setGastoModalOpen] = useState(false);
 
   // Memoized calculations usando dados consolidados
   const summaryStats = useMemo(() => {
@@ -191,7 +192,10 @@ export function ConsolidatedFinancasPage() {
         {/* Header Mobile */}
         <div className="flex items-center justify-between">
           <h1 className="text-lg font-bold">Finanças</h1>
-          <FinanceModal projectId={selectedProjectId} />
+          <Button onClick={() => setGastoModalOpen(true)} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            Movimento
+          </Button>
         </div>
 
         {/* KPIs Mobile */}
@@ -249,6 +253,11 @@ export function ConsolidatedFinancasPage() {
             </Suspense>
           </CollapsibleFinancialSection>
         </Accordion>
+        <GastoObraModal
+          open={gastoModalOpen}
+          onOpenChange={setGastoModalOpen}
+          projectId={selectedProjectId}
+        />
       </div>
     );
   }
@@ -258,7 +267,10 @@ export function ConsolidatedFinancasPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">Análise Financeira</h1>
         <div className="flex gap-2">
-          <FinanceModal projectId={selectedProjectId} />
+          <Button onClick={() => setGastoModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Movimento
+          </Button>
         </div>
       </div>
 
@@ -437,5 +449,11 @@ export function ConsolidatedFinancasPage() {
       <div className="text-xs text-muted-foreground text-center mt-6">
         ⚡ Performance otimizada: dados carregados em query única consolidada
       </div>
+
+      <GastoObraModal
+        open={gastoModalOpen}
+        onOpenChange={setGastoModalOpen}
+        projectId={selectedProjectId}
+      />
     </div>;
 }
