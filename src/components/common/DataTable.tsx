@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
 
@@ -35,44 +34,50 @@ export function DataTable<T extends { id?: number | string }>({
   renderRow
 }: DataTableProps<T>) {
   const content = (
-    <div style={{ minWidth }} className="w-full">
-      <Table scrollIndicators={false}>
-        <TableHeader>
-          <TableRow>
+    <div className="w-full overflow-x-auto">
+      <table 
+        className={cn(
+          "w-full caption-bottom text-sm",
+          minWidth && `min-w-[${minWidth}]`
+        )}
+      >
+        <thead className="[&_tr]:border-b">
+          <tr className="border-b transition-colors hover:bg-muted/50">
             {columns.map((column, index) => (
-              <TableHead 
+              <th 
                 key={index}
                 className={cn(
+                  "h-10 sm:h-12 px-2 sm:px-4 text-left align-middle font-medium text-muted-foreground text-xs sm:text-sm whitespace-nowrap",
                   column.minWidth && `min-w-[${column.minWidth}]`,
                   column.className
                 )}
               >
                 {column.header}
-              </TableHead>
+              </th>
             ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+          </tr>
+        </thead>
+        <tbody className="[&_tr:last-child]:border-0">
           {data.map((item, index) => {
             if (renderRow) {
               return renderRow(item, index);
             }
             
             return (
-              <TableRow key={item.id || index}>
+              <tr key={item.id || index} className="border-b transition-colors hover:bg-muted/50">
                 {columns.map((column, colIndex) => (
-                  <td key={colIndex} className="p-2">
+                  <td key={colIndex} className="p-2 sm:p-4 align-middle text-xs sm:text-sm">
                     {typeof column.accessor === 'function' 
                       ? column.accessor(item)
                       : String(item[column.accessor] || '')
                     }
                   </td>
                 ))}
-              </TableRow>
+              </tr>
             );
           })}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
 

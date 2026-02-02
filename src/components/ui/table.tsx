@@ -8,30 +8,17 @@ const Table = React.forwardRef<
     mobileCards?: boolean;
     scrollIndicators?: boolean;
   }
->(({ className, mobileCards = false, scrollIndicators = true, ...props }, ref) => (
+>(({ className, mobileCards = false, scrollIndicators = false, ...props }, ref) => (
   <div className="relative w-full">
-    <div 
+    <table
+      ref={ref}
       className={cn(
-        "w-full overflow-auto",
-        scrollIndicators && "scrollbar-thin scrollbar-track-muted scrollbar-thumb-border hover:scrollbar-thumb-muted-foreground"
+        "w-full caption-bottom text-sm",
+        mobileCards && "hidden sm:table",
+        className
       )}
-    >
-      <table
-        ref={ref}
-        className={cn(
-          "w-full caption-bottom text-sm",
-          mobileCards && "hidden sm:table",
-          className
-        )}
-        {...props}
-      />
-    </div>
-    {scrollIndicators && (
-      <>
-        <div className="absolute top-0 right-0 bottom-0 w-4 bg-gradient-to-l from-background to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute top-0 left-0 bottom-0 w-4 bg-gradient-to-r from-background to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
-      </>
-    )}
+      {...props}
+    />
   </div>
 ))
 Table.displayName = "Table"
