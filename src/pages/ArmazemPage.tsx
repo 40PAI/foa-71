@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "@/components/common/TablePagination";
 import { MaterialArmazemModal } from "@/components/modals/MaterialArmazemModal";
@@ -16,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Grid3X3, Table as TableIcon, List, Search, History, MapPin, BarChart3, PackagePlus, PackageMinus, AlertTriangle } from "lucide-react";
+import { Package, Grid3X3, Table as TableIcon, List, Search, History, MapPin, BarChart3, PackagePlus, PackageMinus, AlertTriangle, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { MaterialAllocationsSection } from "@/components/warehouse/MaterialAllocationsSection";
 import { MovementHistorySection } from "@/components/warehouse/MovementHistorySection";
@@ -25,6 +26,7 @@ import { WarehouseReportSection } from "@/components/warehouse/WarehouseReportSe
 export function ArmazemPage() {
   const { selectedProjectId } = useProjectContext();
   const { data: materials, isLoading } = useMaterialsArmazem();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   // Hook para verificar stock crítico e mostrar alertas
   const { criticalCount, criticalItems, hasWarehouseAccess } = useCriticalStock();
@@ -33,17 +35,37 @@ export function ArmazemPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
+  const [showCriticalOnly, setShowCriticalOnly] = useState(false);
+
+  // Ler parâmetros de URL para activar filtro de stock crítico
+  useEffect(() => {
+    const filter = searchParams.get('filter');
+    if (filter === 'critical') {
+      setShowCriticalOnly(true);
+      // Limpar parâmetro da URL após aplicar
+      searchParams.delete('filter');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const filteredMaterials = useMemo(() => {
     if (!materials) return [];
-    return materials.filter(material => {
+    
+    let filtered = materials;
+    
+    // Filtro de stock crítico (< 10 unidades)
+    if (showCriticalOnly) {
+      filtered = filtered.filter(m => m.quantidade_stock < 10);
+    }
+    
+    return filtered.filter(material => {
       const matchesSearch = material.nome_material.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            material.codigo_interno.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus === 'all' || material.status_item === filterStatus;
       const matchesCategory = filterCategory === 'all' || material.categoria_principal === filterCategory;
       return matchesSearch && matchesStatus && matchesCategory;
     });
-  }, [materials, searchTerm, filterStatus, filterCategory]);
+  }, [materials, searchTerm, filterStatus, filterCategory, showCriticalOnly]);
 
   const materialsPagination = usePagination({
     totalItems: filteredMaterials.length,
@@ -57,7 +79,7 @@ export function ArmazemPage() {
 
   useEffect(() => {
     materialsPagination.resetToFirstPage();
-  }, [searchTerm, filterStatus, filterCategory]);
+  }, [searchTerm, filterStatus, filterCategory, showCriticalOnly]);
 
   if (isLoading) {
     return (
@@ -85,7 +107,7 @@ export function ArmazemPage() {
 
       {/* Critical Stock Alert Banner */}
       {criticalCount > 0 && hasWarehouseAccess && (
-        <Card className="border-destructive bg-destructive/10">
+        <Card className="border-destructive bg-destructive/10" data-critical-stock-banner>
           <CardContent className="py-3 flex items-center gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive shrink-0" />
             <div className="flex-1">
@@ -97,9 +119,28 @@ export function ArmazemPage() {
                 {criticalCount > 3 && ` e mais ${criticalCount - 3}...`}
               </p>
             </div>
-            <Badge variant="destructive">&lt; 10 unidades</Badge>
+            <Badge 
+              variant="destructive" 
+              className="cursor-pointer"
+              onClick={() => setShowCriticalOnly(!showCriticalOnly)}
+            >
+              {showCriticalOnly ? 'Mostrar todos' : 'Filtrar críticos'}
+            </Badge>
           </CardContent>
         </Card>
+      )}
+
+      {/* Badge indicador de filtro activo */}
+      {showCriticalOnly && (
+        <Badge 
+          variant="destructive" 
+          className="cursor-pointer flex items-center gap-1 w-fit"
+          onClick={() => setShowCriticalOnly(false)}
+        >
+          <AlertTriangle className="h-3 w-3" />
+          Mostrando apenas stock crítico ({filteredMaterials.length} materiais)
+          <X className="h-3 w-3 ml-1" />
+        </Badge>
       )}
 
       <Tabs defaultValue="materials" className="w-full">
