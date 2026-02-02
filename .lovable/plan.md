@@ -1,132 +1,131 @@
 
-# Plano: Unificação das Entradas de Despesas Financeiras
+# Plano: Corrigir Dados Zerados em Finanças, Centros de Custo e Compras
 
-## Contexto e Problema Identificado
+## Diagnóstico dos Problemas
 
-Actualmente a plataforma tem **3 caminhos diferentes** para registar despesas:
+Após análise detalhada da base de dados e código, identifiquei os seguintes problemas:
 
-| Caminho | Tabela | Formulário | Uso Real |
-|---------|--------|------------|----------|
-| 1. Botão "Nova Despesa" em Finanças | `financas` | FinanceForm.tsx | 2 registos (quase não usado) |
-| 2. Botão "Novo Movimento" em Centros de Custo | `movimentos_financeiros` | GastoObraModal.tsx | 223 registos (principal) |
-| 3. Requisições aprovadas | `requisicoes` | RequisitionForm.tsx | 0 registos (workflow separado) |
+| Problema | Causa | Impacto |
+|----------|-------|---------|
+| 1. Função SQL com erro | `get_consolidated_financial_data` usa coluna `categoria_gasto` que não existe em `movimentos_financeiros` | Página de Finanças mostra tudo zerado |
+| 2. View retorna zeros | `saldos_centros_custo` faz JOIN por `centro_custo_id`, mas 223 movimentos têm esse campo `NULL` | KPIs de Centros de Custo zerados |
+| 3. Hook usa view incorreta | `useProjectFinancialTotals` não está a ser usado correctamente | Totais não aparecem |
 
-**Problema**: Esta duplicidade cria confusão e a "discrepância" tenta comparar dados de tabelas que representam conceitos diferentes.
+**Dados na base de dados (confirmados)**:
+- 223 movimentos financeiros para o projeto 53
+- Total saídas: 59,578,497.76 Kz
+- Total FOF Financiamento: 36,199,449.29 Kz  
+- Total FOA Auto: 23,379,048.47 Kz
+- Total Recebimentos FOA: 23,331,521.75 Kz
 
-## Análise dos Formulários
+## Soluções Propostas
 
-### Formulário de Finanças (FinanceForm.tsx)
-**Campos disponíveis:**
-- Categoria, Subcategoria
-- Valor Orçamentado, Valor Gasto
-- Tipo de despesa (fixa, variável, emergencial, planejada)
-- Prioridade (baixa, média, alta, crítica)
-- Etapa e Tarefa relacionadas
-- Centro de custo (texto livre)
-- Justificativa (obrigatória, 20-500 caracteres)
-- Fornecedor, Forma de pagamento, Nº NF
-- Prazo de pagamento, Data da despesa, Data do pagamento
-- Requer aprovação da direcção
-- Upload de comprovantes (múltiplos)
-- Número de parcelas
+### 1. Corrigir a Função SQL `get_consolidated_financial_data`
 
-### Formulário de Movimentos/Gastos de Obra (GastoObraModal.tsx)
-**Campos disponíveis:**
-- Data do movimento
-- Tipo: Entrada ou Saída
-- Fonte de financiamento (REC_FOA, FOF_FIN, FOA_AUTO)
-- Subtipo de entrada (valor_inicial, recebimento_cliente, financiamento_adicional, reembolso)
-- Descrição
-- Valor
-- Categoria (lista predefinida)
-- Centro de custo (vinculado à BD)
-- Responsável (selecção de utilizador ou texto)
-- Observações
+Actualizar a função para usar `categoria` em vez de `categoria_gasto`:
 
-## Recomendação
-
-**Manter e expandir o formulário de Movimentos Financeiros** (GastoObraModal) como único ponto de entrada de despesas, porque:
-
-1. É o que já está a ser utilizado (223 registos vs 2)
-2. Suporta Entradas E Saídas (mais flexível)
-3. Tem fontes de financiamento diferenciadas (REC_FOA, FOF_FIN, FOA_AUTO)
-4. Está vinculado aos Centros de Custo reais da BD
-5. Suporta subtipos de entrada (capital inicial, recebimentos, etc.)
-
-## Alterações Propostas
-
-### 1. Expandir o Formulário de Movimentos Financeiros
-
-Adicionar os campos úteis do FinanceForm que estão em falta:
-
-```text
-Novos campos a adicionar ao GastoObraModal:
-- Etapa relacionada (select das etapas do projecto)
-- Tarefa relacionada (select das tarefas da etapa)
-- Fornecedor/Beneficiário
-- Forma de pagamento
-- Número do documento (NF, recibo, etc.)
-- Upload de comprovante
+```sql
+-- Na CTE movimentos_financeiros_data e integrated_expenses
+-- Substituir: categoria_gasto → categoria
 ```
 
-### 2. Reorganizar o Formulário em Abas
+### 2. Melhorar a Página de Centros de Custo
 
-Para não ficar demasiado longo, organizar em 2-3 abas:
-- **Básico**: Data, Tipo, Fonte, Valor, Descrição, Categoria
-- **Detalhes**: Etapa, Tarefa, Fornecedor, Centro de Custo
-- **Pagamento**: Forma de pagamento, Nº documento, Comprovante, Observações
+O hook `useProjectFinancialTotals` já existe e funciona correctamente. Precisa ser usado quando "Todos os Centros de Custo" está seleccionado para mostrar totais globais (incluindo movimentos sem centro de custo atribuído).
 
-### 3. Remover o Botão "Nova Despesa" da Página de Finanças
+**Alterações em `CentrosCustoPage.tsx`:**
+- Garantir que os KPIs usam `projectTotals` quando `selectedCentroCustoId === "all"`
+- Isto já está implementado, mas os dados não estão a aparecer
 
-- Remover o FinanceModal da ConsolidatedFinancasPage
-- Manter a tabela `financas` para dados históricos (não apagar)
-- Redirecionar utilizadores para Centros de Custo OU adicionar o novo formulário unificado na página de Finanças
+### 3. Verificar View gastos_obra_view
 
-### 4. Simplificar o Sistema de Discrepâncias
+A view está a funcionar correctamente quando consultada directamente. O problema pode ser de renderização no componente.
 
-Com uma única fonte de dados (movimentos_financeiros), o conceito de "discrepância" muda:
+### 4. Actualizar MovimentacoesFinanceirasCard
 
-**Nova lógica:**
-- Comparar `Orçamentado` (do projecto/etapa) vs `Gasto Real` (movimentos_financeiros)
-- Ou simplesmente remover a secção de discrepâncias e mostrar apenas análise de gastos
+Garantir que os dados são passados correctamente para os componentes filhos.
 
-### 5. Manter as Requisições como Fluxo Separado
-
-As requisições são um workflow de aprovação para compras:
-1. Pedido de compra → 2. Aprovação → 3. OC Gerada → 4. Recepcionado → 5. Liquidado
-
-Opcionalmente, ao liquidar uma requisição, criar automaticamente um movimento_financeiro.
-
-## Resumo das Alterações por Ficheiro
+## Ficheiros a Modificar
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| `src/components/modals/GastoObraModal.tsx` | Expandir com novos campos (etapa, tarefa, fornecedor, forma pagamento, upload) |
-| `src/pages/ConsolidatedFinancasPage.tsx` | Substituir FinanceModal pelo novo formulário unificado |
-| `src/components/DiscrepancyReport.tsx` | Simplificar para comparar orçamento vs gasto real |
-| `src/hooks/useGastosObra.ts` | Adicionar suporte aos novos campos |
-| BD: `movimentos_financeiros` | Verificar se já tem colunas necessárias (forma_pagamento, numero_documento, etc.) |
-
-## Benefícios
-
-1. **Simplicidade**: Um único caminho para registar despesas
-2. **Consistência**: Todos os dados numa única tabela
-3. **Elimina confusão**: Sem "discrepâncias" entre tabelas diferentes
-4. **Mantém funcionalidades**: Nenhum campo útil é perdido
-5. **Compatibilidade**: Dados históricos de `financas` permanecem intactos
+| **Migração SQL** | Corrigir função `get_consolidated_financial_data` (substituir `categoria_gasto` por `categoria`) |
+| `src/pages/CentrosCustoPage.tsx` | Verificar que os KPIs mostram dados de `projectTotals` |
+| `src/components/financial/GastosObraKPICards.tsx` | Verificar renderização dos KPIs |
+| `src/components/financial/GastosObraTable.tsx` | Verificar se a tabela renderiza os dados |
 
 ## Secção Técnica
 
-### Esquema da Tabela movimentos_financeiros
+### Migração SQL Necessária
 
-A tabela já possui a maioria dos campos necessários:
-- `forma_pagamento` - já existe
-- `numero_documento` - já existe  
-- `comprovante_url` - já existe
-- `etapa_id` - já existe
-- `tarefa_id` - já existe
-- `fornecedor_beneficiario` - pode precisar ser adicionado (verificar se `responsavel_nome` pode servir ou criar novo)
+```sql
+CREATE OR REPLACE FUNCTION get_consolidated_financial_data(p_projeto_id INTEGER)
+RETURNS JSON AS $$
+DECLARE
+  result JSON;
+BEGIN
+  WITH 
+  -- ... CTEs anteriores mantêm-se ...
+  
+  -- CTE 5: Movimentos financeiros (CORRIGIDO)
+  movimentos_financeiros_data AS (
+    SELECT 
+      id,
+      projeto_id,
+      centro_custo_id,
+      tipo_movimento,
+      categoria,  -- ← CORRIGIDO: era categoria_gasto
+      valor,
+      data_movimento,
+      descricao,
+      fonte_financiamento,
+      created_at
+    FROM movimentos_financeiros
+    WHERE projeto_id = p_projeto_id
+    ORDER BY data_movimento DESC
+    LIMIT 100
+  ),
+  
+  -- CTE 8: Category integrated expenses (CORRIGIDO)
+  integrated_expenses AS (
+    SELECT 
+      -- Material expenses - usar categoria em vez de categoria_gasto
+      COALESCE(SUM(CASE WHEN t.custo_material > 0 ... END), 0) +
+      COALESCE(SUM(CASE WHEN mf.categoria ILIKE '%material%' AND mf.tipo_movimento = 'saida' THEN mf.valor ELSE 0 END), 0) as material_total,
+      -- ... resto mantém-se mas corrigir categoria_gasto → categoria
+    ...
+  )
+  
+  -- ... resto da função ...
+$$;
+```
 
-### Migração Sugerida
+### Fluxo de Dados Actual
 
-Não é necessária migração de dados. A tabela `financas` pode continuar a existir para consulta de dados históricos, mas novos registos serão apenas em `movimentos_financeiros`.
+```
+Tabela: movimentos_financeiros (223 registos)
+         ↓
+    View: gastos_obra_view
+         ↓
+    Hook: useGastosObra
+         ↓
+Componente: MovimentacoesFinanceirasCard
+         ↓
+   Tabela: GastosObraTable
+```
+
+### Verificação Adicional
+
+Se após a correcção SQL os dados continuarem a não aparecer, pode haver um problema de timing/cache. Recomendo:
+1. Limpar cache do React Query
+2. Verificar se a view `gastos_obra_view` tem `SECURITY INVOKER` configurado
+
+## Resultado Esperado
+
+Após as correcções:
+- Página de **Finanças**: Mostrará os KPIs com valores correctos (Total Compras, Aprovado, etc.)
+- Página de **Centros de Custo**: 
+  - Com "Todos" seleccionado: Mostrará total de ~59.5M Kz em custos
+  - KPIs reflectirão os dados reais
+  - Tabela de movimentações mostrará os 223 registos
+- Página de **Compras**: Funcionará correctamente (0 requisições é o valor real para este projeto)
