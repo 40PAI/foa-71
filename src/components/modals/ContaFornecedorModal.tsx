@@ -1,15 +1,20 @@
 import { useState } from "react";
+import { format } from "date-fns";
+import { pt } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
 import { BaseModal } from "@/components/shared/BaseModal";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCreateContaFornecedor, useCreateLancamento } from "@/hooks/useContasFornecedores";
 import { useFornecedores } from "@/hooks/useFornecedores";
 import { useProjectState } from "@/hooks/useContextHooks";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface ContaFornecedorModalProps {
   open: boolean;
@@ -21,7 +26,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
   const [fornecedorId, setFornecedorId] = useState<string>("");
   const [valorCredito, setValorCredito] = useState<number>(0);
   const [descricao, setDescricao] = useState<string>("");
-  const [dataVencimento, setDataVencimento] = useState<string>("");
+  const [dataVencimento, setDataVencimento] = useState<Date | undefined>(undefined);
   const [categoria, setCategoria] = useState<string>("");
   
   const { data: fornecedores, isLoading: loadingFornecedores } = useFornecedores();
@@ -41,7 +46,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
         projeto_id: projectData.id,
         saldo_inicial: 0,
         descricao,
-        data_vencimento: dataVencimento || null,
+        data_vencimento: dataVencimento ? format(dataVencimento, "yyyy-MM-dd") : null,
         categoria,
       });
 
@@ -58,7 +63,7 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
       setFornecedorId("");
       setValorCredito(0);
       setDescricao("");
-      setDataVencimento("");
+      setDataVencimento(undefined);
       setCategoria("");
     } catch (error) {
       console.error("Erro ao criar crédito:", error);
@@ -120,13 +125,34 @@ export function ContaFornecedorModal({ open, onOpenChange }: ContaFornecedorModa
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="dataVencimento">Data de Vencimento</Label>
-          <Input
-            id="dataVencimento"
-            type="date"
-            value={dataVencimento}
-            onChange={(e) => setDataVencimento(e.target.value)}
-          />
+          <Label>Data de Vencimento</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !dataVencimento && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dataVencimento ? (
+                  format(dataVencimento, "dd 'de' MMMM 'de' yyyy", { locale: pt })
+                ) : (
+                  <span>Selecione uma data</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={dataVencimento}
+                onSelect={setDataVencimento}
+                locale={pt}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="space-y-2">
