@@ -151,7 +151,8 @@ export function useCriticalStock() {
         action: {
           label: 'Ver detalhes',
           onClick: () => {
-            window.location.href = '/armazem';
+            // Navega com parâmetro de filtro para activar filtro de stock crítico
+            window.location.href = '/armazem?filter=critical';
           }
         }
       });
