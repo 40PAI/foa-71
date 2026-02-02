@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Brush } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Maximize2, ZoomOut } from "lucide-react";
+import { Maximize2, ZoomOut, RotateCcw } from "lucide-react";
 import { Tooltip as TooltipUI, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -18,10 +18,21 @@ interface GraficoLinhaMovimentosProps {
   movimentos: MovimentoData[];
 }
 
+// Constants for zoom
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 10;
+const ZOOM_SPEED = 0.15;
+
 export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [brushStartIndex, setBrushStartIndex] = useState<number | undefined>(undefined);
-  const [brushEndIndex, setBrushEndIndex] = useState<number | undefined>(undefined);
+  
+  // Zoom state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomCenter, setZoomCenter] = useState(1); // Start at the end (most recent data)
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
+  
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const expandedChartRef = useRef<HTMLDivElement>(null);
 
   // Agrupar movimentos por data
   const dadosAgrupados = movimentos.reduce((acc, mov) => {
@@ -46,6 +57,123 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
     item.saldo = saldoAnterior + item.entradas - item.saidas;
     return item;
   });
+
+  // Calculate visible range based on zoom level
+  const visibleRange = useMemo(() => {
+    const totalPoints = dados.length;
+    if (totalPoints === 0) return { start: 0, end: 0 };
+    
+    // How many points to show based on zoom level
+    const visiblePoints = Math.max(3, Math.floor(totalPoints / zoomLevel));
+    
+    // Calculate start and end based on center
+    const centerIndex = Math.floor((totalPoints - 1) * zoomCenter);
+    const halfVisible = Math.floor(visiblePoints / 2);
+    
+    let start = Math.max(0, centerIndex - halfVisible);
+    let end = Math.min(totalPoints - 1, start + visiblePoints - 1);
+    
+    // Adjust if we hit the end
+    if (end >= totalPoints - 1) {
+      end = totalPoints - 1;
+      start = Math.max(0, end - visiblePoints + 1);
+    }
+    
+    // Adjust if we hit the start
+    if (start <= 0) {
+      start = 0;
+      end = Math.min(totalPoints - 1, visiblePoints - 1);
+    }
+    
+    return { start, end };
+  }, [dados.length, zoomLevel, zoomCenter]);
+
+  // Get visible data slice
+  const visibleData = useMemo(() => {
+    return dados.slice(visibleRange.start, visibleRange.end + 1);
+  }, [dados, visibleRange]);
+
+  // Handle wheel event for zoom
+  const handleWheel = useCallback((event: WheelEvent) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Determine scroll direction (scroll up = zoom in, scroll down = zoom out)
+    const delta = event.deltaY > 0 ? -1 : 1;
+    
+    setZoomLevel(prev => {
+      const newZoom = prev + (delta * ZOOM_SPEED);
+      return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, newZoom));
+    });
+  }, []);
+
+  // Handle horizontal panning when zoomed
+  const handlePan = useCallback((event: WheelEvent) => {
+    if (event.ctrlKey || event.metaKey) return;
+    if (zoomLevel <= 1) return;
+    if (!event.shiftKey) return;
+    
+    event.preventDefault();
+    
+    const panSpeed = 0.05;
+    const delta = event.deltaY > 0 ? panSpeed : -panSpeed;
+    
+    setZoomCenter(prev => Math.max(0, Math.min(1, prev + delta)));
+  }, [zoomLevel]);
+
+  // Detect Ctrl key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(true);
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.key === 'Meta') {
+        setIsCtrlPressed(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  // Attach wheel event to expanded chart container
+  useEffect(() => {
+    const container = expandedChartRef.current;
+    if (!container || !isExpanded) return;
+    
+    const wheelHandler = (e: WheelEvent) => {
+      handleWheel(e);
+      handlePan(e);
+    };
+    
+    container.addEventListener('wheel', wheelHandler, { passive: false });
+    
+    return () => {
+      container.removeEventListener('wheel', wheelHandler);
+    };
+  }, [handleWheel, handlePan, isExpanded]);
+
+  // Reset zoom when modal closes
+  useEffect(() => {
+    if (!isExpanded) {
+      setZoomLevel(1);
+      setZoomCenter(1);
+    }
+  }, [isExpanded]);
+
+  const handleResetZoom = useCallback(() => {
+    setZoomLevel(1);
+    setZoomCenter(1);
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-PT", {
@@ -86,22 +214,15 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
     );
   };
 
-  const handleBrushChange = useCallback((newIndex: { startIndex?: number; endIndex?: number }) => {
-    setBrushStartIndex(newIndex.startIndex);
-    setBrushEndIndex(newIndex.endIndex);
-  }, []);
+  const isZoomed = zoomLevel > 1;
+  const zoomPercentage = Math.round(zoomLevel * 100);
 
-  const handleResetZoom = useCallback(() => {
-    setBrushStartIndex(undefined);
-    setBrushEndIndex(undefined);
-  }, []);
-
-  const isZoomed = brushStartIndex !== undefined || brushEndIndex !== undefined;
-  const defaultStartIndex = Math.max(0, dados.length - 15);
-
-  const ChartContent = ({ height }: { height: number }) => (
+  const ChartContent = ({ height, data }: { height: number; data: typeof dados }) => (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 60 }}>
+      <BarChart 
+        data={data} 
+        margin={{ top: 30, right: 30, left: 20, bottom: 20 }}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis 
           dataKey="data" 
@@ -131,30 +252,29 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
           fill="hsl(var(--chart-3))"
           name="Entradas"
           radius={[4, 4, 0, 0]}
+          isAnimationActive={true}
+          animationDuration={300}
+          animationEasing="ease-out"
         />
         <Bar
           dataKey="saidas"
           fill="hsl(var(--chart-2))"
           name="Saídas"
           radius={[4, 4, 0, 0]}
+          isAnimationActive={true}
+          animationDuration={300}
+          animationEasing="ease-out"
         />
         <Bar
           dataKey="saldo"
           fill="transparent"
           name="Saldo"
+          isAnimationActive={true}
+          animationDuration={300}
+          animationEasing="ease-out"
         >
           <LabelList content={CustomSaldoLabel} />
         </Bar>
-        <Brush
-          dataKey="data"
-          height={30}
-          stroke="hsl(var(--primary))"
-          fill="hsl(var(--muted))"
-          travellerWidth={10}
-          startIndex={brushStartIndex ?? defaultStartIndex}
-          endIndex={brushEndIndex ?? dados.length - 1}
-          onChange={handleBrushChange}
-        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -165,62 +285,102 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Evolução Temporal - Entradas, Saídas e Saldo</CardTitle>
-            <div className="flex items-center gap-2">
-              {isZoomed && (
-                <TooltipProvider>
-                  <TooltipUI>
-                    <TooltipTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                        onClick={handleResetZoom}
-                      >
-                        <ZoomOut className="h-3 w-3 mr-1" />
-                        Reset
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Voltar à vista completa</p>
-                    </TooltipContent>
-                  </TooltipUI>
-                </TooltipProvider>
-              )}
-              <TooltipProvider>
-                <TooltipUI>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      onClick={() => setIsExpanded(true)}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Expandir gráfico</p>
-                  </TooltipContent>
-                </TooltipUI>
-              </TooltipProvider>
-            </div>
+            <TooltipProvider>
+              <TooltipUI>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsExpanded(true)}
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Expandir gráfico com zoom interactivo</p>
+                </TooltipContent>
+              </TooltipUI>
+            </TooltipProvider>
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-xs text-muted-foreground mb-2">
-            Arraste as extremidades da barra inferior para ampliar um período específico
-          </p>
-          <ChartContent height={400} />
+          <ChartContent height={400} data={dados.slice(Math.max(0, dados.length - 15))} />
         </CardContent>
       </Card>
 
       <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
         <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Evolução Temporal - Entradas, Saídas e Saldo</DialogTitle>
+            <div className="flex items-center justify-between pr-8">
+              <DialogTitle>Evolução Temporal - Entradas, Saídas e Saldo</DialogTitle>
+              <div className="flex items-center gap-2">
+                {isZoomed && (
+                  <TooltipProvider>
+                    <TooltipUI>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                          onClick={handleResetZoom}
+                        >
+                          <RotateCcw className="h-3 w-3 mr-1" />
+                          Reset
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Voltar à vista completa</p>
+                      </TooltipContent>
+                    </TooltipUI>
+                  </TooltipProvider>
+                )}
+              </div>
+            </div>
           </DialogHeader>
-          <div className="h-[500px]">
-            <ChartContent height={500} />
+          
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              💡 Use <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Ctrl</kbd> + scroll para zoom suave • 
+              <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono ml-1">Shift</kbd> + scroll para navegar
+            </p>
+            
+            <div 
+              ref={expandedChartRef}
+              className="relative h-[500px] transition-all duration-300 ease-out"
+              style={{
+                cursor: isCtrlPressed 
+                  ? (zoomLevel < MAX_ZOOM ? 'zoom-in' : 'zoom-out') 
+                  : 'default'
+              }}
+            >
+              {/* Zoom indicator */}
+              {isZoomed && (
+                <div className="absolute top-2 right-2 z-10 bg-background/90 backdrop-blur-sm px-3 py-1.5 rounded-md text-xs text-muted-foreground border shadow-sm animate-fade-in">
+                  <span className="font-medium">🔍 {zoomPercentage}%</span>
+                  <span className="ml-2 text-muted-foreground/70">
+                    ({visibleData.length}/{dados.length} pontos)
+                  </span>
+                </div>
+              )}
+              
+              {/* Navigation indicator when zoomed */}
+              {isZoomed && dados.length > 0 && (
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1">
+                  <div className="h-1 bg-muted rounded-full overflow-hidden" style={{ width: '120px' }}>
+                    <div 
+                      className="h-full bg-primary/60 rounded-full transition-all duration-200"
+                      style={{
+                        width: `${(1 / zoomLevel) * 100}%`,
+                        marginLeft: `${zoomCenter * (100 - (1 / zoomLevel) * 100)}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              <ChartContent height={500} data={visibleData} />
+            </div>
           </div>
         </DialogContent>
       </Dialog>
