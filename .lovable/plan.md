@@ -1,112 +1,113 @@
 
-# Plano: Resolver Barras de Scroll Horizontais Duplicadas
 
-## Diagnóstico
+# Plano: Adicionar Zoom Interactivo ao Gráfico de Evolução Temporal
 
-A análise revelou **múltiplas camadas de containers com overflow** que criam barras de scroll redundantes:
+## Problema Identificado
 
-```text
-ESTRUTURA ACTUAL (com problema):
-┌─ main (overflow-x-hidden + overflow-y-auto) ─────────┐
-│   ┌─ div (overflow-y-auto) ──────────────────────┐   │
-│   │   ┌─ Card ─────────────────────────────────┐ │   │
-│   │   │   ┌─ div (minWidth: 1200px) ─────────┐ │ │   │
-│   │   │   │   ┌─ Table wrapper (overflow-auto)│ │ │   │  ← SCROLL #1
-│   │   │   │   │   <table/>                    │ │ │   │
-│   │   │   │   └────────────────────────────┘ │ │ │   │
-│   │   │   └──────────────────────────────────┘ │ │   │
-│   │   └──────────────────────────────────────────┘ │   │
-│   └────────────────────────────────────────────────┘   │
-└── SCROLL #2 (barra inferior da página) ──────────────────┘
-```
+O gráfico "Evolução Temporal - Entradas, Saídas e Saldo" mostra demasiados pontos de dados quando há muitos movimentos financeiros, resultando em:
+- Datas sobrepostas no eixo X
+- Labels de valores aglomerados e ilegíveis
+- Dificuldade em identificar valores exactos em datas específicas
 
-### Ficheiros Afectados
+## Solução: Componente Brush do Recharts
 
-| Ficheiro | Problema |
-|----------|----------|
-| `src/components/MainContent.tsx` | `overflow-x-hidden` no main bloqueia scroll horizontal normal |
-| `src/components/ui/table.tsx` | `overflow-auto` sempre activo cria scroll interno |
-| `src/components/common/DataTable.tsx` | `minWidth` força conteúdo largo |
-
-## Solução
-
-Simplificar a estrutura de overflow para que exista **apenas uma barra de scroll horizontal** controlada pelo componente Table:
+O Recharts já inclui um componente `Brush` que adiciona uma barra de navegação na parte inferior do gráfico, permitindo:
+- **Seleccionar um intervalo de datas** arrastando as extremidades
+- **Ver apenas os dados seleccionados** no gráfico principal
+- **Navegar temporalmente** movendo a janela de selecção
 
 ```text
-ESTRUTURA CORRIGIDA:
-┌─ main (sem overflow-x) ──────────────────────────────┐
-│   ┌─ Card (overflow-hidden) ───────────────────────┐ │
-│   │   ┌─ Table wrapper (overflow-auto) ──────────┐ │ │  ← ÚNICO SCROLL
-│   │   │   <table minWidth="1200px"/>             │ │ │
-│   │   └──────────────────────────────────────────┘ │ │
-│   └──────────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────┘
+ANTES (gráfico congestionado):
+┌────────────────────────────────────┐
+│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
+│ Valores: +24M +23M +21M +19M ...   │  ← Ilegível
+│ 05/12 06/11 07/10 ... 08/01        │  ← Datas sobrepostas
+└────────────────────────────────────┘
+
+DEPOIS (com Brush - visão ampliada):
+┌────────────────────────────────────┐
+│     ▓       ▓       ▓       ▓      │
+│   +24.9M  +23.8M  +22.1M  +19.8M   │  ← Valores claros
+│   25/08   28/08   01/09   05/09    │  ← Datas legíveis
+├────────────────────────────────────┤
+│ ░░░░░░░░[▓▓▓▓▓▓]░░░░░░░░░░░░░░░░░ │  ← Brush (seleccionar período)
+└────────────────────────────────────┘
+        ↑         ↑
+      Início     Fim do zoom
 ```
 
-## Alterações Técnicas
+## Implementação Técnica
 
-### 1. MainContent.tsx
+### Ficheiro a Modificar
 
-Remover `overflow-x-hidden` do main e simplificar estrutura:
+`src/components/financial/GraficoLinhaMovimentos.tsx`
 
+### Alterações
+
+1. **Importar o componente Brush**:
 ```typescript
-// ANTES
-<main className="flex-1 min-w-0 w-full overflow-x-hidden">
-  <div className="h-full overflow-y-auto">
-
-// DEPOIS
-<main className="flex-1 min-w-0 w-full">
-  <div className="h-full">
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Brush } from "recharts";
 ```
 
-### 2. DataTable.tsx
-
-Envolver o conteúdo num container com `overflow-x-auto` correctamente posicionado e remover o `minWidth` inline que força largura:
-
+2. **Adicionar Brush ao BarChart**:
 ```typescript
-// ANTES
-const content = (
-  <div style={{ minWidth }} className="w-full">
-    <Table scrollIndicators={false}>
-
-// DEPOIS
-const content = (
-  <div className="w-full overflow-x-auto">
-    <Table scrollIndicators={false} className={minWidth ? `min-w-[${minWidth}]` : ''}>
+<BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 50 }}>
+  {/* ... componentes existentes ... */}
+  
+  <Brush 
+    dataKey="data" 
+    height={30} 
+    stroke="hsl(var(--primary))"
+    fill="hsl(var(--muted))"
+    travellerWidth={10}
+    startIndex={Math.max(0, dados.length - 15)}  // Mostrar últimos 15 pontos inicialmente
+  />
+</BarChart>
 ```
 
-### 3. Card Component (quando usado com tabelas)
-
-Adicionar `overflow-hidden` ao Card quando contém tabelas para evitar que o scroll escape:
-
+3. **Ajustar margem inferior** para acomodar o Brush:
 ```typescript
-// CardContent com p-0 para tabelas
-<CardContent className="p-0 overflow-hidden">
+margin={{ top: 30, right: 30, left: 20, bottom: 50 }}
 ```
 
-### 4. Table UI Component
-
-Modificar para que o `overflow-auto` só seja aplicado quando necessário e não haja wrapper duplicado:
-
+4. **Adicionar botão "Reset Zoom"** para voltar à vista completa:
 ```typescript
-// ANTES - wrapper sempre com overflow-auto
-<div className={cn("w-full overflow-auto", ...)}>
-  <table ... />
-</div>
+const [brushRange, setBrushRange] = useState<{startIndex?: number, endIndex?: number}>({});
 
-// DEPOIS - table define própria largura, container pai controla scroll
-<div className="relative w-full">
-  <table className={cn("w-full caption-bottom text-sm", className)} ... />
-</div>
+<Button 
+  variant="ghost" 
+  size="sm"
+  onClick={() => setBrushRange({})}
+  className="text-xs"
+>
+  <ZoomOut className="h-3 w-3 mr-1" />
+  Reset
+</Button>
 ```
 
-## Princípio Aplicado
+### Props do Componente Brush
 
-**Uma única responsabilidade de scroll**: O `overflow-x-auto` deve existir apenas num nível - o container imediato da tabela no DataTable. Isto evita barras duplicadas e garante comportamento previsível.
+| Propriedade | Valor | Descrição |
+|-------------|-------|-----------|
+| `dataKey` | `"data"` | Campo usado para labels no Brush |
+| `height` | `30` | Altura da barra de navegação |
+| `stroke` | `hsl(var(--primary))` | Cor da borda dos travellers |
+| `fill` | `hsl(var(--muted))` | Cor de fundo do Brush |
+| `travellerWidth` | `10` | Largura das alças de arrasto |
+| `startIndex` | calculado | Índice inicial da selecção |
+
+### Comportamento Esperado
+
+1. **Vista Inicial**: Gráfico mostra os últimos 15 movimentos (ou menos se não existirem tantos)
+2. **Navegação**: Utilizador arrasta as extremidades do Brush para seleccionar período
+3. **Zoom Automático**: Gráfico principal actualiza mostrando apenas o período seleccionado
+4. **Labels Legíveis**: Com menos pontos visíveis, valores e datas ficam claros
+5. **Reset**: Botão para voltar à vista completa
 
 ## Resultado Esperado
 
-- Apenas UMA barra de scroll horizontal quando o conteúdo excede a largura
-- Scroll funciona suavemente sem duplicação
-- Consistência em todas as páginas com tabelas
-- Mantém a responsividade mobile existente
+- Utilizador consegue fazer zoom arrastando as extremidades da barra de navegação
+- Valores e datas ficam claramente visíveis quando ampliados
+- Funcionalidade disponível tanto no card normal quanto no modal expandido
+- Experiência intuitiva sem necessidade de instruções
+
