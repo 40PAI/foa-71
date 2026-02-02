@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Brush } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, ZoomOut } from "lucide-react";
 import { Tooltip as TooltipUI, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -20,6 +20,8 @@ interface GraficoLinhaMovimentosProps {
 
 export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [brushStartIndex, setBrushStartIndex] = useState<number | undefined>(undefined);
+  const [brushEndIndex, setBrushEndIndex] = useState<number | undefined>(undefined);
 
   // Agrupar movimentos por data
   const dadosAgrupados = movimentos.reduce((acc, mov) => {
@@ -84,9 +86,22 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
     );
   };
 
+  const handleBrushChange = useCallback((newIndex: { startIndex?: number; endIndex?: number }) => {
+    setBrushStartIndex(newIndex.startIndex);
+    setBrushEndIndex(newIndex.endIndex);
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setBrushStartIndex(undefined);
+    setBrushEndIndex(undefined);
+  }, []);
+
+  const isZoomed = brushStartIndex !== undefined || brushEndIndex !== undefined;
+  const defaultStartIndex = Math.max(0, dados.length - 15);
+
   const ChartContent = ({ height }: { height: number }) => (
     <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 5 }}>
+      <BarChart data={dados} margin={{ top: 30, right: 30, left: 20, bottom: 60 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis 
           dataKey="data" 
@@ -130,6 +145,16 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
         >
           <LabelList content={CustomSaldoLabel} />
         </Bar>
+        <Brush
+          dataKey="data"
+          height={30}
+          stroke="hsl(var(--primary))"
+          fill="hsl(var(--muted))"
+          travellerWidth={10}
+          startIndex={brushStartIndex ?? defaultStartIndex}
+          endIndex={brushEndIndex ?? dados.length - 1}
+          onChange={handleBrushChange}
+        />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -140,26 +165,51 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Evolução Temporal - Entradas, Saídas e Saldo</CardTitle>
-            <TooltipProvider>
-              <TooltipUI>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    onClick={() => setIsExpanded(true)}
-                  >
-                    <Maximize2 className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Expandir gráfico</p>
-                </TooltipContent>
-              </TooltipUI>
-            </TooltipProvider>
+            <div className="flex items-center gap-2">
+              {isZoomed && (
+                <TooltipProvider>
+                  <TooltipUI>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={handleResetZoom}
+                      >
+                        <ZoomOut className="h-3 w-3 mr-1" />
+                        Reset
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Voltar à vista completa</p>
+                    </TooltipContent>
+                  </TooltipUI>
+                </TooltipProvider>
+              )}
+              <TooltipProvider>
+                <TooltipUI>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={() => setIsExpanded(true)}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Expandir gráfico</p>
+                  </TooltipContent>
+                </TooltipUI>
+              </TooltipProvider>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
+          <p className="text-xs text-muted-foreground mb-2">
+            Arraste as extremidades da barra inferior para ampliar um período específico
+          </p>
           <ChartContent height={400} />
         </CardContent>
       </Card>
