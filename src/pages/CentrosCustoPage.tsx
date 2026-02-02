@@ -3,7 +3,7 @@ import { Download, Upload, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useSaldosCentrosCusto, useCentrosCusto } from "@/hooks/useCentrosCusto";
+import { useSaldosCentrosCusto, useCentrosCusto, useProjectFinancialTotals } from "@/hooks/useCentrosCusto";
 import { CentroCustoModal } from "@/components/modals/CentroCustoModal";
 import { MovimentosImportModal } from "@/components/modals/MovimentosImportModal";
 import { GraficoLinhaMovimentos } from "@/components/financial/GraficoLinhaMovimentos";
@@ -39,16 +39,30 @@ export default function CentrosCustoPage() {
     centroCustoId: selectedCentroCustoId !== "all" ? selectedCentroCustoId : undefined
   });
 
+  // Buscar totais do projecto quando "Todos" está selecionado
+  const { data: projectTotals } = useProjectFinancialTotals(
+    selectedCentroCustoId === "all" ? selectedProjectId || undefined : undefined
+  );
 
   // Filtrar saldos por centro de custo selecionado
   const filteredSaldos = selectedCentroCustoId === "all" 
     ? saldos 
     : saldos?.filter(s => s.centro_custo_id === selectedCentroCustoId);
 
-  // Calcular KPIs baseados nos saldos filtrados
-  const totalOrcamento = filteredSaldos?.reduce((acc, s) => acc + s.orcamento_mensal, 0) || 0;
-  const totalGasto = filteredSaldos?.reduce((acc, s) => acc + s.total_saidas, 0) || 0;
-  const totalSaldo = filteredSaldos?.reduce((acc, s) => acc + s.saldo, 0) || 0;
+  // Calcular KPIs baseados nos dados disponíveis
+  // Quando "all" está selecionado, usar totais do projecto (inclui movimentos sem CC)
+  const totalOrcamento = selectedCentroCustoId === "all" && projectTotals
+    ? projectTotals.totalOrcamento
+    : filteredSaldos?.reduce((acc, s) => acc + s.orcamento_mensal, 0) || 0;
+  
+  const totalGasto = selectedCentroCustoId === "all" && projectTotals
+    ? projectTotals.totalGasto
+    : filteredSaldos?.reduce((acc, s) => acc + s.total_saidas, 0) || 0;
+  
+  const totalSaldo = selectedCentroCustoId === "all" && projectTotals
+    ? projectTotals.totalSaldo
+    : filteredSaldos?.reduce((acc, s) => acc + s.saldo, 0) || 0;
+  
   const centrosEmAlerta = filteredSaldos?.filter(s => s.percentual_utilizado >= 80).length || 0;
   
   // Obter info do centro selecionado

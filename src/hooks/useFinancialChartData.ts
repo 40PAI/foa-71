@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useSaldosCentrosCusto } from "./useCentrosCusto";
+import { useSaldosCentrosCusto, useUnassignedMovements } from "./useCentrosCusto";
 import { useContasFornecedores } from "./useContasFornecedores";
 import { format, startOfMonth, endOfMonth, subMonths, parseISO } from "date-fns";
 import { pt } from "date-fns/locale";
@@ -86,9 +86,10 @@ export function useCashFlowMonthly(projectId?: number, months: number = 12) {
   });
 }
 
-// Hook for cost center utilization chart
+// Hook for cost center utilization chart (inclui movimentos sem centro de custo)
 export function useCostCenterUtilization(projectId?: number) {
-  const { data: saldos, isLoading } = useSaldosCentrosCusto(projectId);
+  const { data: saldos, isLoading: saldosLoading } = useSaldosCentrosCusto(projectId);
+  const { data: unassigned, isLoading: unassignedLoading } = useUnassignedMovements(projectId);
 
   const chartData: CostCenterUtilization[] = saldos?.map((s) => ({
     codigo: s.codigo,
@@ -99,7 +100,19 @@ export function useCostCenterUtilization(projectId?: number) {
     status: s.percentual_utilizado >= 90 ? 'critico' : s.percentual_utilizado >= 70 ? 'atencao' : 'normal',
   })) || [];
 
-  return { data: chartData, isLoading };
+  // Adicionar barra para movimentos sem centro de custo
+  if (unassigned && unassigned.totalSaidas > 0) {
+    chartData.push({
+      codigo: "N/A",
+      nome: "Sem Centro de Custo",
+      orcamento: 0,
+      gasto: unassigned.totalSaidas,
+      percentual: 100, // Sem orçamento = excedido
+      status: 'critico',
+    });
+  }
+
+  return { data: chartData, isLoading: saldosLoading || unassignedLoading };
 }
 
 // Hook for supplier balances chart

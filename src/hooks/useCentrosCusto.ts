@@ -25,6 +25,73 @@ export function useCentrosCusto(projectId?: number) {
   });
 }
 
+// Hook para calcular totais do projecto (incluindo movimentos sem centro de custo)
+export function useProjectFinancialTotals(projectId?: number) {
+  return useQuery({
+    queryKey: ["project-financial-totals", projectId],
+    queryFn: async () => {
+      // Buscar orçamento total dos centros de custo
+      const { data: centros, error: centrosError } = await supabase
+        .from("centros_custo")
+        .select("orcamento_mensal")
+        .eq("ativo", true)
+        .eq("projeto_id", projectId!);
+      
+      if (centrosError) throw centrosError;
+      
+      // Buscar todos os movimentos (COM e SEM centro de custo)
+      const { data: movimentos, error: movError } = await supabase
+        .from("movimentos_financeiros")
+        .select("tipo_movimento, valor")
+        .eq("projeto_id", projectId!);
+      
+      if (movError) throw movError;
+      
+      const totalOrcamento = centros?.reduce((acc, c) => acc + (Number(c.orcamento_mensal) || 0), 0) || 0;
+      const totalSaidas = movimentos?.filter(m => m.tipo_movimento === 'saida')
+        .reduce((acc, m) => acc + (Number(m.valor) || 0), 0) || 0;
+      const totalEntradas = movimentos?.filter(m => m.tipo_movimento === 'entrada')
+        .reduce((acc, m) => acc + (Number(m.valor) || 0), 0) || 0;
+      
+      return {
+        totalOrcamento,
+        totalGasto: totalSaidas,
+        totalSaldo: totalEntradas - totalSaidas,
+        totalMovimentos: movimentos?.length || 0,
+      };
+    },
+    enabled: !!projectId,
+  });
+}
+
+// Hook para buscar movimentos não atribuídos a centros de custo
+export function useUnassignedMovements(projectId?: number) {
+  return useQuery({
+    queryKey: ["unassigned-movements", projectId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("movimentos_financeiros")
+        .select("tipo_movimento, valor")
+        .eq("projeto_id", projectId!)
+        .is("centro_custo_id", null);
+      
+      if (error) throw error;
+      
+      const totalSaidas = data?.filter(m => m.tipo_movimento === 'saida')
+        .reduce((acc, m) => acc + (Number(m.valor) || 0), 0) || 0;
+      const totalEntradas = data?.filter(m => m.tipo_movimento === 'entrada')
+        .reduce((acc, m) => acc + (Number(m.valor) || 0), 0) || 0;
+      
+      return { 
+        totalSaidas, 
+        totalEntradas,
+        totalMovimentos: data?.length || 0 
+      };
+    },
+    enabled: !!projectId,
+  });
+}
+
 export function useSaldosCentrosCusto(projectId?: number) {
   return useQuery({
     queryKey: ["saldos-centros-custo", projectId],
