@@ -3364,6 +3364,9 @@ export type Database = {
           material_expenses: number
           patrimony_expenses: number
           payroll_expenses: number
+          task_labor_cost: number
+          task_material_cost: number
+          task_real_expenses: number
           total_budget: number
           total_expenses: number
         }[]
@@ -3416,6 +3419,7 @@ export type Database = {
         Returns: {
           categoria: string
           discrepancia: number
+          fontes: string[]
           gasto_calculado: number
           gasto_manual: number
           percentual_discrepancia: number
@@ -3657,6 +3661,10 @@ export type Database = {
           p_responsavel: string
         }
         Returns: Json
+      }
+      normalize_financial_category: {
+        Args: { categoria: string }
+        Returns: string
       }
       prever_gasto_mensal: {
         Args: { p_centro_custo_id: string }

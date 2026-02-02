@@ -66,6 +66,16 @@ export { useTaskExpensesByCategory } from "../useTaskExpensesByCategory";
 // DRE hooks
 export { useDREConsolidado, type DRELinhaConsolidada } from "../useDREConsolidado";
 
+// Financial Audit hooks
+export { 
+  useFinancialAudit,
+  useDetailedExpenseBreakdownV2,
+  useIntegratedFinancialProgressV2,
+  type FinancialDiscrepancy as FinancialAuditDiscrepancy,
+  type FinancialAuditData,
+  type FinancialAuditSummary
+} from "../useFinancialAudit";
+
 // Re-export types
 export type {
   Finance,
