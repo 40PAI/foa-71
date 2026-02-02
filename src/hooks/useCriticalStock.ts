@@ -144,15 +144,38 @@ export function useCriticalStock() {
         playCriticalStockSound();
       }
       
-      // Show toast notification
-      toast.warning(`${criticalItems.length} material(s) com stock crítico`, {
-        description: 'Verifique os materiais com menos de 10 unidades em stock.',
-        duration: 8000,
+      // Separar materiais por urgência
+      const urgentItems = criticalItems.filter(i => i.stock_atual === 0);
+      const warningItems = criticalItems.filter(i => i.stock_atual > 0 && i.stock_atual < 10);
+      
+      // Construir descrição detalhada
+      let description = '';
+      if (urgentItems.length > 0) {
+        const urgentNames = urgentItems.slice(0, 3).map(i => i.nome).join(', ');
+        description += `🔴 ${urgentItems.length} em ruptura (0 un.): ${urgentNames}`;
+        if (urgentItems.length > 3) description += ` e +${urgentItems.length - 3} mais`;
+      }
+      if (warningItems.length > 0) {
+        if (description) description += '\n';
+        const warningNames = warningItems.slice(0, 3).map(i => `${i.nome} (${i.stock_atual})`).join(', ');
+        description += `⚠️ ${warningItems.length} em alerta: ${warningNames}`;
+        if (warningItems.length > 3) description += ` e +${warningItems.length - 3} mais`;
+      }
+      
+      // Show toast notification with detailed description
+      toast.warning('Stock Crítico - Acção Necessária', {
+        description: description,
+        duration: 15000, // Mais tempo para ler detalhes
         action: {
           label: 'Ver detalhes',
           onClick: () => {
-            // Navega com parâmetro de filtro para activar filtro de stock crítico
-            window.location.href = '/armazem?filter=critical';
+            if (window.location.pathname === '/armazem') {
+              // Despachar evento para activar filtro sem reload
+              window.dispatchEvent(new CustomEvent('activate-critical-filter'));
+            } else {
+              // Navegar para armazém com parâmetro de filtro
+              window.location.href = '/armazem?filter=critical';
+            }
           }
         }
       });
