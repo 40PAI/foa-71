@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ProjectSelector } from "@/components/ProjectSelector";
+import { ClipboardList, Phone, MapPin, Building2, FileText } from "lucide-react";
 import type { Cliente } from "@/types/contasCorrentes";
 
 const PROVINCIAS_ANGOLA = [
@@ -64,7 +65,8 @@ export function ClienteForm({ cliente, projectId, onSubmit, onCancel, isLoading 
         {/* Informações Básicas */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            📋 INFORMAÇÕES BÁSICAS
+            <ClipboardList className="h-4 w-4 text-primary" />
+            INFORMAÇÕES BÁSICAS
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -120,7 +122,8 @@ export function ClienteForm({ cliente, projectId, onSubmit, onCancel, isLoading 
         {/* Contacto */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            📞 CONTACTO
+            <Phone className="h-4 w-4 text-primary" />
+            CONTACTO
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -155,7 +158,8 @@ export function ClienteForm({ cliente, projectId, onSubmit, onCancel, isLoading 
         {/* Localização */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            📍 LOCALIZAÇÃO
+            <MapPin className="h-4 w-4 text-primary" />
+            LOCALIZAÇÃO
           </h3>
           <FormField
             control={form.control}
@@ -241,7 +245,8 @@ export function ClienteForm({ cliente, projectId, onSubmit, onCancel, isLoading 
         {/* Associação */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            🏗️ ASSOCIAÇÃO
+            <Building2 className="h-4 w-4 text-primary" />
+            ASSOCIAÇÃO
           </h3>
           <FormField
             control={form.control}
@@ -265,7 +270,8 @@ export function ClienteForm({ cliente, projectId, onSubmit, onCancel, isLoading 
         {/* Observações */}
         <div className="space-y-4">
           <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-            📝 OBSERVAÇÕES
+            <FileText className="h-4 w-4 text-primary" />
+            OBSERVAÇÕES
           </h3>
           <FormField
             control={form.control}
