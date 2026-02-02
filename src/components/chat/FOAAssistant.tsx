@@ -139,7 +139,8 @@ export function FOAAssistant() {
         .n8n-chat button.chat-toggle,
         [class*="chat-toggle"],
         .n8n-chat [class*="toggle"] {
-          bottom: 80px !important;
+          bottom: 100px !important;
+          right: 16px !important;
         }
       }
     `;
