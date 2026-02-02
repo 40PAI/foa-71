@@ -154,11 +154,11 @@ export function useProjectTimelineData({
     if (!dataInicio || !dataFimPrevista) return [];
     
     const totalTasks = tasks.length;
-    const startDate = parseISO(dataInicio);
-    const endDate = parseISO(dataFimPrevista);
+    const projectStartDate = parseISO(dataInicio);
+    const projectEndDate = parseISO(dataFimPrevista);
     const today = new Date();
     
-    // Contar tarefas restantes AGORA (para fallback e ponto final)
+    // Contar tarefas restantes AGORA
     const remainingNow = tasks.filter(task => 
       task.status !== 'Concluído' && task.percentual_conclusao < 100
     ).length;
@@ -166,73 +166,70 @@ export function useProjectTimelineData({
     // Se não há tarefas, retornar fallback mínimo
     if (totalTasks === 0) {
       return [
-        { periodo: "Início", dataReferencia: startDate, planejado: 0, real: 0, tarefasRestantes: 0 },
+        { periodo: "Início", dataReferencia: projectStartDate, planejado: 0, real: 0, tarefasRestantes: 0 },
         { periodo: "Atual", dataReferencia: today, planejado: 0, real: 0, tarefasRestantes: 0 }
       ];
     }
     
-    // IMPORTANTE: Sempre mostrar histórico completo do projeto até hoje ou data_fim
-    // Para projectos passados, mostramos até data_fim
-    // Para projectos em curso, mostramos até hoje
-    const displayEndDate = isAfter(today, endDate) ? endDate : today;
+    // Encontrar a data mais antiga entre tarefas e início do projeto
+    const earliestTaskDeadline = tasks
+      .filter(t => t.prazo)
+      .reduce((min, t) => {
+        const d = parseISO(t.prazo!);
+        return !min || isBefore(d, min) ? d : min;
+      }, null as Date | null);
     
+    // Usar a data mais antiga como início efetivo
+    const effectiveStart = earliestTaskDeadline && isBefore(earliestTaskDeadline, projectStartDate) 
+      ? startOfMonth(earliestTaskDeadline) 
+      : startOfMonth(projectStartDate);
+    
+    // SEMPRE mostrar até hoje para ver estado actual
+    const displayEndDate = today;
+    
+    // Gerar meses do intervalo efectivo
     const months = eachMonthOfInterval({
-      start: startOfMonth(startDate),
+      start: effectiveStart,
       end: startOfMonth(displayEndDate),
     });
     
-    // Fallback se o intervalo gerar 0 meses (datas inválidas)
+    // Fallback se o intervalo gerar 0 meses
     if (months.length === 0) {
       return [
-        { periodo: "Início", dataReferencia: startDate, planejado: totalTasks, real: totalTasks, tarefasRestantes: totalTasks },
+        { periodo: "Início", dataReferencia: effectiveStart, planejado: totalTasks, real: totalTasks, tarefasRestantes: totalTasks },
         { periodo: "Atual", dataReferencia: today, planejado: 0, real: remainingNow, tarefasRestantes: remainingNow }
       ];
     }
     
-    // Calcular número total de meses do projecto (do início até data_fim_prevista)
-    const allProjectMonths = eachMonthOfInterval({
-      start: startOfMonth(startDate),
-      end: startOfMonth(endDate),
-    });
-    const totalProjectMonths = allProjectMonths.length;
+    // Calcular meses totais do projecto para distribuição linear
+    const totalProjectMonths = months.length;
     
-    // Para cada tarefa, distribuir linearmente pelos meses do projecto
-    // Cada tarefa deve ser "removida" do planejado num mês específico
+    // Para cada tarefa, atribuir uma deadline (usar prazo real ou distribuir linearmente)
     const tasksWithDeadlines = tasks.map((task, index) => {
-      // Se a tarefa tem prazo, usar o prazo
       if (task.prazo) {
         return { ...task, deadlineMonth: parseISO(task.prazo) };
       }
-      // Se não tem prazo, distribuir uniformemente ao longo do projecto
+      // Distribuir uniformemente
       const monthIndex = Math.floor((index + 1) / totalTasks * totalProjectMonths) - 1;
-      const assignedMonth = allProjectMonths[Math.max(0, Math.min(monthIndex, allProjectMonths.length - 1))];
+      const assignedMonth = months[Math.max(0, Math.min(monthIndex, months.length - 1))];
       return { ...task, deadlineMonth: endOfMonth(assignedMonth) };
     });
     
-    return months.map((month, index) => {
+    return months.map((month) => {
       const monthEnd = endOfMonth(month);
-      const referenceDate = monthEnd;
       
-      // Planejado: quantas tarefas ainda deveriam estar "restantes" neste mês
+      // Planejado: quantas tarefas deveriam estar "restantes" neste mês
       // Uma tarefa é "planejada restante" se seu prazo é DEPOIS deste mês
       const planejado = tasksWithDeadlines.filter(task => {
         return isAfter(task.deadlineMonth, monthEnd);
       }).length;
       
-      // Real: quantas tarefas estão realmente restantes (não concluídas)
-      // Para meses no passado: mostrar o estado actual das tarefas
-      // (não temos histórico de quando cada tarefa foi concluída)
-      const tarefasRestantes = tasks.filter(task => {
-        // Tarefas 100% concluídas NÃO contam como restantes
-        if (task.status === 'Concluído' || task.percentual_conclusao >= 100) {
-          return false;
-        }
-        return true;
-      }).length;
+      // Real: quantas tarefas estão realmente por fazer
+      const tarefasRestantes = remainingNow;
       
       return {
         periodo: format(month, "MMM/yy", { locale: pt }),
-        dataReferencia: referenceDate,
+        dataReferencia: monthEnd,
         planejado,
         real: tarefasRestantes,
         tarefasRestantes,
