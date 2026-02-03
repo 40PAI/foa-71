@@ -1,156 +1,100 @@
 
 
-## Correção: Formulário de Amortização com Seleção de Dívidas Ativas
+## Correção: Custos Indiretos - Valores Incorretos e Gastos Detalhados Vazios
 
-### Problema Identificado
+### Problemas Identificados
 
-Quando o utilizador seleciona "Amortização (Pagamento)" como tipo de movimento, o formulário continua a mostrar os mesmos campos (Descrição, Valor, etc.) como se fosse um novo crédito. Isto está incorreto porque:
+Após análise detalhada da base de dados e do código, encontrei **dois problemas distintos**:
 
-1. Uma amortização é um **pagamento de uma dívida existente**
-2. O utilizador deveria ver uma lista das dívidas activas para selecionar qual amortizar
-3. O valor e descrição deveriam ser preenchidos com base na dívida seleccionada
+#### Problema 1: Valor Negativo no Card de Custos Indiretos (-12M Kz)
 
-### Comportamento Esperado
+O card de "Custos Indiretos" está a mostrar **-12.038.588,07 Kz** enquanto o gráfico de Centros de Custo mostra correctamente **~36M Kz**.
 
-**Quando tipo = "Crédito Recebido":**
-- Formulário actual (criar novo crédito)
-- Campos: Descrição, Valor, Data Vencimento, etc.
+**Causa Raiz:** O gráfico de Centros de Custo (GraficoBarrasCategorias) filtra apenas `tipo_movimento === 'saida'` e agrupa os valores correctamente. No entanto, há um cálculo algures que está a subtrair entradas das saídas:
 
-**Quando tipo = "Amortização (Pagamento)":**
-- Mostrar lista de dívidas activas (créditos com saldo devedor > 0)
-- Agrupar por Fonte + Credor
-- Mostrar saldo devedor de cada dívida
-- Valor máximo = saldo devedor da dívida selecionada
-- Descrição automática: "Amortização de [Nome do Credor]"
+- Total de Saídas (gastos reais): **35.959.912,64 Kz**
+- Total de Entradas: **47.998.500,71 Kz**
+- Saldo (saída - entrada): **-12.038.588,07 Kz** ← Este valor negativo está a aparecer no card
 
-**Quando tipo = "Pagamento de Juros":**
-- Similar à amortização (selecionar dívida activa)
-- Valor livre para introduzir montante dos juros
+O hook `useCategoryIntegratedExpenses` está correcto (só soma saídas), mas o card pode estar a receber dados de outra fonte ou há uma cache com dados antigos.
+
+#### Problema 2: Modal "Ver Mais" Vazio para Custos Indiretos
+
+Quando o utilizador clica em "Ver Mais" nos Custos Indiretos, a tabela mostra "Nenhum gasto registrado ainda".
+
+**Causa Raiz:** O hook `useUnifiedExpenses` procura por categorias específicas no array:
+```javascript
+'indireto': ['Custos Indiretos', 'Indireto', 'indireto', 'Segurança', 'CUSTOS INDIRETOS', 'INDIRETO']
+```
+
+Mas na base de dados existem duas categorias relacionadas:
+1. **"Custos Indiretos"** ✅ (está mapeada)
+2. **"segurança e higiene no trabalho"** ❌ (NÃO está mapeada!)
+
+### Dados Reais da Base de Dados
+
+| Categoria | Tipo | Quantidade | Total (Kz) |
+|-----------|------|------------|------------|
+| Custos Indiretos | saída | 138 | 35.408.912,64 |
+| Custos Indiretos | entrada | 2 | 47.998.500,71 |
+| segurança e higiene no trabalho | saída | 6 | 551.000,00 |
+| Materiais | saída | 84 | 18.616.556,81 |
+| Mão de Obra | saída | 23 | 7.439.390,93 |
+| Patrimônio | saída | 2 | 120.000,00 |
+
+**Total de Custos Indiretos (apenas saídas):** 35.408.912,64 + 551.000 = **35.959.912,64 Kz**
 
 ### Solução Técnica
 
-#### 1. Adicionar Hook para Dívidas Activas
+#### 1. Actualizar `useUnifiedExpenses.ts`
 
-Utilizar o hook `useResumoDividas()` que já existe e retorna:
-```typescript
-{
-  fonte_credito: FonteCredito;
-  credor_nome: string;
-  total_credito: number;
-  total_amortizado: number;
-  saldo_devedor: number;  // = total_credito - total_amortizado
-  status: 'ativo' | 'quitado';
-}
-```
-
-#### 2. Modificar `ReembolsoFOAModal.tsx`
-
-Adicionar lógica condicional baseada no tipo de movimento:
-
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                  ReembolsoFOAModal                          │
-├─────────────────────────────────────────────────────────────┤
-│  Fonte de Crédito: [FOF] [Banco] [Fornecedor] [Outro]       │
-├─────────────────────────────────────────────────────────────┤
-│  Projeto: [CATETE ▼]                                        │
-├─────────────────────────────────────────────────────────────┤
-│  Tipo de Movimento: [Amortização (Pagamento) ▼]   Data: []  │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─── SE TIPO = AMORTIZAÇÃO ou JUROS ───────────────────┐   │
-│  │                                                       │   │
-│  │  Selecione a Dívida a Amortizar *                     │   │
-│  │  ┌─────────────────────────────────────────────────┐  │   │
-│  │  │ FOF - Saldo: 1.000.000,00 Kz              ▼     │  │   │
-│  │  └─────────────────────────────────────────────────┘  │   │
-│  │                                                       │   │
-│  │  💡 Saldo devedor: 1.000.000,00 Kz                    │   │
-│  │                                                       │   │
-│  │  Valor da Amortização *                               │   │
-│  │  ┌─────────────────────────────────────────────────┐  │   │
-│  │  │ 100.000,00                                      │  │   │
-│  │  └─────────────────────────────────────────────────┘  │   │
-│  │  ⚠️ Máximo: 1.000.000,00 Kz                           │   │
-│  │                                                       │   │
-│  └───────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌─── SE TIPO = CRÉDITO ────────────────────────────────┐   │
-│  │                                                       │   │
-│  │  Descrição *                                          │   │
-│  │  [______________________________________________]     │   │
-│  │                                                       │   │
-│  │  Valor (AOA) *              Data de Vencimento        │   │
-│  │  [___________]              [_______________]         │   │
-│  │                                                       │   │
-│  └───────────────────────────────────────────────────────┘   │
-│                                                             │
-│  Observações                                                │
-│  [__________________________________________________]       │
-│                                                             │
-│                         [Cancelar]  [Registrar]             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-#### 3. Campos Condicionais por Tipo
-
-| Tipo | Campos Visíveis |
-|------|-----------------|
-| **Crédito** | Fonte, Projeto, Data, Descrição, Valor, Data Vencimento, Taxa Juro, Observações |
-| **Amortização** | Fonte, Projeto, Data, **Dívida (Select)**, **Valor a Amortizar**, Observações |
-| **Juros** | Fonte, Projeto, Data, **Dívida (Select)**, Valor dos Juros, Observações |
-
-#### 4. Estado Adicional no Formulário
+Expandir o mapeamento de categorias para incluir todas as variações encontradas na base de dados:
 
 ```typescript
-const [dividaSelecionada, setDividaSelecionada] = useState<string>("");
-
-// Usar o hook existente para buscar dívidas activas
-const { data: resumoDividas } = useResumoDividas(formData.projeto_id || undefined);
-
-// Filtrar apenas dívidas activas (saldo_devedor > 0)
-const dividasActivas = useMemo(() => 
-  resumoDividas?.filter(d => d.saldo_devedor > 0) || [], 
-  [resumoDividas]
-);
-
-// Obter saldo máximo da dívida selecionada
-const saldoMaximo = useMemo(() => {
-  const divida = dividasActivas.find(d => 
-    `${d.fonte_credito}:${d.credor_nome}` === dividaSelecionada
-  );
-  return divida?.saldo_devedor || 0;
-}, [dividasActivas, dividaSelecionada]);
+const categoryMap: Record<string, string[]> = {
+  'material': ['Material', 'Materiais', 'material', 'Materia', 'MATERIAL', 'MATERIAIS', 'Materiais de Construção'],
+  'mao_obra': ['Mão de Obra', 'Mao de Obra', 'mao_obra', 'Salário', 'Pessoal', 'MAO DE OBRA', 'MÃO DE OBRA'],
+  'patrimonio': ['Patrimônio', 'Patrimonio', 'Equipamento', 'patrimonio', 'Veículo', 'PATRIMONIO', 'EQUIPAMENTO'],
+  'indireto': [
+    'Custos Indiretos', 
+    'Indireto', 
+    'indireto', 
+    'Segurança', 
+    'CUSTOS INDIRETOS', 
+    'INDIRETO',
+    'segurança e higiene no trabalho',  // NOVO
+    'Segurança e Higiene',              // NOVO
+    'Administrativo',                    // NOVO
+    'Transporte',                        // NOVO
+    'Energia',                           // NOVO
+    'Comunicação'                        // NOVO
+  ]
+};
 ```
 
-#### 5. Validações Específicas para Amortização
+Também adicionar uma lógica de fallback que usa pattern matching (ILIKE) em vez de match exacto:
 
 ```typescript
-// No handleSubmit
-if (formData.tipo === 'amortizacao' || formData.tipo === 'juro') {
-  if (!dividaSelecionada) {
-    toast.error("Selecione uma dívida para amortizar");
-    return;
-  }
-  
-  if (formData.tipo === 'amortizacao' && formData.valor > saldoMaximo) {
-    toast.error(`Valor excede o saldo devedor (${formatCurrency(saldoMaximo)})`);
-    return;
-  }
-}
+// Em vez de usar .in('categoria', categoryNames)
+// Usar múltiplas condições OR com ILIKE para cobrir todas as variações
 ```
+
+#### 2. Limpar Cache de Dados
+
+Invalidar as queries relacionadas para garantir que os dados actualizados sejam recarregados:
+- `category-integrated-expenses`
+- `unified-expenses`
+- `integrated-financial-progress`
 
 ### Ficheiros a Modificar
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| `src/components/modals/ReembolsoFOAModal.tsx` | Adicionar lógica condicional para mostrar dívidas activas quando tipo = amortização/juros |
+| `src/hooks/useUnifiedExpenses.ts` | Expandir categoryMap para incluir "segurança e higiene no trabalho" e outras variações; usar lógica de match mais flexível |
 
 ### Resultado Esperado
 
-1. Ao selecionar "Amortização (Pagamento)", aparece um dropdown com as dívidas activas
-2. Cada opção mostra: "FOF - Saldo: 1.000.000,00 Kz"
-3. O campo de valor mostra o máximo permitido
-4. A descrição é preenchida automaticamente
-5. Validação impede valores superiores ao saldo devedor
+1. **Card de Custos Indiretos** mostrará **~36M Kz** (apenas saídas)
+2. **Modal "Ver Mais"** mostrará os 138+6 = 144 movimentos de saída relacionados com custos indiretos
+3. Os valores serão consistentes entre o gráfico de Centros de Custo e a secção de Finanças
 
