@@ -15,11 +15,12 @@ export interface UnifiedExpense {
   metadata?: any;
 }
 
+// EXPANDED: Include all category variations found in the database
 const categoryMap: Record<string, string[]> = {
-  'material': ['Material', 'Materiais', 'material'],
-  'mao_obra': ['Mão de Obra', 'Mao de Obra', 'mao_obra'],
-  'patrimonio': ['Patrimônio', 'Patrimonio', 'Equipamento', 'patrimonio'],
-  'indireto': ['Custos Indiretos', 'Indireto', 'indireto']
+  'material': ['Material', 'Materiais', 'material', 'Materia', 'MATERIAL', 'MATERIAIS'],
+  'mao_obra': ['Mão de Obra', 'Mao de Obra', 'mao_obra', 'Salário', 'Pessoal', 'MAO DE OBRA', 'MÃO DE OBRA'],
+  'patrimonio': ['Patrimônio', 'Patrimonio', 'Equipamento', 'patrimonio', 'Veículo', 'PATRIMONIO', 'EQUIPAMENTO'],
+  'indireto': ['Custos Indiretos', 'Indireto', 'indireto', 'Segurança', 'CUSTOS INDIRETOS', 'INDIRETO']
 };
 
 export function useUnifiedExpenses(projectId: number, category: string) {
