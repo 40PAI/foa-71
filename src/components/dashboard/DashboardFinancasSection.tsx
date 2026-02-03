@@ -13,38 +13,41 @@ export function DashboardFinancasSection({
   gastoTotal
 }: DashboardFinancasSectionProps) {
   const chartData = topProjetosGasto.map(projeto => ({
-    name: projeto.nome.length > 20 ? projeto.nome.substring(0, 20) + "..." : projeto.nome,
+    name: projeto.nome.length > 15 ? projeto.nome.substring(0, 15) + "..." : projeto.nome,
     value: projeto.gasto,
     status: projeto.percentual_gasto > 110 ? 'critico' as const : projeto.percentual_gasto > 90 ? 'atencao' as const : 'normal' as const
   }));
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
-  return <Card className="overflow-hidden">
-      <CardHeader className="py-1.5 px-2">
-        <CardTitle className="text-xs font-semibold">Finanças</CardTitle>
+  
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="py-3 px-4">
+        <CardTitle className="text-base font-semibold">Finanças</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1.5 px-2 pb-2 pt-0">
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className="p-1.5 border rounded bg-muted/30">
-            <p className="text-[9px] text-muted-foreground leading-tight">Orçamento Total</p>
-            <p className="text-xs font-bold break-all leading-tight">{formatCurrency(orcamentoTotal)}</p>
+      <CardContent className="space-y-3 px-4 pb-4 pt-0">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="p-3 border rounded bg-muted/30">
+            <p className="text-xs text-muted-foreground leading-tight">Orçamento Total</p>
+            <p className="text-lg font-bold break-all leading-tight">{formatCurrency(orcamentoTotal)}</p>
           </div>
-          <div className="p-1.5 border rounded bg-muted/30">
-            <p className="text-[9px] text-muted-foreground leading-tight">Gasto Total</p>
-            <p className="text-xs font-bold break-all leading-tight">{formatCurrency(gastoTotal)}</p>
-            <p className="text-[8px] text-muted-foreground">{percentualGasto}%</p>
+          <div className="p-3 border rounded bg-muted/30">
+            <p className="text-xs text-muted-foreground leading-tight">Gasto Total</p>
+            <p className="text-lg font-bold break-all leading-tight">{formatCurrency(gastoTotal)}</p>
+            <p className="text-xs text-muted-foreground">{percentualGasto}%</p>
           </div>
         </div>
 
         {topProjetosGasto.length > 0 ? (
           <div className="w-full">
-            <h3 className="text-[9px] font-semibold mb-0.5">Top 5 Projetos</h3>
-            <div className="w-full">
-              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
+            <h3 className="text-sm font-semibold mb-2">Top 5 Projetos</h3>
+            <div className="w-full max-h-[200px] overflow-hidden">
+              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} maxHeight={180} />
             </div>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-1 text-[10px]">Sem dados</p>
+          <p className="text-center text-muted-foreground py-2 text-sm">Sem dados</p>
         )}
       </CardContent>
-    </Card>;
+    </Card>
+  );
 }
