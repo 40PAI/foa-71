@@ -157,7 +157,7 @@ export function useOptimizedApproveRequisition() {
       // Selective invalidation for better performance
       const projectId = data.id_projeto;
       
-      // Only invalidate specific queries
+      // Invalidar queries da página de Finanças
       queryClient.invalidateQueries({ 
         queryKey: ["pending-approvals-optimized", projectId],
         exact: false 
@@ -168,6 +168,34 @@ export function useOptimizedApproveRequisition() {
       });
       queryClient.invalidateQueries({ 
         queryKey: ["financial-discrepancies-optimized", projectId],
+        exact: false 
+      });
+      
+      // NOVO: Invalidar queries do Dashboard Geral
+      queryClient.invalidateQueries({ 
+        queryKey: ["dashboard-geral"],
+        exact: false 
+      });
+      
+      // NOVO: Invalidar dados consolidados de Finanças
+      queryClient.invalidateQueries({ 
+        queryKey: ["consolidated-financial-data", projectId],
+        exact: false 
+      });
+      
+      // NOVO: Invalidar lista de requisições (modal analytics)
+      queryClient.invalidateQueries({ 
+        queryKey: ["requisitions"],
+        exact: false 
+      });
+      
+      // NOVO: Forçar refetch imediato para garantir dados actualizados
+      queryClient.refetchQueries({ 
+        queryKey: ["dashboard-geral"],
+        exact: false 
+      });
+      queryClient.refetchQueries({ 
+        queryKey: ["consolidated-financial-data", projectId],
         exact: false 
       });
       
