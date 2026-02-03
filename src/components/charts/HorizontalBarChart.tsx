@@ -43,10 +43,10 @@ export function HorizontalBarChart({
   valueFormatter = formatCurrency,
   maxHeight = 250
 }: HorizontalBarChartProps) {
-  // Calcular altura compacta: barSize + pequeno espaço entre barras
-  const barHeight = 22;
-  const barGap = 6;
-  const calculatedHeight = Math.max(80, data.length * (barHeight + barGap) + 24);
+  // Altura compacta: barras menores mas legíveis
+  const barHeight = 14;
+  const barGap = 3;
+  const calculatedHeight = Math.max(60, data.length * (barHeight + barGap) + 16);
   const chartHeight = Math.min(calculatedHeight, maxHeight);
 
   return (
@@ -57,21 +57,21 @@ export function HorizontalBarChart({
           <BarChart 
             data={data} 
             layout="vertical" 
-            margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
+            margin={{ left: 0, right: 8, top: 0, bottom: 0 }}
             barCategoryGap={barGap}
           >
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 8 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={70}
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
+              width={55}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 9 }}
               axisLine={false}
               tickLine={false}
             />
@@ -79,7 +79,7 @@ export function HorizontalBarChart({
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={barHeight}>
+            <Bar dataKey="value" radius={[0, 2, 2, 0]} barSize={barHeight}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}
