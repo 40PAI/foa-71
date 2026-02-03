@@ -17,10 +17,37 @@ export interface UnifiedExpense {
 
 // EXPANDED: Include all category variations found in the database
 const categoryMap: Record<string, string[]> = {
-  'material': ['Material', 'Materiais', 'material', 'Materia', 'MATERIAL', 'MATERIAIS'],
+  'material': ['Material', 'Materiais', 'material', 'Materia', 'MATERIAL', 'MATERIAIS', 'Materiais de Construção'],
   'mao_obra': ['Mão de Obra', 'Mao de Obra', 'mao_obra', 'Salário', 'Pessoal', 'MAO DE OBRA', 'MÃO DE OBRA'],
   'patrimonio': ['Patrimônio', 'Patrimonio', 'Equipamento', 'patrimonio', 'Veículo', 'PATRIMONIO', 'EQUIPAMENTO'],
-  'indireto': ['Custos Indiretos', 'Indireto', 'indireto', 'Segurança', 'CUSTOS INDIRETOS', 'INDIRETO']
+  'indireto': [
+    'Custos Indiretos', 
+    'Indireto', 
+    'indireto', 
+    'Segurança', 
+    'CUSTOS INDIRETOS', 
+    'INDIRETO',
+    'segurança e higiene no trabalho',
+    'Segurança e Higiene',
+    'Segurança e Higiene no Trabalho',
+    'Administrativo',
+    'Transporte',
+    'Energia',
+    'Comunicação',
+    'Água',
+    'Combustível',
+    'Aluguel',
+    'Seguros'
+  ]
+};
+
+// Helper function to check if a category matches any of the patterns
+const matchesCategory = (dbCategory: string, patterns: string[]): boolean => {
+  const lower = dbCategory.toLowerCase();
+  return patterns.some(pattern => {
+    const patternLower = pattern.toLowerCase();
+    return lower === patternLower || lower.includes(patternLower) || patternLower.includes(lower);
+  });
 };
 
 export function useUnifiedExpenses(projectId: number, category: string) {
@@ -32,16 +59,36 @@ export function useUnifiedExpenses(projectId: number, category: string) {
       const expenses: UnifiedExpense[] = [];
       const categoryNames = categoryMap[category] || [category];
       
-      // 1. CENTRO DE CUSTOS (movimentos_financeiros)
-      const { data: movimentos } = await supabase
+      // 1. CENTRO DE CUSTOS (movimentos_financeiros) - use flexible matching
+      // For indirect costs, we need to fetch all and filter locally for better matching
+      let movimentosQuery = supabase
         .from('movimentos_financeiros')
         .select('*')
         .eq('projeto_id', projectId)
         .eq('tipo_movimento', 'saida')
-        .eq('status_aprovacao', 'aprovado')
-        .in('categoria', categoryNames as any);
+        .eq('status_aprovacao', 'aprovado');
       
-      movimentos?.forEach(m => {
+      // For non-indirect categories, use exact match; for indirect, fetch all and filter
+      if (category !== 'indireto') {
+        movimentosQuery = movimentosQuery.in('categoria', categoryNames as any);
+      }
+      
+      const { data: movimentos } = await movimentosQuery;
+      
+      // Filter movements based on category matching
+      const filteredMovimentos = movimentos?.filter(m => {
+        if (category === 'indireto') {
+          // For indirect costs, match any pattern OR anything not matching other categories
+          const isIndirect = matchesCategory(m.categoria, categoryNames);
+          const isMaterial = matchesCategory(m.categoria, categoryMap['material']);
+          const isMaoObra = matchesCategory(m.categoria, categoryMap['mao_obra']);
+          const isPatrimonio = matchesCategory(m.categoria, categoryMap['patrimonio']);
+          return isIndirect || (!isMaterial && !isMaoObra && !isPatrimonio);
+        }
+        return matchesCategory(m.categoria, categoryNames);
+      }) || [];
+      
+      filteredMovimentos.forEach(m => {
         expenses.push({
           id: `mov_${m.id}`,
           fonte: 'centro_custo',
