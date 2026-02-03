@@ -67,7 +67,7 @@ export function RequisitionsAnalyticsModal({
     <Card key={req.id} className="p-4 hover:bg-muted/50 transition-colors">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className="font-semibold text-sm">#{req.id}</span>
             <Badge className={getStatusColor(req.status_fluxo || "")}>
               {req.status_fluxo}
@@ -125,47 +125,51 @@ export function RequisitionsAnalyticsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="p-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
             Compras & Requisições - Análise Detalhada
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden flex flex-col gap-4">
-          {/* Gráfico Expandido */}
-          <Card className="p-4">
-            <div className="h-[250px]">
-              <DonutChart 
-                data={chartData} 
-                title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`} 
-              />
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Secção Superior: Gráfico + KPIs lado a lado */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico */}
+            <Card className="p-4">
+              <h3 className="text-sm font-semibold mb-3">Taxa de Aprovação: {requisicoesResumo.taxa_aprovacao.toFixed(1)}%</h3>
+              <div className="h-[200px]">
+                <DonutChart 
+                  data={chartData} 
+                  title="" 
+                />
+              </div>
+            </Card>
+
+            {/* KPIs */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="p-4 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold">{requisicoesResumo.total}</p>
+                <p className="text-sm text-muted-foreground">Total</p>
+              </Card>
+              <Card className="p-4 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-warning">{requisicoesResumo.pendentes}</p>
+                <p className="text-sm text-muted-foreground">Pendentes</p>
+              </Card>
+              <Card className="p-4 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-primary">{requisicoesResumo.aprovacao}</p>
+                <p className="text-sm text-muted-foreground">Em Aprovação</p>
+              </Card>
+              <Card className="p-4 flex flex-col items-center justify-center">
+                <p className="text-3xl font-bold text-chart-1">{requisicoesResumo.aprovadas}</p>
+                <p className="text-sm text-muted-foreground">Aprovadas</p>
+              </Card>
             </div>
-            
-            {/* KPIs resumidos */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t">
-              <div className="text-center">
-                <p className="text-2xl font-bold">{requisicoesResumo.total}</p>
-                <p className="text-xs text-muted-foreground">Total</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-warning">{requisicoesResumo.pendentes}</p>
-                <p className="text-xs text-muted-foreground">Pendentes</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-primary">{requisicoesResumo.aprovacao}</p>
-                <p className="text-xs text-muted-foreground">Em Aprovação</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-chart-1">{requisicoesResumo.aprovadas}</p>
-                <p className="text-xs text-muted-foreground">Aprovadas</p>
-              </div>
-            </div>
-          </Card>
+          </div>
 
           {/* Tabs com Requisições */}
-          <Tabs defaultValue="pendentes" className="flex-1 overflow-hidden flex flex-col">
+          <Tabs defaultValue="pendentes" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="pendentes" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
@@ -177,38 +181,38 @@ export function RequisitionsAnalyticsModal({
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="pendentes" className="flex-1 overflow-hidden mt-4">
-              <ScrollArea className="h-[280px] pr-4">
+            <TabsContent value="pendentes" className="mt-4">
+              <ScrollArea className="h-[250px]">
                 {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
+                  <div className="flex items-center justify-center h-full py-8">
                     <p className="text-muted-foreground">A carregar requisições...</p>
                   </div>
                 ) : requisicoesEmProcesso.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
+                  <div className="flex flex-col items-center justify-center h-full text-center py-8">
                     <CheckCircle className="h-12 w-12 text-muted-foreground/50 mb-2" />
                     <p className="text-muted-foreground">Nenhuma requisição em processo</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 pr-4">
                     {requisicoesEmProcesso.map(renderRequisitionCard)}
                   </div>
                 )}
               </ScrollArea>
             </TabsContent>
             
-            <TabsContent value="historico" className="flex-1 overflow-hidden mt-4">
-              <ScrollArea className="h-[280px] pr-4">
+            <TabsContent value="historico" className="mt-4">
+              <ScrollArea className="h-[250px]">
                 {isLoading ? (
-                  <div className="flex items-center justify-center h-full">
+                  <div className="flex items-center justify-center h-full py-8">
                     <p className="text-muted-foreground">A carregar histórico...</p>
                   </div>
                 ) : requisicoesHistorico.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center">
+                  <div className="flex flex-col items-center justify-center h-full text-center py-8">
                     <FileText className="h-12 w-12 text-muted-foreground/50 mb-2" />
                     <p className="text-muted-foreground">Nenhuma requisição no histórico</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
+                  <div className="space-y-3 pr-4">
                     {requisicoesHistorico.map(renderRequisitionCard)}
                   </div>
                 )}
