@@ -2802,6 +2802,7 @@ export type Database = {
           percentual_desconto: number | null
           percentual_imposto: number | null
           prazo_limite_dias: number | null
+          projeto_destino_id: number | null
           quantidade_requisitada: number | null
           requisitante: string
           status_fluxo: Database["public"]["Enums"]["status_fluxo"]
@@ -2842,6 +2843,7 @@ export type Database = {
           percentual_desconto?: number | null
           percentual_imposto?: number | null
           prazo_limite_dias?: number | null
+          projeto_destino_id?: number | null
           quantidade_requisitada?: number | null
           requisitante: string
           status_fluxo?: Database["public"]["Enums"]["status_fluxo"]
@@ -2882,6 +2884,7 @@ export type Database = {
           percentual_desconto?: number | null
           percentual_imposto?: number | null
           prazo_limite_dias?: number | null
+          projeto_destino_id?: number | null
           quantidade_requisitada?: number | null
           requisitante?: string
           status_fluxo?: Database["public"]["Enums"]["status_fluxo"]
@@ -2937,6 +2940,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "materiais_armazem"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisicoes_projeto_destino_id_fkey"
+            columns: ["projeto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requisicoes_projeto_destino_id_fkey"
+            columns: ["projeto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "vw_resumo_foa"
+            referencedColumns: ["projeto_id"]
           },
         ]
       }

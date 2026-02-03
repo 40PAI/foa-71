@@ -10,6 +10,7 @@ interface HorizontalBarChartProps {
   }>;
   title?: string;
   valueFormatter?: (value: number) => string;
+  maxHeight?: number;
 }
 
 const chartConfig = {
@@ -39,22 +40,24 @@ const getBarColor = (index: number, status?: string) => {
 export function HorizontalBarChart({ 
   data, 
   title, 
-  valueFormatter = formatCurrency 
+  valueFormatter = formatCurrency,
+  maxHeight = 250
 }: HorizontalBarChartProps) {
-  // Calcular altura compacta: barSize + pequeno espaço entre barras
-  const barHeight = 18;
-  const barGap = 4;
-  const chartHeight = Math.max(80, data.length * (barHeight + barGap) + 20);
+  // Altura compacta: barras menores mas legíveis
+  const barHeight = 14;
+  const barGap = 3;
+  const calculatedHeight = Math.max(60, data.length * (barHeight + barGap) + 16);
+  const chartHeight = Math.min(calculatedHeight, maxHeight);
 
   return (
     <div className="w-full">
-      {title && <h3 className="text-xs font-semibold mb-0.5">{title}</h3>}
+      {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
       <ChartContainer config={chartConfig} className="w-full" style={{ minHeight: `${chartHeight}px` }}>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart 
             data={data} 
             layout="vertical" 
-            margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
+            margin={{ left: 0, right: 8, top: 0, bottom: 0 }}
             barCategoryGap={barGap}
           >
             <XAxis 
@@ -68,7 +71,7 @@ export function HorizontalBarChart({
               type="category" 
               dataKey="name" 
               width={55}
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 8 }}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 9 }}
               axisLine={false}
               tickLine={false}
             />
@@ -76,7 +79,7 @@ export function HorizontalBarChart({
               content={<ChartTooltipContent />}
               formatter={(value) => [valueFormatter(Number(value)), ""]}
             />
-            <Bar dataKey="value" radius={[0, 3, 3, 0]} barSize={barHeight}>
+            <Bar dataKey="value" radius={[0, 2, 2, 0]} barSize={barHeight}>
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={getBarColor(index, entry.status)} />
               ))}

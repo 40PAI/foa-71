@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion } from "@/components/ui/accordion";
 import { formatCurrency } from "@/utils/formatters";
 import { useProjectContext } from "@/contexts/ProjectContext";
-import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Maximize2, Wallet, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
+import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Maximize2, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
 import { GastoObraModal } from "@/components/modals/GastoObraModal";
 import { useConsolidatedFinancialData } from "@/hooks/useConsolidatedFinancialData";
 import { useRequisitions } from "@/hooks/useRequisitions";
@@ -21,9 +21,6 @@ const IntegratedFinancialDashboard = lazy(() => import("@/components/IntegratedF
 })));
 const ExpandedFinancialDashboard = lazy(() => import("@/components/financial/ExpandedFinancialDashboard").then(m => ({
   default: m.ExpandedFinancialDashboard
-})));
-const FluxoCaixaSection = lazy(() => import("@/components/financial/FluxoCaixaSection").then(m => ({
-  default: m.FluxoCaixaSection
 })));
 const CategoryExpenseCard = lazy(() => import("@/components/financial/CategoryExpenseCard").then(m => ({
   default: m.CategoryExpenseCard
@@ -200,14 +197,6 @@ export function ConsolidatedFinancasPage() {
 
         {/* Collapsible Sections Mobile */}
         <Accordion type="multiple" className="w-full space-y-2">
-          <CollapsibleFinancialSection value="fluxo-caixa" title="Fluxo de Caixa" icon={Wallet} badge={{
-            text: "FOA",
-            variant: "default"
-          }}>
-            <Suspense fallback={<SectionLoadingFallback rows={3} />}>
-              <FluxoCaixaSection projectId={selectedProjectId} />
-            </Suspense>
-          </CollapsibleFinancialSection>
 
           <CollapsibleFinancialSection value="expenses" title="Gastos por Categoria" icon={TrendingDown}>
             <div className="grid grid-cols-2 gap-2">
@@ -358,20 +347,6 @@ export function ConsolidatedFinancasPage() {
 
       {/* Collapsible Sections */}
       <Accordion type="multiple" className="w-full space-y-3">
-        <CollapsibleFinancialSection value="fluxo-caixa" title="Fluxo de Caixa (Administrativo)" icon={Wallet} badge={{
-        text: "FOA",
-        variant: "default"
-      }}>
-          <Suspense fallback={<SectionLoadingFallback rows={5} />}>
-            {selectedProjectId ? (
-              <FluxoCaixaSection projectId={selectedProjectId} />
-            ) : (
-              <div className="p-8 text-center">
-                <p className="text-muted-foreground">Selecione um projeto para visualizar o fluxo de caixa</p>
-              </div>
-            )}
-          </Suspense>
-        </CollapsibleFinancialSection>
 
         <CollapsibleFinancialSection value="expenses" title="Gestão de Gastos por Categoria" icon={TrendingDown} badge={{
         text: `Dados consolidados`,
