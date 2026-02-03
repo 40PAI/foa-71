@@ -21,7 +21,7 @@ export interface IntegratedCategoryExpenses {
  */
 export function useCategoryIntegratedExpenses(projectId: number | null) {
   return useQuery<IntegratedCategoryExpenses>({
-    queryKey: ['category-integrated-expenses', projectId],
+    queryKey: ['category-integrated-expenses', 'v2-saida-only', projectId],
     queryFn: async () => {
       if (!projectId) {
         return {
@@ -52,12 +52,13 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         console.error('Error fetching manual expenses:', manualError);
       }
 
-      // Fetch financial movements from centros de custo
+      // Fetch financial movements from centros de custo - ONLY SAIDAS (expenses)
       const { data: movimentos, error: movimentosError } = await supabase
         .from('movimentos_financeiros')
         .select('categoria, valor, tipo_movimento')
         .eq('projeto_id', projectId)
-        .eq('status_aprovacao', 'aprovado');
+        .eq('status_aprovacao', 'aprovado')
+        .eq('tipo_movimento', 'saida'); // Only fetch expenses, not entries
 
       if (movimentosError) {
         console.error('Error fetching movimentos financeiros:', movimentosError);
@@ -103,11 +104,9 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
       };
 
       movimentos?.forEach((movimento) => {
-        // Only count expenses (saidas) for the category cards
-        if (movimento.tipo_movimento === 'saida') {
-          const category = mapCategory(movimento.categoria);
-          centroCustoByCategory[category] += Number(movimento.valor) || 0;
-        }
+        // All movements are already filtered to 'saida' in the query
+        const category = mapCategory(movimento.categoria);
+        centroCustoByCategory[category] += Number(movimento.valor) || 0;
       });
 
       // A nova função retorna: total_gasto, percentual_progresso, orcamento_total
