@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend, Area, ComposedChart, ReferenceLine } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Legend,
+  Area,
+  ComposedChart,
+  ReferenceLine,
+} from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +31,7 @@ interface SCurveChartProps {
 // Padrão semântico: chart-1=Baseline, chart-2=Físico, chart-3=Financeiro
 const chartConfig = {
   tempo: {
-    label: "Baseline Linear",
+    label: "Planeamento Temporal",
     color: "hsl(var(--chart-1))",
   },
   fisico: {
@@ -35,67 +46,62 @@ const chartConfig = {
 
 export function SCurveChart({ data }: SCurveChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Calcular estatísticas para mostrar no header
   const lastPoint = data[data.length - 1];
   const hasMultiplePoints = data.length > 3;
-  
+
   // Calcular gap entre físico e financeiro no último ponto
   const gap = lastPoint ? Math.abs(lastPoint.financeiro - lastPoint.fisico) : 0;
-  const gapStatus = gap > 20 ? 'destructive' : gap > 10 ? 'secondary' : 'default';
+  const gapStatus = gap > 20 ? "destructive" : gap > 10 ? "secondary" : "default";
 
   const ChartContent = ({ expanded }: { expanded: boolean }) => (
-    <ChartContainer 
-      config={chartConfig} 
+    <ChartContainer
+      config={chartConfig}
       className={expanded ? "h-[500px] w-full" : "h-[250px] sm:h-[300px] lg:h-[350px] w-full max-w-4xl"}
     >
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
           <defs>
             <linearGradient id="colorFisico" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+              <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="colorFinanceiro" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
+              <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
+              <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-          <XAxis 
-            dataKey="periodo" 
+          <XAxis
+            dataKey="periodo"
             fontSize={expanded ? 12 : 11}
             className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--border))' }}
+            tick={{ fill: "hsl(var(--muted-foreground))" }}
+            tickLine={{ stroke: "hsl(var(--border))" }}
           />
-          <YAxis 
-            domain={[0, 100]} 
+          <YAxis
+            domain={[0, 100]}
             fontSize={expanded ? 12 : 11}
             className="text-xs"
-            tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            tickLine={{ stroke: 'hsl(var(--border))' }}
+            tick={{ fill: "hsl(var(--muted-foreground))" }}
+            tickLine={{ stroke: "hsl(var(--border))" }}
             tickFormatter={(value) => `${value}%`}
           />
-          <ChartTooltip 
-            content={<ChartTooltipContent />} 
-            formatter={(value: number) => `${value.toFixed(1)}%`}
-          />
-          <Legend 
-            wrapperStyle={{ fontSize: expanded ? '12px' : '11px', paddingTop: '10px' }}
-          />
-          
+          <ChartTooltip content={<ChartTooltipContent />} formatter={(value: number) => `${value.toFixed(1)}%`} />
+          <Legend wrapperStyle={{ fontSize: expanded ? "12px" : "11px", paddingTop: "10px" }} />
+
           {/* Linha de baseline linear (tracejada) */}
-          <Line 
-            type="monotone" 
-            dataKey="tempo" 
-            stroke="var(--color-tempo)" 
+          <Line
+            type="monotone"
+            dataKey="tempo"
+            stroke="var(--color-tempo)"
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={false}
             name="Baseline Linear"
           />
-          
+
           {/* Área e linha do avanço financeiro */}
           <Area
             type="monotone"
@@ -104,7 +110,7 @@ export function SCurveChart({ data }: SCurveChartProps) {
             fill="url(#colorFinanceiro)"
             strokeWidth={2}
           />
-          
+
           {/* Área e linha do avanço físico */}
           <Area
             type="monotone"
@@ -118,7 +124,7 @@ export function SCurveChart({ data }: SCurveChartProps) {
     </ChartContainer>
   );
 
-  const Summary = () => (
+  const Summary = () =>
     hasMultiplePoints ? (
       <div className="mt-3 pt-3 border-t text-xs text-muted-foreground grid grid-cols-3 gap-2 max-w-md mx-auto">
         <div className="text-center">
@@ -134,8 +140,7 @@ export function SCurveChart({ data }: SCurveChartProps) {
           <p>Temporal</p>
         </div>
       </div>
-    ) : null
-  );
+    ) : null;
 
   return (
     <>
@@ -155,9 +160,9 @@ export function SCurveChart({ data }: SCurveChartProps) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={() => setIsExpanded(true)}
                     >
@@ -173,7 +178,8 @@ export function SCurveChart({ data }: SCurveChartProps) {
           </div>
           {!hasMultiplePoints && (
             <p className="text-xs text-muted-foreground">
-              Dados insuficientes para curva temporal completa. Adicione mais tarefas com prazos para visualizar evolução mensal.
+              Dados insuficientes para curva temporal completa. Adicione mais tarefas com prazos para visualizar
+              evolução mensal.
             </p>
           )}
         </CardHeader>
