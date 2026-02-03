@@ -71,19 +71,22 @@ export function DividaFOAPage() {
       });
     }
 
-    // Adicionar dados de reembolsos_foa_fof (outras fontes: Bancos, Fornecedores, Outros)
+    // Calcular créditos e amortizações por fonte (de reembolsos_foa_fof)
     const resultado = (reembolsos || []).reduce(
       (acc, mov) => {
+        const fonte = mov.fonte_credito || 'OUTRO';
+        
         if (isCredito(mov.tipo)) {
           // Só adicionar créditos de outras fontes (não FOF, pois já contamos de movimentos_financeiros)
-          if (mov.fonte_credito !== 'FOF') {
+          if (fonte !== 'FOF') {
             acc.total_creditos += mov.valor;
-            acc.por_fonte[mov.fonte_credito || 'OUTRO'] = (acc.por_fonte[mov.fonte_credito || 'OUTRO'] || 0) + mov.valor;
+            acc.creditos_por_fonte[fonte] = (acc.creditos_por_fonte[fonte] || 0) + mov.valor;
           }
         } else if (mov.tipo === 'amortizacao') {
-          // Só adicionar amortizações de outras fontes
-          if (mov.fonte_credito !== 'FOF') {
+          // Só adicionar amortizações de outras fontes (FOF já está em fof_amortizacao_total)
+          if (fonte !== 'FOF') {
             acc.total_amortizado += mov.valor;
+            acc.amortizacoes_por_fonte[fonte] = (acc.amortizacoes_por_fonte[fonte] || 0) + mov.valor;
           }
         } else if (mov.tipo === 'juro') {
           acc.total_juros += mov.valor;
@@ -94,7 +97,8 @@ export function DividaFOAPage() {
         total_creditos: 0, 
         total_amortizado: 0, 
         total_juros: 0,
-        por_fonte: { FOF: 0, BANCO: 0, FORNECEDOR: 0, OUTRO: 0 } as Record<FonteCredito, number>
+        creditos_por_fonte: { FOF: 0, BANCO: 0, FORNECEDOR: 0, OUTRO: 0 } as Record<FonteCredito, number>,
+        amortizacoes_por_fonte: { FOF: 0, BANCO: 0, FORNECEDOR: 0, OUTRO: 0 } as Record<FonteCredito, number>
       }
     );
 
@@ -102,16 +106,22 @@ export function DividaFOAPage() {
     const total_creditos = fof_financiamento_total + resultado.total_creditos;
     const total_amortizado = fof_amortizacao_total + resultado.total_amortizado;
     
+    // Calcular DÍVIDA LÍQUIDA por fonte (créditos - amortizações)
+    const divida_fof = fof_financiamento_total - fof_amortizacao_total;
+    const divida_banco = (resultado.creditos_por_fonte.BANCO || 0) - (resultado.amortizacoes_por_fonte.BANCO || 0);
+    const divida_fornecedor = (resultado.creditos_por_fonte.FORNECEDOR || 0) - (resultado.amortizacoes_por_fonte.FORNECEDOR || 0);
+    const divida_outro = (resultado.creditos_por_fonte.OUTRO || 0) - (resultado.amortizacoes_por_fonte.OUTRO || 0);
+    
     return {
       total_creditos,
       total_amortizado,
       total_juros: resultado.total_juros,
       divida_total: total_creditos - total_amortizado,
       por_fonte: {
-        FOF: fof_financiamento_total, // FOF vem de movimentos_financeiros
-        BANCO: resultado.por_fonte.BANCO,
-        FORNECEDOR: resultado.por_fonte.FORNECEDOR,
-        OUTRO: resultado.por_fonte.OUTRO,
+        FOF: divida_fof,           // Dívida líquida FOF
+        BANCO: divida_banco,       // Dívida líquida Bancos
+        FORNECEDOR: divida_fornecedor, // Dívida líquida Fornecedores
+        OUTRO: divida_outro,       // Dívida líquida Outros
       }
     };
   }, [reembolsos, projetosList]);
