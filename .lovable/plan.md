@@ -3,24 +3,42 @@
 
 ### Problema Identificado
 
-Os cards de "Gestão de Gastos por Categoria" ainda mostram 0,00 Kz apesar de existirem dados reais:
-- Materiais: **18.616.556,81 Kz**
-- Mão de Obra: **7.439.390,93 Kz**  
-- Patrimônio: **120.000 Kz**
-- Custos Indiretos: **35.408.912,64 Kz**
+A RPC `get_consolidated_financial_data` falha completamente com o erro:
+```
+column "custo_patrimonio" does not exist
+```
 
-O erro no console confirma: `column "status" does not exist`
+Isto faz com que TODOS os campos retornem zero, incluindo os gastos por categoria que deveriam mostrar:
+- **Materiais**: 18.616.556,81 Kz (projeto 54)
+- **Mão de Obra**: 7.439.390,93 Kz
+- **Patrimônio**: 120.000 Kz
+- **Custos Indiretos**: 35.408.912,64 Kz
 
-### Causas Raiz na RPC `get_consolidated_financial_data`
+### Causa Raiz
 
-A última migração aplicada ainda contém erros de mapeamento:
+A migração atual referencia colunas inexistentes na tabela `tarefas_lean`:
 
-| Problema | Linha | Valor Errado | Valor Correto |
-|----------|-------|--------------|---------------|
-| Coluna status | 25-29 | `status` | `status_fluxo` |
-| Coluna valor | 27-28 | `valor_total` | `valor_liquido` |
-| Coluna projeto | 32 | `projeto_id` | `id_projeto` |
-| Tipo movimento | 92 | `'Saída'` (maiúscula) | `'saida'` (minúscula) |
+| Coluna Referenciada | Existe? | Solução |
+|---------------------|---------|---------|
+| `custo_material` | Sim | Manter |
+| `custo_mao_obra` | Sim | Manter |
+| `custo_patrimonio` | **Não** | Remover |
+| `custo_indireto` | **Não** | Remover |
+
+### Dados Reais no Banco
+
+A tabela `movimentos_financeiros` contém os dados corretos:
+
+```text
+┌─────────────────────────┬──────────────────┐
+│ categoria               │ total (saida)    │
+├─────────────────────────┼──────────────────┤
+│ Materiais               │ 92.850.300,16 Kz │
+│ Mão de Obra             │ 24.287.634,12 Kz │
+│ Patrimônio              │ 15.494.923,94 Kz │
+│ Custos Indiretos        │ 162.263.431,68 Kz│
+└─────────────────────────┴──────────────────┘
+```
 
 ---
 
@@ -28,10 +46,9 @@ A última migração aplicada ainda contém erros de mapeamento:
 
 #### Ficheiro: Nova Migração SQL
 
-Criar migração para corrigir a função RPC com todos os nomes de colunas corretos:
+Corrigir a função RPC removendo as referências às colunas inexistentes:
 
 ```sql
--- Corrigir função RPC com nomes de colunas validados no schema real
 DROP FUNCTION IF EXISTS get_consolidated_financial_data(INTEGER);
 
 CREATE OR REPLACE FUNCTION get_consolidated_financial_data(p_projeto_id INTEGER)
@@ -50,7 +67,6 @@ BEGIN
             WHERE f.id_projeto = p_projeto_id
         ), '[]'::jsonb),
         
-        -- CORRIGIDO: status_fluxo, valor_liquido, id_projeto
         'requisitions_summary', (
             SELECT jsonb_build_object(
                 'total_requisitions', COUNT(*),
@@ -69,9 +85,10 @@ BEGIN
                 )
             )
             FROM requisicoes
-            WHERE id_projeto = p_projeto_id  -- CORRIGIDO
+            WHERE id_projeto = p_projeto_id
         ),
         
+        -- CORRIGIDO: Removidas colunas inexistentes custo_patrimonio e custo_indireto
         'task_analytics', (
             SELECT jsonb_build_object(
                 'total_tasks', COUNT(*),
@@ -79,16 +96,12 @@ BEGIN
                 'in_progress_tasks', COUNT(*) FILTER (WHERE COALESCE(percentual_conclusao, 0) > 0 AND COALESCE(percentual_conclusao, 0) < 100),
                 'total_budget', COALESCE(SUM(
                     COALESCE(custo_material, 0) + 
-                    COALESCE(custo_mao_obra, 0) + 
-                    COALESCE(custo_patrimonio, 0) + 
-                    COALESCE(custo_indireto, 0)
+                    COALESCE(custo_mao_obra, 0)
                 ), 0),
                 'executed_budget', COALESCE(SUM(
                     CASE WHEN COALESCE(percentual_conclusao, 0) >= 1 THEN
                         (COALESCE(custo_material, 0) + 
-                         COALESCE(custo_mao_obra, 0) + 
-                         COALESCE(custo_patrimonio, 0) + 
-                         COALESCE(custo_indireto, 0)) * (COALESCE(percentual_conclusao, 0) / 100.0)
+                         COALESCE(custo_mao_obra, 0)) * (COALESCE(percentual_conclusao, 0) / 100.0)
                     ELSE 0 END
                 ), 0),
                 'efficiency_score', CASE 
@@ -101,7 +114,7 @@ BEGIN
             WHERE id_projeto = p_projeto_id
         ),
         
-        -- CORRIGIDO: tipo_movimento = 'saida' (minúscula)
+        -- Gastos por categoria da tabela movimentos_financeiros
         'integrated_expenses', (
             SELECT jsonb_build_object(
                 'material_total', COALESCE(SUM(valor) FILTER (WHERE 
@@ -125,7 +138,7 @@ BEGIN
             )
             FROM movimentos_financeiros
             WHERE projeto_id = p_projeto_id
-              AND tipo_movimento = 'saida'  -- CORRIGIDO: minúscula
+              AND tipo_movimento = 'saida'
         ),
         
         'clientes', COALESCE((
@@ -145,7 +158,7 @@ BEGIN
                     SUM(valor) as total_gasto
                 FROM movimentos_financeiros
                 WHERE projeto_id = p_projeto_id
-                  AND tipo_movimento = 'saida'  -- CORRIGIDO: minúscula
+                  AND tipo_movimento = 'saida'
                 GROUP BY categoria
             ) sub
         ), '[]'::jsonb)
@@ -162,19 +175,21 @@ $$;
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| Nova migração SQL | Corrigir todos os nomes de colunas na RPC |
+| Nova migração SQL | Remover referências a `custo_patrimonio` e `custo_indireto` |
 
 ### Resumo das Correções
 
-1. `status` → `status_fluxo` (tabela requisicoes)
-2. `valor_total` → `COALESCE(valor_liquido, valor)` (tabela requisicoes)
-3. `projeto_id` → `id_projeto` (tabela requisicoes)
-4. `'Saída'` → `'saida'` (tabela movimentos_financeiros)
+| Linha | Antes | Depois |
+|-------|-------|--------|
+| 49-50 | `COALESCE(custo_patrimonio, 0) + COALESCE(custo_indireto, 0)` | Removido |
+| 56-57 | `COALESCE(custo_patrimonio, 0) + COALESCE(custo_indireto, 0)` | Removido |
 
 ### Resultado Esperado
 
-Após aplicar esta migração:
-- Os cards de Materiais mostrarão **18.616.556,81 Kz**
-- Os cards de Mão de Obra mostrarão **7.439.390,93 Kz**
-- Os cards de Patrimônio mostrarão **120.000 Kz**
-- Os cards de Custos Indiretos mostrarão **35.408.912,64 Kz**
+Após aplicar esta migração, a RPC executará sem erros e os cards mostrarão:
+- **Materiais**: 18.616.556,81 Kz
+- **Mão de Obra**: 7.439.390,93 Kz
+- **Patrimônio**: 120.000 Kz  
+- **Custos Indiretos**: 35.408.912,64 Kz
+
+Os dados vêm diretamente da tabela `movimentos_financeiros` (a mesma fonte que alimenta os Centros de Custo).
