@@ -99,7 +99,7 @@ export function SCurveChart({ data }: SCurveChartProps) {
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={false}
-            name="Baseline Linear"
+            name="Planeamento Temporal"
           />
 
           {/* Área e linha do avanço financeiro */}

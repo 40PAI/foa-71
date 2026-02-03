@@ -99,7 +99,7 @@ export function TimelineChart({ data, title }: TimelineChartProps) {
             strokeWidth={2}
             strokeDasharray="5 5"
             dot={false}
-            name="Baseline Linear"
+            name="Planeamento Temporal"
           />
           
           {/* Área e linha do avanço real físico */}
