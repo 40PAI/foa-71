@@ -1,100 +1,119 @@
 
+# Plano de Correção: Sincronização do Fluxo de Requisições
 
-## Correção: Custos Indiretos - Valores Incorretos e Gastos Detalhados Vazios
+## Problema Identificado
 
-### Problemas Identificados
+O utilizador aprovou uma requisição na página de Finanças (status passou para "OC Gerada"), porém:
+1. **Dashboard Geral**: Secção "Compras & Requisições" ainda mostra valores como "pendentes"
+2. **Dados inconsistentes**: O KPI de "Total Compras" mostra 30.000 Kz (correto), mas "Valor Pendente" ainda exibe 60.250 Kz quando deveria ser 30.250 Kz
 
-Após análise detalhada da base de dados e do código, encontrei **dois problemas distintos**:
+### Causa Raiz (Análise Técnica)
 
-#### Problema 1: Valor Negativo no Card de Custos Indiretos (-12M Kz)
+Foram identificados **3 problemas críticos** de sincronização:
 
-O card de "Custos Indiretos" está a mostrar **-12.038.588,07 Kz** enquanto o gráfico de Centros de Custo mostra correctamente **~36M Kz**.
+---
 
-**Causa Raiz:** O gráfico de Centros de Custo (GraficoBarrasCategorias) filtra apenas `tipo_movimento === 'saida'` e agrupa os valores correctamente. No entanto, há um cálculo algures que está a subtrair entradas das saídas:
+## Problema 1: Falta de Invalidação de Cache Após Aprovação
 
-- Total de Saídas (gastos reais): **35.959.912,64 Kz**
-- Total de Entradas: **47.998.500,71 Kz**
-- Saldo (saída - entrada): **-12.038.588,07 Kz** ← Este valor negativo está a aparecer no card
+**Localização**: `src/hooks/useOptimizedFinancialIntegration.ts`
 
-O hook `useCategoryIntegratedExpenses` está correcto (só soma saídas), mas o card pode estar a receber dados de outra fonte ou há uma cache com dados antigos.
+O hook `useOptimizedApproveRequisition` só invalida queries locais da página de Finanças:
+- `pending-approvals-optimized`
+- `purchase-breakdown-optimized`
+- `financial-discrepancies-optimized`
 
-#### Problema 2: Modal "Ver Mais" Vazio para Custos Indiretos
+**Queries que NÃO estão a ser invalidadas**:
+- `dashboard-geral` (usada no Dashboard Geral)
+- `consolidated-financial-data` (usada na página de Finanças)
+- `requisitions` (usada no modal de análise de requisições)
 
-Quando o utilizador clica em "Ver Mais" nos Custos Indiretos, a tabela mostra "Nenhum gasto registrado ainda".
+---
 
-**Causa Raiz:** O hook `useUnifiedExpenses` procura por categorias específicas no array:
-```javascript
-'indireto': ['Custos Indiretos', 'Indireto', 'indireto', 'Segurança', 'CUSTOS INDIRETOS', 'INDIRETO']
+## Problema 2: Realtime Incompleto no Dashboard
+
+**Localização**: `src/hooks/useRealtimeDashboard.ts`
+
+O hook de sincronização em tempo real apenas escuta mudanças nas tabelas:
+- `projetos`
+- `tarefas_lean`
+
+**Tabela que NÃO está a ser monitorizada**:
+- `requisicoes` - mudanças de status não disparam actualização do dashboard
+
+---
+
+## Problema 3: Cache Muito Agressivo
+
+**Localização**: `src/hooks/useConsolidatedFinancialData.ts` e `src/hooks/useDashboardGeral.ts`
+
+Ambos os hooks têm `staleTime: 10 * 60 * 1000` (10 minutos), o que significa que mesmo após invalidação, os dados podem não ser actualizados se ainda forem considerados "frescos".
+
+---
+
+## Solução Proposta
+
+### Parte 1: Corrigir Invalidação de Cache na Aprovação
+
+Modificar `useOptimizedApproveRequisition` para invalidar **todas** as queries afectadas:
+
+```text
+Ficheiro: src/hooks/useOptimizedFinancialIntegration.ts
+
+Adicionar invalidações:
+- dashboard-geral
+- consolidated-financial-data
+- requisitions
 ```
 
-Mas na base de dados existem duas categorias relacionadas:
-1. **"Custos Indiretos"** ✅ (está mapeada)
-2. **"segurança e higiene no trabalho"** ❌ (NÃO está mapeada!)
+### Parte 2: Adicionar Listener de Requisições no Dashboard
 
-### Dados Reais da Base de Dados
+Modificar `useRealtimeDashboard` para também escutar a tabela `requisicoes`:
 
-| Categoria | Tipo | Quantidade | Total (Kz) |
-|-----------|------|------------|------------|
-| Custos Indiretos | saída | 138 | 35.408.912,64 |
-| Custos Indiretos | entrada | 2 | 47.998.500,71 |
-| segurança e higiene no trabalho | saída | 6 | 551.000,00 |
-| Materiais | saída | 84 | 18.616.556,81 |
-| Mão de Obra | saída | 23 | 7.439.390,93 |
-| Patrimônio | saída | 2 | 120.000,00 |
+```text
+Ficheiro: src/hooks/useRealtimeDashboard.ts
 
-**Total de Custos Indiretos (apenas saídas):** 35.408.912,64 + 551.000 = **35.959.912,64 Kz**
-
-### Solução Técnica
-
-#### 1. Actualizar `useUnifiedExpenses.ts`
-
-Expandir o mapeamento de categorias para incluir todas as variações encontradas na base de dados:
-
-```typescript
-const categoryMap: Record<string, string[]> = {
-  'material': ['Material', 'Materiais', 'material', 'Materia', 'MATERIAL', 'MATERIAIS', 'Materiais de Construção'],
-  'mao_obra': ['Mão de Obra', 'Mao de Obra', 'mao_obra', 'Salário', 'Pessoal', 'MAO DE OBRA', 'MÃO DE OBRA'],
-  'patrimonio': ['Patrimônio', 'Patrimonio', 'Equipamento', 'patrimonio', 'Veículo', 'PATRIMONIO', 'EQUIPAMENTO'],
-  'indireto': [
-    'Custos Indiretos', 
-    'Indireto', 
-    'indireto', 
-    'Segurança', 
-    'CUSTOS INDIRETOS', 
-    'INDIRETO',
-    'segurança e higiene no trabalho',  // NOVO
-    'Segurança e Higiene',              // NOVO
-    'Administrativo',                    // NOVO
-    'Transporte',                        // NOVO
-    'Energia',                           // NOVO
-    'Comunicação'                        // NOVO
-  ]
-};
+Adicionar canal para tabela "requisicoes"
+Invalidar "dashboard-geral" quando requisições mudarem
 ```
 
-Também adicionar uma lógica de fallback que usa pattern matching (ILIKE) em vez de match exacto:
+### Parte 3: Garantir Refetch Imediato
 
-```typescript
-// Em vez de usar .in('categoria', categoryNames)
-// Usar múltiplas condições OR com ILIKE para cobrir todas as variações
-```
+Após aprovação, forçar um refetch em vez de depender apenas de invalidação para garantir que os dados são actualizados imediatamente na UI.
 
-#### 2. Limpar Cache de Dados
+---
 
-Invalidar as queries relacionadas para garantir que os dados actualizados sejam recarregados:
-- `category-integrated-expenses`
-- `unified-expenses`
-- `integrated-financial-progress`
-
-### Ficheiros a Modificar
+## Ficheiros a Modificar
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| `src/hooks/useUnifiedExpenses.ts` | Expandir categoryMap para incluir "segurança e higiene no trabalho" e outras variações; usar lógica de match mais flexível |
+| `src/hooks/useOptimizedFinancialIntegration.ts` | Adicionar invalidação de `dashboard-geral`, `consolidated-financial-data`, `requisitions` |
+| `src/hooks/useRealtimeDashboard.ts` | Adicionar escuta de mudanças na tabela `requisicoes` |
+| `src/components/OptimizedApprovalInterface.tsx` | Garantir refetch após aprovação |
 
-### Resultado Esperado
+---
 
-1. **Card de Custos Indiretos** mostrará **~36M Kz** (apenas saídas)
-2. **Modal "Ver Mais"** mostrará os 138+6 = 144 movimentos de saída relacionados com custos indiretos
-3. Os valores serão consistentes entre o gráfico de Centros de Custo e a secção de Finanças
+## Fluxo Corrigido
 
+```text
+1. Utilizador clica "Aprovar" na requisição
+2. Status muda de "Aprovação Direção" para "OC Gerada"
+3. Mutação bem-sucedida dispara:
+   ├── Invalidar "pending-approvals-optimized" (Finanças)
+   ├── Invalidar "purchase-breakdown-optimized" (Finanças)
+   ├── Invalidar "financial-discrepancies-optimized" (Finanças)
+   ├── Invalidar "dashboard-geral" (Dashboard Geral) [NOVO]
+   ├── Invalidar "consolidated-financial-data" (Finanças) [NOVO]
+   └── Invalidar "requisitions" (Modal Analytics) [NOVO]
+4. Realtime listener em "requisicoes" também dispara actualização [NOVO]
+5. Dashboard e Modal mostram dados actualizados
+```
+
+---
+
+## Resultado Esperado
+
+Após implementar estas correcções:
+- Aprovar requisição na página de Finanças actualiza imediatamente todos os KPIs
+- Secção "Compras & Requisições" no Dashboard reflecte o novo status
+- Modal de análise detalhada mostra requisição no "Histórico" em vez de "Em Processo"
+- Valores de "Pendente" e "Aprovado" são calculados correctamente
