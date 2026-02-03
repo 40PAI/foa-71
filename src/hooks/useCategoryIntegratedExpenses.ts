@@ -68,10 +68,13 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         const lower = cat.toLowerCase();
         // Material variations: "Material", "Materiais", "Materiais de Construção"
         if (lower.includes('material') || lower.includes('materiais')) return 'material';
-        // Mão de Obra variations
-        if (lower.includes('mão') || lower.includes('mao') || lower.includes('obra') || lower.includes('salário') || lower.includes('pessoal')) return 'mao_obra';
+        // Mão de Obra variations - must check before indireto since "obra" could conflict
+        if (lower.includes('mão de obra') || lower.includes('mao de obra') || lower.includes('salário') || lower.includes('pessoal')) return 'mao_obra';
         // Patrimônio variations
         if (lower.includes('patrimônio') || lower.includes('patrimonio') || lower.includes('equipamento') || lower.includes('veículo')) return 'patrimonio';
+        // Custos Indiretos - explicit match first, then fallback
+        if (lower.includes('custo') && lower.includes('indireto')) return 'indireto';
+        if (lower.includes('segurança') || lower.includes('higiene') || lower.includes('administrativo') || lower.includes('transporte') || lower.includes('energia') || lower.includes('água') || lower.includes('comunicação')) return 'indireto';
         // Everything else is indirect costs
         return 'indireto';
       };
