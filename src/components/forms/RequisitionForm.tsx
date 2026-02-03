@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Form,
   FormControl,
@@ -21,9 +20,8 @@ import {
 import { useCreateRequisition, useUpdateRequisition } from "@/hooks/useRequisitions";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useMaterialsArmazem } from "@/hooks/useMaterialsArmazem";
-import { useProjects } from "@/hooks/useProjects";
 import { useToast } from "@/hooks/use-toast";
-import { Calculator, Percent, DollarSign, Clock, AlertTriangle, Building2 } from "lucide-react";
+import { Calculator, Percent, DollarSign, Clock } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { useSubcategorias } from "@/hooks/useSubcategorias";
 import { useCategoriaSecundaria } from "@/hooks/useCategoriaSecundaria";
@@ -107,7 +105,6 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
   const { toast } = useToast();
   const { data: materials = [] } = useMaterials();
   const { data: materiaisArmazem = [] } = useMaterialsArmazem();
-  const { data: projects = [] } = useProjects();
   const createMutation = useCreateRequisition();
   const updateMutation = useUpdateRequisition();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -116,20 +113,6 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
     (requisition?.tipo_requisicao as RequisitionType) || "compra"
   );
   const [selectedMaterialArmazem, setSelectedMaterialArmazem] = useState<string | null>(null);
-  const [projetoDestinoId, setProjetoDestinoId] = useState<number | null>(
-    (requisition as any)?.projeto_destino_id || null
-  );
-  
-  // Obter stock do material selecionado
-  const selectedMaterialData = selectedMaterialArmazem 
-    ? materiaisArmazem.find(m => m.id === selectedMaterialArmazem)
-    : null;
-  const stockDisponivel = selectedMaterialData?.quantidade_stock || 0;
-  
-  // Filtrar projetos ativos (excluindo o projeto de origem para alocamentos)
-  const projetosDisponiveis = projects.filter(p => 
-    p.status === "Em Andamento" && p.id !== projectId
-  );
 
   const form = useForm<RequisitionFormData>({
     resolver: zodResolver(requisitionSchema),
@@ -229,16 +212,6 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
       return;
     }
 
-    // Validação de projeto destino para alocamento
-    if (tipoRequisicao === "alocamento" && !projetoDestinoId) {
-      toast({
-        title: "Erro",
-        description: "Selecione o projeto de destino para o alocamento",
-        variant: "destructive",
-      });
-      return;
-    }
-
     // Validação específica para compra
     if (tipoRequisicao === "compra" && !data.categoria_principal) {
       toast({
@@ -287,8 +260,6 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         tipo_requisicao: tipoRequisicao,
         // Adicionar referência ao material do armazém para alocamentos
         material_armazem_id: tipoRequisicao === "alocamento" ? selectedMaterialArmazem : null,
-        // Adicionar projeto de destino para alocamentos
-        projeto_destino_id: tipoRequisicao === "alocamento" ? projetoDestinoId : null,
       };
 
       if (requisition) {
@@ -390,132 +361,53 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         {tipoRequisicao === "alocamento" && (
           <>
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">📦 Selecionar Material do Armazém</h3>
+              <h3 className="text-lg font-semibold">Selecionar Material do Armazém</h3>
               
               {materiaisDisponiveis.length === 0 ? (
                 <div className="p-4 bg-muted rounded-lg text-center text-muted-foreground">
                   Não há materiais disponíveis no armazém. Use "Compra de Material" para requisitar novos materiais.
                 </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <FormLabel>Material Disponível *</FormLabel>
-                    <Select
-                      value={selectedMaterialArmazem || ""}
-                      onValueChange={handleMaterialArmazemSelect}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um material do armazém" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materiaisDisponiveis.map((material) => (
-                          <SelectItem key={material.id} value={material.id}>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{material.nome_material}</span>
-                              <span className="text-muted-foreground text-xs">
-                                ({material.codigo_interno}) - Stock: {material.quantidade_stock} {material.unidade_medida}
-                              </span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="space-y-2">
+                  <FormLabel>Material Disponível *</FormLabel>
+                  <Select
+                    value={selectedMaterialArmazem || ""}
+                    onValueChange={handleMaterialArmazemSelect}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um material do armazém" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {materiaisDisponiveis.map((material) => (
+                        <SelectItem key={material.id} value={material.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{material.nome_material}</span>
+                            <span className="text-muted-foreground text-xs">
+                              ({material.codigo_interno}) - Stock: {material.quantidade_stock} {material.unidade_medida}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   
                   {selectedMaterialArmazem && (
-                    <>
-                      <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-                        {(() => {
-                          const material = materiaisArmazem.find(m => m.id === selectedMaterialArmazem);
-                          if (!material) return null;
-                          return (
-                            <div className="text-sm space-y-1">
-                              <p><strong>Material:</strong> {material.nome_material}</p>
-                              <p><strong>Código:</strong> {material.codigo_interno}</p>
-                              <p className="text-primary font-semibold">
-                                <strong>Stock Disponível:</strong> {material.quantidade_stock} {material.unidade_medida}
-                              </p>
-                              {material.localizacao_fisica && (
-                                <p><strong>Localização:</strong> {material.localizacao_fisica}</p>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Seletor de Projeto Destino */}
-                      <div className="space-y-2">
-                        <FormLabel className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          Projeto Destino *
-                        </FormLabel>
-                        <Select
-                          value={projetoDestinoId?.toString() || ""}
-                          onValueChange={(value) => setProjetoDestinoId(parseInt(value))}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o projeto de destino" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {projetosDisponiveis.length === 0 ? (
-                              <div className="p-2 text-sm text-muted-foreground text-center">
-                                Nenhum outro projeto disponível
-                              </div>
-                            ) : (
-                              projetosDisponiveis.map((projeto) => (
-                                <SelectItem key={projeto.id} value={projeto.id!.toString()}>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">{projeto.nome}</span>
-                                    <span className="text-muted-foreground text-xs">
-                                      ({projeto.cliente})
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))
+                    <div className="mt-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                      {(() => {
+                        const material = materiaisArmazem.find(m => m.id === selectedMaterialArmazem);
+                        if (!material) return null;
+                        return (
+                          <div className="text-sm space-y-1">
+                            <p><strong>Material:</strong> {material.nome_material}</p>
+                            <p><strong>Código:</strong> {material.codigo_interno}</p>
+                            <p><strong>Stock Disponível:</strong> {material.quantidade_stock} {material.unidade_medida}</p>
+                            {material.localizacao_fisica && (
+                              <p><strong>Localização:</strong> {material.localizacao_fisica}</p>
                             )}
-                          </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Selecione para qual obra este material será enviado
-                        </p>
-                      </div>
-
-                      {/* Quantidade com validação de stock */}
-                      <div className="space-y-2">
-                        <FormLabel>Quantidade a Alocar *</FormLabel>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            max={stockDisponivel}
-                            value={quantidade || ""}
-                            onChange={(e) => form.setValue("quantidade_requisitada", parseFloat(e.target.value) || 0)}
-                            className="flex-1"
-                          />
-                          <span className="text-sm text-muted-foreground whitespace-nowrap">
-                            / {stockDisponivel} disponível
-                          </span>
-                        </div>
-                        
-                        {/* Aviso se quantidade exceder stock */}
-                        {quantidade > stockDisponivel && (
-                          <Alert variant="destructive" className="py-2">
-                            <AlertTriangle className="h-4 w-4" />
-                            <AlertDescription className="text-sm">
-                              Quantidade ({quantidade}) excede o stock disponível ({stockDisponivel})
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        
-                        {/* Indicador de percentual do stock */}
-                        {quantidade > 0 && quantidade <= stockDisponivel && (
-                          <div className="text-xs text-muted-foreground">
-                            Será alocado {((quantidade / stockDisponivel) * 100).toFixed(0)}% do stock disponível
                           </div>
-                        )}
-                      </div>
-                    </>
+                        );
+                      })()}
+                    </div>
                   )}
                 </div>
               )}
@@ -749,8 +641,7 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
 
         <Separator />
 
-        {/* Seção 4: Quantidade e Valores - apenas para compras */}
-        {tipoRequisicao === "compra" && (
+        {/* Seção 4: Quantidade e Valores */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Quantidade e Valores</h3>
           
@@ -832,7 +723,6 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
             </div>
           </div>
         </div>
-        )}
 
         <Separator />
 
