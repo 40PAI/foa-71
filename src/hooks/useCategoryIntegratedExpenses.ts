@@ -100,9 +100,11 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
       };
 
       movimentos?.forEach((movimento) => {
-        const category = mapCategory(movimento.categoria);
-        const valor = movimento.tipo_movimento === 'saida' ? Number(movimento.valor) : -Number(movimento.valor);
-        centroCustoByCategory[category] += valor || 0;
+        // Only count expenses (saidas) for the category cards
+        if (movimento.tipo_movimento === 'saida') {
+          const category = mapCategory(movimento.categoria);
+          centroCustoByCategory[category] += Number(movimento.valor) || 0;
+        }
       });
 
       // A nova função retorna: total_gasto, percentual_progresso, orcamento_total
