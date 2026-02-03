@@ -54,10 +54,22 @@ export function useReembolsosFOA(projectId?: number, fonteCredito?: FonteCredito
 }
 
 // Buscar resumo de dívidas agrupado por fonte/credor
+// INCLUI FOF de movimentos_financeiros + outras fontes de reembolsos_foa_fof
 export function useResumoDividas(projectId?: number) {
   return useQuery({
-    queryKey: ["resumo-dividas", projectId],
+    queryKey: ["resumo-dividas", projectId, "v2-with-fof"],
     queryFn: async () => {
+      // 1. Buscar FOF Financiamentos de movimentos_financeiros via RPC
+      const { data: fofData, error: fofError } = await supabase
+        .rpc('calcular_resumo_foa', { 
+          p_projeto_id: projectId !== undefined ? projectId : null 
+        });
+
+      if (fofError) {
+        console.error('Erro ao buscar resumo FOA:', fofError);
+      }
+
+      // 2. Buscar outras fontes de crédito (Bancos, Fornecedores, Outros) de reembolsos_foa_fof
       let query = supabase
         .from("reembolsos_foa_fof")
         .select("*");
@@ -66,22 +78,23 @@ export function useResumoDividas(projectId?: number) {
         query = query.eq("projeto_id", projectId);
       }
 
-      const { data, error } = await query;
+      const { data: reembolsosData, error: reembolsosError } = await query;
 
-      if (error) throw error;
+      if (reembolsosError) throw reembolsosError;
 
-      // Agrupar por fonte_credito + credor_nome
-      const agrupado = (data as ReembolsoFOA[]).reduce((acc, mov) => {
-        const chave = mov.fonte_credito === 'FOF' 
-          ? 'FOF'
-          : mov.fonte_credito === 'FORNECEDOR'
-            ? `FORNECEDOR:${mov.fornecedor_id || 'desconhecido'}`
-            : `${mov.fonte_credito}:${mov.credor_nome || 'desconhecido'}`;
+      // 3. Agrupar reembolsos por fonte_credito + credor_nome (EXCETO FOF)
+      const agrupado = (reembolsosData as ReembolsoFOA[]).reduce((acc, mov) => {
+        // Ignorar FOF aqui pois será tratado separadamente de movimentos_financeiros
+        if (mov.fonte_credito === 'FOF') return acc;
+
+        const chave = mov.fonte_credito === 'FORNECEDOR'
+          ? `FORNECEDOR:${mov.fornecedor_id || 'desconhecido'}`
+          : `${mov.fonte_credito}:${mov.credor_nome || 'desconhecido'}`;
 
         if (!acc[chave]) {
           acc[chave] = {
             fonte_credito: mov.fonte_credito,
-            credor_nome: mov.credor_nome || (mov.fonte_credito === 'FOF' ? 'FOF' : 'Desconhecido'),
+            credor_nome: mov.credor_nome || 'Desconhecido',
             fornecedor_id: mov.fornecedor_id,
             total_credito: 0,
             total_amortizado: 0,
@@ -116,11 +129,47 @@ export function useResumoDividas(projectId?: number) {
         proxima_vencimento?: string;
       }>);
 
-      return Object.values(agrupado).map(item => ({
+      // 4. Converter outras fontes para array
+      const outrasFontes = Object.values(agrupado).map(item => ({
         ...item,
         saldo_devedor: item.total_credito - item.total_amortizado,
         status: item.total_credito <= item.total_amortizado ? 'quitado' as StatusDivida : 'ativo' as StatusDivida,
       }));
+
+      // 5. Calcular totais FOF de movimentos_financeiros
+      let fofTotal = {
+        fonte_credito: 'FOF' as FonteCredito,
+        credor_nome: 'FOF',
+        fornecedor_id: undefined as string | undefined,
+        total_credito: 0,
+        total_amortizado: 0,
+        total_juros: 0,
+        saldo_devedor: 0,
+        status: 'quitado' as StatusDivida,
+        proxima_vencimento: undefined as string | undefined,
+      };
+
+      if (fofData && Array.isArray(fofData)) {
+        fofData.forEach((projeto: { fof_financiamento: number; amortizacao: number }) => {
+          fofTotal.total_credito += Number(projeto.fof_financiamento) || 0;
+          fofTotal.total_amortizado += Number(projeto.amortizacao) || 0;
+        });
+        fofTotal.saldo_devedor = fofTotal.total_credito - fofTotal.total_amortizado;
+        fofTotal.status = fofTotal.saldo_devedor > 0 ? 'ativo' : 'quitado';
+      }
+
+      // 6. Combinar: FOF + outras fontes
+      const resultado = [];
+      
+      // Adicionar FOF se tiver saldo devedor
+      if (fofTotal.saldo_devedor > 0) {
+        resultado.push(fofTotal);
+      }
+
+      // Adicionar outras fontes
+      resultado.push(...outrasFontes);
+
+      return resultado;
     },
   });
 }
