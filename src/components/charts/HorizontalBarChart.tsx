@@ -10,6 +10,7 @@ interface HorizontalBarChartProps {
   }>;
   title?: string;
   valueFormatter?: (value: number) => string;
+  maxHeight?: number;
 }
 
 const chartConfig = {
@@ -39,16 +40,18 @@ const getBarColor = (index: number, status?: string) => {
 export function HorizontalBarChart({ 
   data, 
   title, 
-  valueFormatter = formatCurrency 
+  valueFormatter = formatCurrency,
+  maxHeight = 250
 }: HorizontalBarChartProps) {
   // Calcular altura compacta: barSize + pequeno espaço entre barras
-  const barHeight = 18;
-  const barGap = 4;
-  const chartHeight = Math.max(80, data.length * (barHeight + barGap) + 20);
+  const barHeight = 22;
+  const barGap = 6;
+  const calculatedHeight = Math.max(80, data.length * (barHeight + barGap) + 24);
+  const chartHeight = Math.min(calculatedHeight, maxHeight);
 
   return (
     <div className="w-full">
-      {title && <h3 className="text-xs font-semibold mb-0.5">{title}</h3>}
+      {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
       <ChartContainer config={chartConfig} className="w-full" style={{ minHeight: `${chartHeight}px` }}>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart 
@@ -60,15 +63,15 @@ export function HorizontalBarChart({
             <XAxis 
               type="number" 
               tickFormatter={valueFormatter} 
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 8 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis 
               type="category" 
               dataKey="name" 
-              width={55}
-              tick={{ fill: 'hsl(var(--foreground))', fontSize: 8 }}
+              width={70}
+              tick={{ fill: 'hsl(var(--foreground))', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
