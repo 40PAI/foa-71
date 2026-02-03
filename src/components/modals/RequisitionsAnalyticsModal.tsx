@@ -136,16 +136,13 @@ export function RequisitionsAnalyticsModal({
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Secção Superior: Gráfico + KPIs lado a lado */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Gráfico */}
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-3">Taxa de Aprovação: {requisicoesResumo.taxa_aprovacao.toFixed(1)}%</h3>
-              <div className="h-[200px]">
-                <DonutChart 
-                  data={chartData} 
-                  title="" 
-                />
-              </div>
-            </Card>
+            {/* Gráfico - usando o DonutChart com seu próprio Card */}
+            <div className="[&>div]:border-0 [&>div]:shadow-none [&_.recharts-wrapper]:!max-h-[180px]">
+              <DonutChart 
+                data={chartData} 
+                title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`}
+              />
+            </div>
 
             {/* KPIs */}
             <div className="grid grid-cols-2 gap-3">
