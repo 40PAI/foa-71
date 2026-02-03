@@ -7,6 +7,7 @@ import { useProjectContext } from "@/contexts/ProjectContext";
 import { AlertCircle, TrendingUp, TrendingDown, ShoppingCart, CheckCircle, Target, ClipboardCheck, Maximize2, Building, Users, Truck, DollarSign, Building2, Plus } from "lucide-react";
 import { GastoObraModal } from "@/components/modals/GastoObraModal";
 import { useConsolidatedFinancialData } from "@/hooks/useConsolidatedFinancialData";
+import { useCategoryIntegratedExpenses } from "@/hooks/useCategoryIntegratedExpenses";
 import { useRequisitions } from "@/hooks/useRequisitions";
 import { useProjects } from "@/hooks/useProjects";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -121,6 +122,9 @@ export function ConsolidatedFinancasPage() {
     isLoading
   } = useConsolidatedFinancialData(selectedProjectId || 0);
   const {
+    data: categoryExpenses
+  } = useCategoryIntegratedExpenses(selectedProjectId);
+  const {
     data: requisitions = []
   } = useRequisitions();
   const [expandedDashboardOpen, setExpandedDashboardOpen] = useState(false);
@@ -203,16 +207,16 @@ export function ConsolidatedFinancasPage() {
           <CollapsibleFinancialSection value="expenses" title="Gastos por Categoria" icon={TrendingDown}>
             <div className="grid grid-cols-2 gap-2">
               <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.material_total || 0} fromCentroCusto={0} manualExpenses={0} />
+                <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} fromTasks={categoryExpenses?.material?.fromTasks || 0} fromCentroCusto={categoryExpenses?.material?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.material?.manual || 0} />
               </Suspense>
               <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.mao_obra_total || 0} fromCentroCusto={0} manualExpenses={0} />
+                <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} fromTasks={categoryExpenses?.mao_obra?.fromTasks || 0} fromCentroCusto={categoryExpenses?.mao_obra?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.mao_obra?.manual || 0} />
               </Suspense>
               <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.patrimonio_total || 0} fromCentroCusto={0} manualExpenses={0} />
+                <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} fromTasks={categoryExpenses?.patrimonio?.fromTasks || 0} fromCentroCusto={categoryExpenses?.patrimonio?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.patrimonio?.manual || 0} />
               </Suspense>
               <Suspense fallback={<SectionLoadingFallback rows={1} />}>
-                <CategoryExpenseCard category="indireto" title="Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.indireto_total || 0} fromCentroCusto={0} manualExpenses={0} />
+                <CategoryExpenseCard category="indireto" title="Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} fromTasks={categoryExpenses?.indireto?.fromTasks || 0} fromCentroCusto={categoryExpenses?.indireto?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.indireto?.manual || 0} />
               </Suspense>
             </div>
           </CollapsibleFinancialSection>
@@ -356,16 +360,16 @@ export function ConsolidatedFinancasPage() {
       }}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.material_total || 0} fromCentroCusto={0} manualExpenses={0} />
+              <CategoryExpenseCard category="material" title="Materiais" icon={Building} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Materiais de Construção")?.orcamentado || 1000000} fromTasks={categoryExpenses?.material?.fromTasks || 0} fromCentroCusto={categoryExpenses?.material?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.material?.manual || 0} />
             </Suspense>
             <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.mao_obra_total || 0} fromCentroCusto={0} manualExpenses={0} />
+              <CategoryExpenseCard category="mao_obra" title="Mão de Obra" icon={Users} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Mão de Obra")?.orcamentado || 1000000} fromTasks={categoryExpenses?.mao_obra?.fromTasks || 0} fromCentroCusto={categoryExpenses?.mao_obra?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.mao_obra?.manual || 0} />
             </Suspense>
             <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.patrimonio_total || 0} fromCentroCusto={0} manualExpenses={0} />
+              <CategoryExpenseCard category="patrimonio" title="Patrimônio" icon={Truck} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Equipamentos")?.orcamentado || 1000000} fromTasks={categoryExpenses?.patrimonio?.fromTasks || 0} fromCentroCusto={categoryExpenses?.patrimonio?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.patrimonio?.manual || 0} />
             </Suspense>
             <Suspense fallback={<SectionLoadingFallback rows={2} />}>
-              <CategoryExpenseCard category="indireto" title="Custos Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} fromTasks={consolidatedData?.integrated_expenses?.indireto_total || 0} fromCentroCusto={0} manualExpenses={0} />
+              <CategoryExpenseCard category="indireto" title="Custos Indiretos" icon={DollarSign} projectId={selectedProjectId} totalBudget={consolidatedData?.financas?.find(f => f.categoria === "Custos Indiretos")?.orcamentado || 1000000} fromTasks={categoryExpenses?.indireto?.fromTasks || 0} fromCentroCusto={categoryExpenses?.indireto?.fromCentroCusto || 0} manualExpenses={categoryExpenses?.indireto?.manual || 0} />
             </Suspense>
           </div>
         </CollapsibleFinancialSection>
