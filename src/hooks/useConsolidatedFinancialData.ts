@@ -24,6 +24,7 @@ export interface ConsolidatedFinancialData {
     pending_approvals: number;
     approved_requisitions: number;
     total_value: number;
+    approved_value: number;
     pending_value: number;
   };
   movimentos_financeiros: Partial<Tables<"movimentos_financeiros">>[];

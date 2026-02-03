@@ -127,6 +127,7 @@ export function ConsolidatedFinancasPage() {
   const [gastoModalOpen, setGastoModalOpen] = useState(false);
 
   // Memoized calculations usando dados consolidados
+  // CORRIGIDO: Total Compras agora usa apenas requisições aprovadas (compras efetivas)
   const summaryStats = useMemo(() => {
     if (!consolidatedData?.requisitions_summary) {
       return {
@@ -137,14 +138,15 @@ export function ConsolidatedFinancasPage() {
       };
     }
     const {
-      total_value = 0,
+      approved_value = 0,
       pending_value = 0,
       total_requisitions = 0,
       approved_requisitions = 0
     } = consolidatedData.requisitions_summary;
     return {
-      totalPurchaseValue: total_value,
-      totalApprovedValue: total_value - pending_value,
+      // Total Compras = apenas requisições aprovadas (OC Gerada, Recepcionado, Liquidado)
+      totalPurchaseValue: approved_value,
+      totalApprovedValue: approved_value,
       totalPendingValue: pending_value,
       approvalRate: total_requisitions > 0 ? approved_requisitions / total_requisitions * 100 : 0
     };
