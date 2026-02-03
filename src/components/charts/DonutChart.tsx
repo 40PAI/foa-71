@@ -66,15 +66,15 @@ export function DonutChart({ data, title }: DonutChartProps) {
   }));
 
   const ChartContent = ({ expanded }: { expanded: boolean }) => (
-    <ChartContainer config={chartConfig} className={expanded ? "h-[400px]" : "h-[250px] sm:h-[300px] lg:h-[320px]"}>
+    <ChartContainer config={chartConfig} className={expanded ? "h-[400px] w-full" : "h-[200px] w-full max-w-[300px] mx-auto"}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
           <Pie
             data={dataWithColors}
             cx="50%"
             cy="50%"
-            innerRadius={expanded ? "35%" : "40%"}
-            outerRadius={expanded ? "75%" : "70%"}
+            innerRadius={expanded ? "35%" : "45%"}
+            outerRadius={expanded ? "75%" : "80%"}
             paddingAngle={3}
             dataKey="value"
           >
@@ -100,10 +100,11 @@ export function DonutChart({ data, title }: DonutChartProps) {
             }}
           />
           <Legend 
-            wrapperStyle={{ fontSize: '12px' }}
+            wrapperStyle={{ fontSize: '11px', paddingTop: '8px' }}
             iconType="circle"
-            formatter={(value, entry) => (
-              <span style={{ color: 'hsl(var(--foreground))' }}>{value}</span>
+            iconSize={8}
+            formatter={(value) => (
+              <span style={{ color: 'hsl(var(--foreground))', fontSize: '11px' }}>{value}</span>
             )}
           />
         </PieChart>
