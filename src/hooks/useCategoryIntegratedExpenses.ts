@@ -63,12 +63,16 @@ export function useCategoryIntegratedExpenses(projectId: number | null) {
         console.error('Error fetching movimentos financeiros:', movimentosError);
       }
 
-      // Helper function to map categories
+      // Helper function to map categories - expanded to include all database variations
       const mapCategory = (cat: string): 'material' | 'mao_obra' | 'patrimonio' | 'indireto' => {
         const lower = cat.toLowerCase();
-        if (lower.includes('material')) return 'material';
-        if (lower.includes('mão') || lower.includes('mao') || lower.includes('obra')) return 'mao_obra';
-        if (lower.includes('patrimônio') || lower.includes('patrimonio') || lower.includes('equipamento')) return 'patrimonio';
+        // Material variations: "Material", "Materiais", "Materiais de Construção"
+        if (lower.includes('material') || lower.includes('materiais')) return 'material';
+        // Mão de Obra variations
+        if (lower.includes('mão') || lower.includes('mao') || lower.includes('obra') || lower.includes('salário') || lower.includes('pessoal')) return 'mao_obra';
+        // Patrimônio variations
+        if (lower.includes('patrimônio') || lower.includes('patrimonio') || lower.includes('equipamento') || lower.includes('veículo')) return 'patrimonio';
+        // Everything else is indirect costs
         return 'indireto';
       };
 
