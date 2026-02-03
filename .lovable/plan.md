@@ -1,95 +1,156 @@
 
-## Correção: KPI "Total Compras" Exibindo Requisições Pendentes
+
+## Correção: Formulário de Amortização com Seleção de Dívidas Ativas
 
 ### Problema Identificado
 
-O KPI "Total Compras" mostra **60.250,00 Kz**, que é a soma de TODAS as requisições (Multímetro 30.000 + Madeira 30.250). Porém, estas requisições ainda estão "Aprovação Direção" - ou seja, **não foram aprovadas**.
+Quando o utilizador seleciona "Amortização (Pagamento)" como tipo de movimento, o formulário continua a mostrar os mesmos campos (Descrição, Valor, etc.) como se fosse um novo crédito. Isto está incorreto porque:
 
-**Comportamento Atual (Incorreto):**
-- Total Compras: 60.250,00 Kz (inclui pendentes)
-- Aprovado: 0,00 Kz
-- Pendente: 60.250,00 Kz
+1. Uma amortização é um **pagamento de uma dívida existente**
+2. O utilizador deveria ver uma lista das dívidas activas para selecionar qual amortizar
+3. O valor e descrição deveriam ser preenchidos com base na dívida seleccionada
 
-**Comportamento Esperado (Correto):**
-- Total Compras: **0,00 Kz** (apenas compras efetivamente aprovadas)
-- Aprovado: 0,00 Kz
-- Pendente: 60.250,00 Kz
+### Comportamento Esperado
 
-### Regra de Negócio
+**Quando tipo = "Crédito Recebido":**
+- Formulário actual (criar novo crédito)
+- Campos: Descrição, Valor, Data Vencimento, etc.
 
-Uma requisição só é considerada "compra efetiva" quando atinge um dos seguintes estados:
-- **OC Gerada** (Ordem de Compra emitida)
-- **Recepcionado** (Material recebido)
-- **Liquidado** (Pagamento efetuado)
+**Quando tipo = "Amortização (Pagamento)":**
+- Mostrar lista de dívidas activas (créditos com saldo devedor > 0)
+- Agrupar por Fonte + Credor
+- Mostrar saldo devedor de cada dívida
+- Valor máximo = saldo devedor da dívida selecionada
+- Descrição automática: "Amortização de [Nome do Credor]"
 
-Estados pendentes (Pendente, Cotações, Aprovação Qualidade, Aprovação Direção) **não contam** como compras.
-
----
+**Quando tipo = "Pagamento de Juros":**
+- Similar à amortização (selecionar dívida activa)
+- Valor livre para introduzir montante dos juros
 
 ### Solução Técnica
 
-#### 1. Migração SQL - Adicionar Campo `approved_value`
+#### 1. Adicionar Hook para Dívidas Activas
 
-Atualizar a RPC `get_consolidated_financial_data` para incluir um novo campo que soma apenas o valor das requisições aprovadas:
-
-```sql
-'requisitions_summary', (
-    SELECT jsonb_build_object(
-        'total_requisitions', COUNT(*),
-        'pending_requisitions', COUNT(*) FILTER (...),
-        'approved_requisitions', COUNT(*) FILTER (...),
-        'total_value', COALESCE(SUM(COALESCE(valor_liquido, valor)), 0),
-        
-        -- NOVO: Valor apenas das requisições aprovadas
-        'approved_value', COALESCE(SUM(COALESCE(valor_liquido, valor)) FILTER (
-            WHERE status_fluxo IN ('OC Gerada', 'Recepcionado', 'Liquidado')
-        ), 0),
-        
-        'pending_value', COALESCE(SUM(...) FILTER (
-            WHERE status_fluxo IN ('Pendente', 'Cotações', 'Aprovação Qualidade', 'Aprovação Direção')
-        ), 0),
-        'pending_approvals', COUNT(*) FILTER (...)
-    )
-    FROM requisicoes
-    WHERE id_projeto = p_projeto_id
-)
+Utilizar o hook `useResumoDividas()` que já existe e retorna:
+```typescript
+{
+  fonte_credito: FonteCredito;
+  credor_nome: string;
+  total_credito: number;
+  total_amortizado: number;
+  saldo_devedor: number;  // = total_credito - total_amortizado
+  status: 'ativo' | 'quitado';
+}
 ```
 
-#### 2. Frontend - Usar `approved_value` para "Total Compras"
+#### 2. Modificar `ReembolsoFOAModal.tsx`
 
-Atualizar o cálculo no `ConsolidatedFinancasPage.tsx`:
+Adicionar lógica condicional baseada no tipo de movimento:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                  ReembolsoFOAModal                          │
+├─────────────────────────────────────────────────────────────┤
+│  Fonte de Crédito: [FOF] [Banco] [Fornecedor] [Outro]       │
+├─────────────────────────────────────────────────────────────┤
+│  Projeto: [CATETE ▼]                                        │
+├─────────────────────────────────────────────────────────────┤
+│  Tipo de Movimento: [Amortização (Pagamento) ▼]   Data: []  │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─── SE TIPO = AMORTIZAÇÃO ou JUROS ───────────────────┐   │
+│  │                                                       │   │
+│  │  Selecione a Dívida a Amortizar *                     │   │
+│  │  ┌─────────────────────────────────────────────────┐  │   │
+│  │  │ FOF - Saldo: 1.000.000,00 Kz              ▼     │  │   │
+│  │  └─────────────────────────────────────────────────┘  │   │
+│  │                                                       │   │
+│  │  💡 Saldo devedor: 1.000.000,00 Kz                    │   │
+│  │                                                       │   │
+│  │  Valor da Amortização *                               │   │
+│  │  ┌─────────────────────────────────────────────────┐  │   │
+│  │  │ 100.000,00                                      │  │   │
+│  │  └─────────────────────────────────────────────────┘  │   │
+│  │  ⚠️ Máximo: 1.000.000,00 Kz                           │   │
+│  │                                                       │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                             │
+│  ┌─── SE TIPO = CRÉDITO ────────────────────────────────┐   │
+│  │                                                       │   │
+│  │  Descrição *                                          │   │
+│  │  [______________________________________________]     │   │
+│  │                                                       │   │
+│  │  Valor (AOA) *              Data de Vencimento        │   │
+│  │  [___________]              [_______________]         │   │
+│  │                                                       │   │
+│  └───────────────────────────────────────────────────────┘   │
+│                                                             │
+│  Observações                                                │
+│  [__________________________________________________]       │
+│                                                             │
+│                         [Cancelar]  [Registrar]             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 3. Campos Condicionais por Tipo
+
+| Tipo | Campos Visíveis |
+|------|-----------------|
+| **Crédito** | Fonte, Projeto, Data, Descrição, Valor, Data Vencimento, Taxa Juro, Observações |
+| **Amortização** | Fonte, Projeto, Data, **Dívida (Select)**, **Valor a Amortizar**, Observações |
+| **Juros** | Fonte, Projeto, Data, **Dívida (Select)**, Valor dos Juros, Observações |
+
+#### 4. Estado Adicional no Formulário
 
 ```typescript
-// Antes (incorreto)
-totalPurchaseValue: total_value,
+const [dividaSelecionada, setDividaSelecionada] = useState<string>("");
 
-// Depois (correto) 
-totalPurchaseValue: approved_value,  // Apenas compras efetivas
-totalApprovedValue: approved_value,  // Valor aprovado
-totalPendingValue: pending_value,    // Valor pendente
+// Usar o hook existente para buscar dívidas activas
+const { data: resumoDividas } = useResumoDividas(formData.projeto_id || undefined);
+
+// Filtrar apenas dívidas activas (saldo_devedor > 0)
+const dividasActivas = useMemo(() => 
+  resumoDividas?.filter(d => d.saldo_devedor > 0) || [], 
+  [resumoDividas]
+);
+
+// Obter saldo máximo da dívida selecionada
+const saldoMaximo = useMemo(() => {
+  const divida = dividasActivas.find(d => 
+    `${d.fonte_credito}:${d.credor_nome}` === dividaSelecionada
+  );
+  return divida?.saldo_devedor || 0;
+}, [dividasActivas, dividaSelecionada]);
 ```
 
----
+#### 5. Validações Específicas para Amortização
+
+```typescript
+// No handleSubmit
+if (formData.tipo === 'amortizacao' || formData.tipo === 'juro') {
+  if (!dividaSelecionada) {
+    toast.error("Selecione uma dívida para amortizar");
+    return;
+  }
+  
+  if (formData.tipo === 'amortizacao' && formData.valor > saldoMaximo) {
+    toast.error(`Valor excede o saldo devedor (${formatCurrency(saldoMaximo)})`);
+    return;
+  }
+}
+```
 
 ### Ficheiros a Modificar
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| Nova migração SQL | Adicionar campo `approved_value` na RPC |
-| `src/pages/ConsolidatedFinancasPage.tsx` | Usar `approved_value` para KPI "Total Compras" |
-| `src/hooks/useConsolidatedFinancialData.ts` | Atualizar tipo para incluir `approved_value` |
-
----
+| `src/components/modals/ReembolsoFOAModal.tsx` | Adicionar lógica condicional para mostrar dívidas activas quando tipo = amortização/juros |
 
 ### Resultado Esperado
 
-Após as alterações:
+1. Ao selecionar "Amortização (Pagamento)", aparece um dropdown com as dívidas activas
+2. Cada opção mostra: "FOF - Saldo: 1.000.000,00 Kz"
+3. O campo de valor mostra o máximo permitido
+4. A descrição é preenchida automaticamente
+5. Validação impede valores superiores ao saldo devedor
 
-| KPI | Valor | Explicação |
-|-----|-------|------------|
-| **Total Compras** | 0,00 Kz | Nenhuma requisição foi aprovada ainda |
-| **Aprovado** | 0,00 Kz | Mesmo valor (compras efetivas) |
-| **Pendente** | 60.250,00 Kz | Multímetro + Madeira aguardando aprovação |
-| **Taxa Aprovação** | 0% | 0 de 2 requisições aprovadas |
-
-Quando as requisições forem aprovadas (status → OC Gerada), os valores migrarão automaticamente para "Total Compras" e "Aprovado".
