@@ -20,17 +20,17 @@ export function DashboardFinancasSection({
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
   
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="py-1.5 px-2">
+    <Card className="overflow-hidden max-w-md">
+      <CardHeader className="py-1 px-1.5">
         <CardTitle className="text-sm font-semibold">Finanças</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-1.5 px-2 pb-2 pt-0">
-        <div className="grid grid-cols-2 gap-1.5">
-          <div className="p-1.5 border rounded bg-muted/30">
+      <CardContent className="space-y-1 px-1.5 pb-1.5 pt-0">
+        <div className="grid grid-cols-2 gap-1">
+          <div className="p-1 border rounded bg-muted/30">
             <p className="text-[10px] text-muted-foreground leading-tight">Orçamento Total</p>
             <p className="text-sm font-bold break-all leading-tight">{formatCurrency(orcamentoTotal)}</p>
           </div>
-          <div className="p-1.5 border rounded bg-muted/30">
+          <div className="p-1 border rounded bg-muted/30">
             <p className="text-[10px] text-muted-foreground leading-tight">Gasto Total</p>
             <p className="text-sm font-bold break-all leading-tight">{formatCurrency(gastoTotal)}</p>
             <p className="text-[10px] text-muted-foreground">{percentualGasto}%</p>
@@ -45,7 +45,7 @@ export function DashboardFinancasSection({
             </div>
           </div>
         ) : (
-          <p className="text-center text-muted-foreground py-1 text-xs">Sem dados</p>
+          <p className="text-center text-muted-foreground py-0.5 text-xs">Sem dados</p>
         )}
       </CardContent>
     </Card>
