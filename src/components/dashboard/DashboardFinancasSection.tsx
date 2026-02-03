@@ -40,8 +40,8 @@ export function DashboardFinancasSection({
         {topProjetosGasto.length > 0 ? (
           <div className="w-full">
             <h3 className="text-sm font-semibold mb-2">Top 5 Projetos</h3>
-            <div className="w-full max-h-[200px] overflow-hidden">
-              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} maxHeight={180} />
+            <div className="w-full">
+              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
             </div>
           </div>
         ) : (
