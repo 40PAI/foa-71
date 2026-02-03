@@ -48,14 +48,11 @@ export const CategoryExpenseCard = memo(function CategoryExpenseCard({
       <Card className="hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setIsOpen(true)}>
         <CardContent className="p-4 sm:p-6">
           <div className="space-y-4">
-            {/* Header with icon and percentage */}
-            <div className="flex items-center justify-between">
+            {/* Header with icon */}
+            <div className="flex items-center">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground">
-                {percentageOfBudget.toFixed(1)}%
-              </span>
             </div>
 
             {/* Title */}
@@ -88,8 +85,6 @@ export const CategoryExpenseCard = memo(function CategoryExpenseCard({
               )}
             </div>
 
-            {/* Progress bar */}
-            <Progress value={percentageOfBudget} className="h-2" />
 
             {/* View More button */}
             <Button
