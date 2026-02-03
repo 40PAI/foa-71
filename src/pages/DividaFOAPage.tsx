@@ -58,25 +58,33 @@ export function DividaFOAPage() {
     setModalOpen(true);
   };
 
-  // Calcular totais gerais
+  // Calcular totais gerais - incluindo FOF financiamentos de movimentos_financeiros
   const totaisGerais = useMemo(() => {
-    if (!reembolsos || reembolsos.length === 0) {
-      return { 
-        total_creditos: 0, 
-        total_amortizado: 0, 
-        total_juros: 0,
-        divida_total: 0,
-        por_fonte: { FOF: 0, BANCO: 0, FORNECEDOR: 0, OUTRO: 0 }
-      };
+    // Inicializar com valores dos FOF Financiamentos (movimentos_financeiros)
+    let fof_financiamento_total = 0;
+    let fof_amortizacao_total = 0;
+    
+    if (projetosList && projetosList.length > 0) {
+      projetosList.forEach(projeto => {
+        fof_financiamento_total += Number(projeto.fof_financiamento) || 0;
+        fof_amortizacao_total += Number(projeto.amortizacao) || 0;
+      });
     }
 
-    const resultado = reembolsos.reduce(
+    // Adicionar dados de reembolsos_foa_fof (outras fontes: Bancos, Fornecedores, Outros)
+    const resultado = (reembolsos || []).reduce(
       (acc, mov) => {
         if (isCredito(mov.tipo)) {
-          acc.total_creditos += mov.valor;
-          acc.por_fonte[mov.fonte_credito || 'FOF'] = (acc.por_fonte[mov.fonte_credito || 'FOF'] || 0) + mov.valor;
+          // Só adicionar créditos de outras fontes (não FOF, pois já contamos de movimentos_financeiros)
+          if (mov.fonte_credito !== 'FOF') {
+            acc.total_creditos += mov.valor;
+            acc.por_fonte[mov.fonte_credito || 'OUTRO'] = (acc.por_fonte[mov.fonte_credito || 'OUTRO'] || 0) + mov.valor;
+          }
         } else if (mov.tipo === 'amortizacao') {
-          acc.total_amortizado += mov.valor;
+          // Só adicionar amortizações de outras fontes
+          if (mov.fonte_credito !== 'FOF') {
+            acc.total_amortizado += mov.valor;
+          }
         } else if (mov.tipo === 'juro') {
           acc.total_juros += mov.valor;
         }
@@ -90,11 +98,23 @@ export function DividaFOAPage() {
       }
     );
 
+    // Combinar FOF (de movimentos_financeiros) com outras fontes (de reembolsos_foa_fof)
+    const total_creditos = fof_financiamento_total + resultado.total_creditos;
+    const total_amortizado = fof_amortizacao_total + resultado.total_amortizado;
+    
     return {
-      ...resultado,
-      divida_total: resultado.total_creditos - resultado.total_amortizado,
+      total_creditos,
+      total_amortizado,
+      total_juros: resultado.total_juros,
+      divida_total: total_creditos - total_amortizado,
+      por_fonte: {
+        FOF: fof_financiamento_total, // FOF vem de movimentos_financeiros
+        BANCO: resultado.por_fonte.BANCO,
+        FORNECEDOR: resultado.por_fonte.FORNECEDOR,
+        OUTRO: resultado.por_fonte.OUTRO,
+      }
     };
-  }, [reembolsos]);
+  }, [reembolsos, projetosList]);
 
   // Alertas de vencimento (próximos 30 dias)
   const alertasVencimento = useMemo(() => {
