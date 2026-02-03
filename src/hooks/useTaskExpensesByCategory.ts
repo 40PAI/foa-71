@@ -17,6 +17,7 @@ export interface TaskExpenseDetail {
 /**
  * Hook to fetch detailed task expenses by category for a project
  * This shows the breakdown of costs from tasks
+ * FIXED: Uses tarefas_lean table with correct field mappings
  */
 export function useTaskExpensesByCategory(projectId: number | null, category: string) {
   return useQuery<TaskExpenseDetail[]>({
@@ -24,11 +25,11 @@ export function useTaskExpensesByCategory(projectId: number | null, category: st
     queryFn: async (): Promise<TaskExpenseDetail[]> => {
       if (!projectId) return [];
 
-      // Direct query with any typing to bypass type issues
+      // FIXED: Query tarefas_lean instead of tarefas, use id_projeto instead of projeto_id
       const { data: fallbackData, error: fallbackError } = await supabase
-        .from('tarefas' as any)
+        .from('tarefas_lean' as any)
         .select('*')
-        .eq('projeto_id', projectId);
+        .eq('id_projeto', projectId);
       
       if (fallbackError) {
         console.error('Error fetching task expenses:', fallbackError);
@@ -58,14 +59,14 @@ export function useTaskExpensesByCategory(projectId: number | null, category: st
 
           return {
             tarefa_id: task.id,
-            nome_tarefa: task.nome_tarefa,
+            nome_tarefa: task.descricao || task.nome_tarefa || 'Tarefa sem nome', // FIXED: use descricao field
             etapa_nome: 'N/A',
             custo_material: Number(task.custo_material) || 0,
             custo_mao_obra: Number(task.custo_mao_obra) || 0,
             custo_patrimonio: Number(task.custo_patrimonio) || 0,
             custo_indireto: Number(task.custo_indireto) || 0,
-            data_inicio: task.data_inicio,
-            data_fim_prevista: task.data_fim_prevista,
+            data_inicio: task.data_inicio || task.prazo,
+            data_fim_prevista: task.data_fim_prevista || task.prazo,
             relevantCost,
           };
         })
