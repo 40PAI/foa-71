@@ -20,7 +20,7 @@ export function DashboardFinancasSection({
   const percentualGasto = orcamentoTotal > 0 ? (gastoTotal / orcamentoTotal * 100).toFixed(1) : "0.0";
   
   return (
-    <Card className="overflow-hidden max-w-md">
+    <Card className="overflow-hidden max-w-md ml-auto">
       <CardHeader className="py-1 px-1.5">
         <CardTitle className="text-sm font-semibold">Finanças</CardTitle>
       </CardHeader>
