@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import PageLoadingFallback from "@/components/loading/PageLoadingFallback";
 
 // Lazy load todas as páginas para reduzir bundle inicial
 const DashboardGeralPage = lazy(() => import("@/pages/DashboardGeralPage").then(m => ({ default: m.DashboardGeralPage })));
@@ -18,11 +17,16 @@ const GraficosPage = lazy(() => import("@/pages/GraficosPage").then(m => ({ defa
 const UserManagementPage = lazy(() => import("@/pages/UserManagementPage").then(m => ({ default: m.UserManagementPage })));
 const DividaFOAPage = lazy(() => import("@/pages/DividaFOAPage").then(m => ({ default: m.DividaFOAPage })));
 
+// Fallback minimalista para mobile - evita flash de skeleton
+const MinimalFallback = () => (
+  <div className="flex-1 min-h-0" />
+);
+
 export function MobileMainContent() {
   return (
     <main className="flex-1 min-w-0 w-full overflow-x-hidden">
       <div className="h-full overflow-y-auto">
-        <Suspense fallback={<PageLoadingFallback />}>
+        <Suspense fallback={<MinimalFallback />}>
           <Routes>
             <Route path="/" element={<DashboardGeralPage />} />
             <Route path="/projetos" element={<ProjetosPage />} />

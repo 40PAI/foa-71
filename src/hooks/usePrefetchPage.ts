@@ -2,16 +2,44 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useProjectContext } from "@/contexts/ProjectContext";
 
+// ============================================
+// PRELOAD JS CHUNKS (carrega código antes do clique)
+// ============================================
+const preloadChunks = {
+  dashboard: () => import("@/pages/DashboardGeralPage"),
+  projetos: () => import("@/pages/ProjetosPage"),
+  financas: () => import("@/pages/FinancasPage"),
+  centrosCusto: () => import("@/pages/CentrosCustoPage"),
+  contasFornecedores: () => import("@/pages/ContasFornecedoresPage"),
+  gastosObra: () => import("@/pages/GastosObraPage"),
+  compras: () => import("@/pages/ComprasPage"),
+  armazem: () => import("@/pages/ArmazemPage"),
+  rh: () => import("@/pages/RhPage"),
+  seguranca: () => import("@/pages/SegurancaPage"),
+  tarefas: () => import("@/pages/TarefasPage"),
+  graficos: () => import("@/pages/GraficosPage"),
+  usuarios: () => import("@/pages/UserManagementPage"),
+  dividaFOA: () => import("@/pages/DividaFOAPage"),
+};
+
+// Preload all critical chunks immediately after login
+export function preloadAllCriticalChunks() {
+  Object.values(preloadChunks).forEach(preload => preload());
+}
+
 /**
  * Hook para prefetch inteligente de dados de páginas
- * Carrega dados no hover do sidebar para transições instantâneas
+ * Carrega CÓDIGO JS + DADOS no hover/touch para transições instantâneas
  */
 export function usePrefetchPage() {
   const queryClient = useQueryClient();
   const { selectedProjectId } = useProjectContext();
 
   const prefetchDashboard = () => {
-    // Prefetch projetos como fallback (RPC pode não existir)
+    // Preload código JS
+    preloadChunks.dashboard();
+    
+    // Prefetch dados
     queryClient.prefetchQuery({
       queryKey: ["projetos"],
       queryFn: async () => {
@@ -22,11 +50,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchProjetos = () => {
+    preloadChunks.projetos();
+    
     queryClient.prefetchQuery({
       queryKey: ["projetos"],
       queryFn: async () => {
@@ -37,14 +67,15 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 3 * 60 * 1000, // 3 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchFinancas = () => {
+    preloadChunks.financas();
+    
     if (!selectedProjectId) return;
 
-    // Prefetch dados financeiros consolidados (substitui 9 queries individuais)
     queryClient.prefetchQuery({
       queryKey: ["consolidated-financial-data", selectedProjectId],
       queryFn: async () => {
@@ -54,11 +85,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchCentrosCusto = () => {
+    preloadChunks.centrosCusto();
+    
     if (!selectedProjectId) return;
 
     queryClient.prefetchQuery({
@@ -72,7 +105,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
 
     queryClient.prefetchQuery({
@@ -86,11 +119,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchCompras = () => {
+    preloadChunks.compras();
+    
     if (!selectedProjectId) return;
 
     queryClient.prefetchQuery({
@@ -104,11 +139,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchArmazem = () => {
+    preloadChunks.armazem();
+    
     queryClient.prefetchQuery({
       queryKey: ["materials-armazem"],
       queryFn: async () => {
@@ -118,11 +155,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutos (dados estáticos)
+      staleTime: 3 * 60 * 1000,
     });
   };
 
   const prefetchRH = () => {
+    preloadChunks.rh();
+    
     queryClient.prefetchQuery({
       queryKey: ["employees"],
       queryFn: async () => {
@@ -133,11 +172,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 5 * 60 * 1000, // 5 minutos (dados estáticos)
+      staleTime: 3 * 60 * 1000,
     });
   };
 
   const prefetchSeguranca = () => {
+    preloadChunks.seguranca();
+    
     if (!selectedProjectId) return;
 
     queryClient.prefetchQuery({
@@ -151,11 +192,13 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchTarefas = () => {
+    preloadChunks.tarefas();
+    
     if (!selectedProjectId) return;
 
     queryClient.prefetchQuery({
@@ -169,16 +212,17 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
   const prefetchContasFornecedores = () => {
-    // Skip prefetch - queries serão carregadas sob demanda
-    return;
+    preloadChunks.contasFornecedores();
   };
 
   const prefetchDividaFOA = () => {
+    preloadChunks.dividaFOA();
+    
     queryClient.prefetchQuery({
       queryKey: ["resumo-foa-geral"],
       queryFn: async () => {
@@ -188,7 +232,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
 
     queryClient.prefetchQuery({
@@ -201,7 +245,7 @@ export function usePrefetchPage() {
         if (error) throw error;
         return data;
       },
-      staleTime: 2 * 60 * 1000, // 2 minutos
+      staleTime: 2 * 60 * 1000,
     });
   };
 
