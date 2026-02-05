@@ -13,6 +13,13 @@ const navItems = [
   { icon: Banknote, label: "Finanças", path: "/financas" },
 ];
 
+// Preload chunks imediatamente ao importar (mais agressivo)
+const preloadChunks = () => {
+  import("@/pages/DashboardGeralPage");
+  import("@/pages/ProjetosPage");
+  import("@/pages/FinancasPage");
+};
+
 export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
   const location = useLocation();
   const prefetch = usePrefetchPage();
@@ -28,6 +35,12 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
     return location.pathname.startsWith(path);
   };
 
+  // Preload on first interaction with nav
+  const handleInteraction = (path: string) => {
+    preloadChunks();
+    prefetchMap[path]?.();
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border safe-area-bottom">
       <div className="flex items-center justify-around h-16 relative">
@@ -37,8 +50,8 @@ export function MobileBottomNav({ onMoreClick }: MobileBottomNavProps) {
             <NavLink
               key={item.path}
               to={item.path}
-              onPointerDown={() => prefetchMap[item.path]?.()}
-              onTouchStart={() => prefetchMap[item.path]?.()}
+              onPointerDown={() => handleInteraction(item.path)}
+              onTouchStart={() => handleInteraction(item.path)}
               className={cn(
                 "relative flex flex-col items-center justify-center flex-1 h-full gap-1 transition-all duration-300",
                 "touch-manipulation",

@@ -6,7 +6,7 @@ import { ThemeProvider } from "./ThemeContext";
 import { LoadingProvider } from "./LoadingContext";
 import { AuthProvider } from "./AuthContext";
 import { ProjectProvider } from "./ProjectContext";
-import { usePrefetchPage } from "@/hooks/usePrefetchPage";
+import { usePrefetchPage, preloadAllCriticalChunks } from "@/hooks/usePrefetchPage";
 import { useAuth } from "./AuthContext";
 import { useProjectContext } from "./ProjectContext";
 
@@ -14,7 +14,7 @@ interface AllProvidersProps {
   children: ReactNode;
 }
 
-// Background prefetch component
+// Background prefetch component - muito mais agressivo
 function BackgroundPrefetch() {
   const prefetch = usePrefetchPage();
   const { user } = useAuth();
@@ -22,13 +22,14 @@ function BackgroundPrefetch() {
 
   useEffect(() => {
     if (user) {
-      // Aggressive background prefetch of all main routes after 500ms
+      // IMEDIATAMENTE preload de todos os chunks JS críticos
+      preloadAllCriticalChunks();
+
+      // Prefetch dados após apenas 100ms (muito mais rápido)
       const timer = setTimeout(() => {
-        console.log("🚀 Background prefetch started...");
+        console.log("🚀 Background prefetch: carregando dados...");
         prefetch.prefetchDashboard();
         prefetch.prefetchProjetos();
-        
-        // Prefetch global data (não depende de projeto)
         prefetch.prefetchArmazem();
         prefetch.prefetchRH();
         
@@ -39,7 +40,7 @@ function BackgroundPrefetch() {
           prefetch.prefetchSeguranca();
           prefetch.prefetchTarefas();
         }
-      }, 500); // Reduzido de 1000ms para 500ms
+      }, 100);
 
       return () => clearTimeout(timer);
     }

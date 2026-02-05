@@ -1,7 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useSidebar } from "@/components/ui/sidebar";
-import PageLoadingFallback from "@/components/loading/PageLoadingFallback";
 
 // Lazy load todas as páginas para reduzir bundle inicial
 const DashboardGeralPage = lazy(() => import("@/pages/DashboardGeralPage").then(m => ({ default: m.DashboardGeralPage })));
@@ -19,13 +18,18 @@ const GraficosPage = lazy(() => import("@/pages/GraficosPage").then(m => ({ defa
 const UserManagementPage = lazy(() => import("@/pages/UserManagementPage").then(m => ({ default: m.UserManagementPage })));
 const DividaFOAPage = lazy(() => import("@/pages/DividaFOAPage").then(m => ({ default: m.DividaFOAPage })));
 
+// Fallback minimalista - quase invisível para transições rápidas
+const MinimalFallback = () => (
+  <div className="flex-1 min-h-0" />
+);
+
 export function MainContent() {
   const { open: sidebarOpen } = useSidebar();
   
   return (
     <main className="flex-1 min-w-0 w-full">
       <div className="h-full">
-        <Suspense fallback={<PageLoadingFallback />}>
+        <Suspense fallback={<MinimalFallback />}>
           <Routes>
             <Route path="/" element={<DashboardGeralPage />} />
             <Route path="/projetos" element={<ProjetosPage />} />

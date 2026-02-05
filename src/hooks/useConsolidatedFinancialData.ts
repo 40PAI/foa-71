@@ -78,8 +78,8 @@ export function useConsolidatedFinancialData(projectId: number | null) {
     },
     enabled: !!projectId,
     placeholderData: (previousData) => previousData,
-    staleTime: 10 * 60 * 1000, // 10 minutos
-    gcTime: 30 * 60 * 1000, // 30 minutos em cache
+    staleTime: 2 * 60 * 1000, // Reduzido para 2 minutos
+    gcTime: 15 * 60 * 1000, // Reduzido para 15 minutos
     refetchOnWindowFocus: false,
   });
 }
