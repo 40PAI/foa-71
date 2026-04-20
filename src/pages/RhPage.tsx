@@ -17,6 +17,8 @@ import { ProjectTimeCalendar } from "@/components/calendars/ProjectTimeCalendar"
 import { EmployeeListView } from "@/components/EmployeeListView";
 import { EmployeeTableView } from "@/components/EmployeeTableView";
 import { EmployeeImportModal } from "@/components/modals/EmployeeImportModal";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 const RhPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -185,6 +187,7 @@ const RhPage = () => {
             <Card className="max-h-28">
               <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs sm:text-sm font-medium">Total</CardTitle>
+                <InfoTooltip {...KPI_INFO.totalFuncionarios} title="Total de Colaboradores" />
               </CardHeader>
               <CardContent size="sm">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">{employees?.length || 0}</div>
@@ -193,6 +196,7 @@ const RhPage = () => {
             <Card className="max-h-28">
               <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs sm:text-sm font-medium">Fixos</CardTitle>
+                <InfoTooltip {...KPI_INFO.funcionariosFixos} title="Colaboradores Fixos" />
               </CardHeader>
               <CardContent size="sm">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
@@ -203,6 +207,7 @@ const RhPage = () => {
             <Card className="max-h-28">
               <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs sm:text-sm font-medium">Temporários</CardTitle>
+                <InfoTooltip {...KPI_INFO.funcionariosTemporarios} title="Colaboradores Temporários" />
               </CardHeader>
               <CardContent size="sm">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
@@ -213,6 +218,7 @@ const RhPage = () => {
             <Card className="max-h-28">
               <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs sm:text-sm font-medium">Oficiais</CardTitle>
+                <InfoTooltip {...KPI_INFO.funcionariosOficiais} title="Oficiais" />
               </CardHeader>
               <CardContent size="sm">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">
@@ -223,6 +229,7 @@ const RhPage = () => {
             <Card className="max-h-28">
               <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs sm:text-sm font-medium">Técnicos Sup.</CardTitle>
+                <InfoTooltip {...KPI_INFO.funcionariosTecnicos} title="Técnicos Superiores" />
               </CardHeader>
               <CardContent size="sm">
                 <div className="text-lg sm:text-xl lg:text-2xl font-bold">

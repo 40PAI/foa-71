@@ -6,6 +6,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { Maximize2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RequisitionsAnalyticsModal } from "@/components/modals/RequisitionsAnalyticsModal";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 import type { RequisicoesResumo } from "@/hooks/useDashboardGeral";
 
 interface DashboardRequisicoesSectionProps {
@@ -47,30 +49,48 @@ export function DashboardRequisicoesSection({ requisicoesResumo }: DashboardRequ
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground">Total</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Total</p>
+                <InfoTooltip {...KPI_INFO.totalRequisicoes} title="Total de Requisições" />
+              </div>
               <p className="text-xl font-bold">{requisicoesResumo.total}</p>
             </div>
             <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground">Pendentes</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Pendentes</p>
+                <InfoTooltip {...KPI_INFO.requisicoesPendentes} title="Pendentes" />
+              </div>
               <p className="text-xl font-bold text-warning">{requisicoesResumo.pendentes}</p>
             </div>
             <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground">Em Aprovação</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Em Aprovação</p>
+                <InfoTooltip {...KPI_INFO.requisicoesEmAprovacao} title="Em Aprovação" />
+              </div>
               <p className="text-xl font-bold text-primary">{requisicoesResumo.aprovacao}</p>
             </div>
             <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground">Aprovadas</p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">Aprovadas</p>
+                <InfoTooltip {...KPI_INFO.requisicoesAprovadas} title="Aprovadas" />
+              </div>
               <p className="text-xl font-bold text-chart-1">{requisicoesResumo.aprovadas}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 border rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Valor Total</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Valor Total</p>
+                <InfoTooltip {...KPI_INFO.valorTotalCompras} title="Valor Total" />
+              </div>
               <p className="text-xl font-bold">{formatCurrency(requisicoesResumo.valor_total)}</p>
             </div>
             <div className="p-4 border rounded-lg bg-card">
-              <p className="text-sm text-muted-foreground">Valor Pendente</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">Valor Pendente</p>
+                <InfoTooltip {...KPI_INFO.valorPendenteCompras} title="Valor Pendente" />
+              </div>
               <p className="text-xl font-bold">{formatCurrency(requisicoesResumo.valor_pendente)}</p>
             </div>
           </div>
@@ -78,7 +98,11 @@ export function DashboardRequisicoesSection({ requisicoesResumo }: DashboardRequ
           {requisicoesResumo.total > 0 && (
             <div>
               <h3 className="text-sm font-semibold mb-3">Distribuição por Status</h3>
-              <DonutChart data={chartData} title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`} />
+              <DonutChart
+                data={chartData}
+                title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`}
+                info={KPI_INFO.graficoDonut}
+              />
             </div>
           )}
         </CardContent>

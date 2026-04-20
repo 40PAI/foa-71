@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Package, AlertTriangle, TrendingUp, TrendingDown, BarChart3 } from "lucide-react";
 import { useMaterialsArmazem } from "@/hooks/useMaterialsArmazem";
 import { useMaterialMovements } from "@/hooks/useMaterialMovements";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface DashboardArmazemSectionProps {
   onOpenAnalytics?: () => void;
@@ -64,22 +66,34 @@ export function DashboardArmazemSection({ onOpenAnalytics }: DashboardArmazemSec
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Total Materiais</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Total Materiais</p>
+              <InfoTooltip {...KPI_INFO.totalMateriais} title="Total Materiais" />
+            </div>
             <p className="text-xl font-bold">{totalMaterials}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Unidades em Stock</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Unidades em Stock</p>
+              <InfoTooltip {...KPI_INFO.unidadesEmStock} title="Unidades em Stock" />
+            </div>
             <p className="text-xl font-bold">{totalStock.toLocaleString()}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-destructive" />
-              Stock Crítico
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 text-destructive" />
+                Stock Crítico
+              </p>
+              <InfoTooltip {...KPI_INFO.estoqueCritico} title="Stock Crítico" />
+            </div>
             <p className="text-xl font-bold text-destructive">{criticalItems.length}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Stock Baixo</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Stock Baixo</p>
+              <InfoTooltip {...{ description: "Materiais com stock entre 10 e 30 unidades, ainda dentro do limite mas próximo do crítico.", formula: "COUNT(materiais WHERE quantidade BETWEEN 10 AND 30)" }} title="Stock Baixo" />
+            </div>
             <p className="text-xl font-bold text-warning">{lowStockItems.length}</p>
           </div>
         </div>
@@ -87,7 +101,10 @@ export function DashboardArmazemSection({ onOpenAnalytics }: DashboardArmazemSec
         {/* Stock Health */}
         <div className="p-4 border rounded-lg bg-card">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-medium">Saúde do Stock</p>
+            <div className="flex items-center gap-1">
+              <p className="text-sm font-medium">Saúde do Stock</p>
+              <InfoTooltip {...KPI_INFO.saudeStock} title="Saúde do Stock" />
+            </div>
             <p className="text-lg font-bold">{healthPercentage}%</p>
           </div>
           <Progress 
@@ -101,17 +118,20 @@ export function DashboardArmazemSection({ onOpenAnalytics }: DashboardArmazemSec
 
         {/* Movement Summary */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="p-3 border rounded-lg bg-card text-center">
+          <div className="p-3 border rounded-lg bg-card text-center relative">
+            <div className="absolute top-1 right-1"><InfoTooltip {...KPI_INFO.entradasMaterial} title="Entradas" /></div>
             <TrendingUp className="h-4 w-4 mx-auto text-chart-1 mb-1" />
             <p className="text-lg font-bold text-chart-1">{entradas}</p>
             <p className="text-xs text-muted-foreground">Entradas</p>
           </div>
-          <div className="p-3 border rounded-lg bg-card text-center">
+          <div className="p-3 border rounded-lg bg-card text-center relative">
+            <div className="absolute top-1 right-1"><InfoTooltip {...KPI_INFO.saidasMaterial} title="Saídas" /></div>
             <TrendingDown className="h-4 w-4 mx-auto text-destructive mb-1" />
             <p className="text-lg font-bold text-destructive">{saidas}</p>
             <p className="text-xs text-muted-foreground">Saídas</p>
           </div>
-          <div className="p-3 border rounded-lg bg-card text-center">
+          <div className="p-3 border rounded-lg bg-card text-center relative">
+            <div className="absolute top-1 right-1"><InfoTooltip {...KPI_INFO.consumosMaterial} title="Consumos" /></div>
             <Package className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className="text-lg font-bold text-primary">{consumos}</p>
             <p className="text-xs text-muted-foreground">Consumos</p>

@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HorizontalBarChart } from "@/components/charts/HorizontalBarChart";
 import { formatCurrency } from "@/utils/formatters";
 import type { ProjetoGasto } from "@/hooks/useDashboardGeral";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 interface DashboardFinancasSectionProps {
   topProjetosGasto: ProjetoGasto[];
   orcamentoTotal: number;
@@ -21,17 +23,27 @@ export function DashboardFinancasSection({
   
   return (
     <Card className="overflow-hidden w-full">
-      <CardHeader className="py-1 px-1.5">
+      <CardHeader className="py-1 px-1.5 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold">Finanças</CardTitle>
+        <InfoTooltip
+          title="Finanças"
+          description="Resumo financeiro consolidado: orçamento total previsto, gasto acumulado e top 5 projetos com maior consumo."
+        />
       </CardHeader>
       <CardContent className="space-y-1 px-1.5 pb-1.5 pt-0">
         <div className="grid grid-cols-2 gap-1">
           <div className="p-1 border rounded bg-muted/30">
-            <p className="text-[10px] text-muted-foreground leading-tight">Orçamento Total</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-muted-foreground leading-tight">Orçamento Total</p>
+              <InfoTooltip {...KPI_INFO.orcamentoTotal} title="Orçamento Total" />
+            </div>
             <p className="text-sm font-bold break-all leading-tight">{formatCurrency(orcamentoTotal)}</p>
           </div>
           <div className="p-1 border rounded bg-muted/30">
-            <p className="text-[10px] text-muted-foreground leading-tight">Gasto Total</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] text-muted-foreground leading-tight">Gasto Total</p>
+              <InfoTooltip {...KPI_INFO.gastoTotal} title="Gasto Total" />
+            </div>
             <p className="text-sm font-bold break-all leading-tight">{formatCurrency(gastoTotal)}</p>
             <p className="text-[10px] text-muted-foreground">{percentualGasto}%</p>
           </div>
@@ -41,7 +53,7 @@ export function DashboardFinancasSection({
           <div className="w-full">
             <h3 className="text-xs font-semibold mb-0.5">Top 5 Projetos</h3>
             <div className="w-full">
-              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} />
+              <HorizontalBarChart data={chartData} valueFormatter={formatCurrency} info={KPI_INFO.graficoTopMateriais} />
             </div>
           </div>
         ) : (

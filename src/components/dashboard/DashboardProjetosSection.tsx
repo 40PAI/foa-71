@@ -6,6 +6,7 @@ import type { ProjetoLista } from "@/hooks/useDashboardGeral";
 import { cn } from "@/lib/utils";
 import { RefreshCw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
 interface DashboardProjetosSectionProps {
   projetos: ProjetoLista[];
 }
@@ -34,7 +35,14 @@ export function DashboardProjetosSection({
   return <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle className="text-responsive-xl">Projetos - Visão Rápida</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-responsive-xl">Projetos - Visão Rápida</CardTitle>
+            <InfoTooltip
+              title="Projetos - Visão Rápida"
+              description="Lista resumida dos projetos com status, orçamento, gasto, progresso físico e datas de início e fim."
+              formula="Projetos ordenados por relevância (status ativo, prazo, gasto)"
+            />
+          </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
             <RefreshCw className="h-3 w-3" />
             <span>Atualizado: {lastUpdate}</span>

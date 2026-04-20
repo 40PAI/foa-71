@@ -8,6 +8,7 @@ import { SupplierBalanceTreemap } from "@/components/charts/SupplierBalanceTreem
 import { TrendingUp, Building2, Users, Filter } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
 import { Label } from "@/components/ui/label";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface FinanceAnalyticsModalProps {
   open: boolean;
@@ -72,6 +73,7 @@ export function FinanceAnalyticsModal({ open, onOpenChange }: FinanceAnalyticsMo
               projectId={selectedProjectId} 
               months={12} 
               title={selectedProjectId ? "Fluxo de Caixa do Projecto" : "Fluxo de Caixa - Todos os Projectos"} 
+              info={KPI_INFO.graficoCashFlow}
             />
           </TabsContent>
 
@@ -79,6 +81,7 @@ export function FinanceAnalyticsModal({ open, onOpenChange }: FinanceAnalyticsMo
             <CostCenterUtilizationChart 
               projectId={selectedProjectId}
               title={selectedProjectId ? "Utilização por Centro de Custo - Projecto" : "Utilização por Centro de Custo - Geral"} 
+              info={KPI_INFO.graficoCostCenterUtil}
             />
           </TabsContent>
 
@@ -86,6 +89,7 @@ export function FinanceAnalyticsModal({ open, onOpenChange }: FinanceAnalyticsMo
             <SupplierBalanceTreemap 
               projectId={selectedProjectId}
               title={selectedProjectId ? "Saldos por Fornecedor - Projecto" : "Saldos por Fornecedor (Top 10)"} 
+              info={KPI_INFO.graficoSupplierBalance}
             />
           </TabsContent>
         </Tabs>
