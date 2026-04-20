@@ -37,6 +37,7 @@ import {
   CheckCircle,
   ShoppingCart
 } from "lucide-react";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface ProjectChartsModalProps {
   projectId: number;
@@ -93,6 +94,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Meta: ≥ 85%"
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert={chartData.kpis.ppc >= 85 ? "green" : chartData.kpis.ppc >= 70 ? "yellow" : "red"}
+                  info={KPI_INFO.ppcProjeto}
                 />
                 <KPICard
                   title="Lead-time Médio"
@@ -100,6 +102,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Compras"
                   icon={<Clock className="h-4 w-4" />}
                   alert={chartData.kpis.leadTime <= 7 ? "green" : chartData.kpis.leadTime <= 14 ? "yellow" : "red"}
+                  info={KPI_INFO.leadTimeMedio}
                 />
                 <KPICard
                   title="Taxa de Utilização"
@@ -107,19 +110,21 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Equipamentos"
                   icon={<Package className="h-4 w-4" />}
                   alert={chartData.kpis.utilizationRate >= 75 ? "green" : chartData.kpis.utilizationRate >= 50 ? "yellow" : "red"}
+                  info={KPI_INFO.taxaUtilizacaoEquipamentos}
                 />
               </div>
 
               {/* Gráficos principais */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <SCurveChart data={chartData.chartData.sCurve} />
+                <SCurveChart data={chartData.chartData.sCurve} info={KPI_INFO.graficoSCurve} />
                 <GaugeChart 
                   value={chartData.kpis.ppc} 
                   title="PPC - Programação Cumprida" 
+                  info={KPI_INFO.graficoGauge}
                 />
               </div>
 
-              <BurndownChart data={chartData.chartData.burndown} />
+              <BurndownChart data={chartData.chartData.burndown} info={KPI_INFO.graficoBurndown} />
             </TabsContent>
 
             <TabsContent value="finance" className="space-y-6 mt-6">
@@ -129,30 +134,35 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   title="Orçamento Total"
                   value={formatCurrency(chartData.project.orcamento)}
                   icon={<TrendingUp className="h-4 w-4" />}
+                  info={KPI_INFO.orcamentoTotal}
                 />
                 <KPICard
                   title="Gasto Total"
                   value={formatCurrency(chartData.project.gasto)}
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert={(chartData.project.gasto / chartData.project.orcamento) > 0.9 ? "red" : "green"}
+                  info={KPI_INFO.gastoTotal}
                 />
                 <KPICard
                   title="Saldo Disponível"
                   value={formatCurrency(chartData.project.orcamento - chartData.project.gasto)}
                   icon={<DollarSign className="h-4 w-4" />}
                   alert={(chartData.project.orcamento - chartData.project.gasto) < (chartData.project.orcamento * 0.2) ? "red" : "green"}
+                  info={KPI_INFO.saldoDisponivelProjeto}
                 />
                 <KPICard
                   title="Desvio Orçamental"
                   value={`${((chartData.project.gasto / chartData.project.orcamento - 1) * 100).toFixed(1)}%`}
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert={(chartData.project.gasto / chartData.project.orcamento - 1) > 0.1 ? "red" : "green"}
+                  info={KPI_INFO.desvioOrcamental}
                 />
               </div>
 
               <StackedBarChart
                 data={chartData.chartData.finance}
                 title="Orçado vs Real por Categoria"
+                info={KPI_INFO.graficoStackedBar}
               />
 
               {/* Seções Colapsáveis */}
@@ -186,6 +196,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Nesta obra"
                   icon={<Package className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.totalRequisicoes}
                 />
                 <KPICard
                   title="Requisições Aprovadas"
@@ -193,6 +204,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="OC geradas ou recepcionadas"
                   icon={<CheckCircle className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.requisicoesAprovadas}
                 />
                 <KPICard
                   title="Taxa de Aprovação"
@@ -200,6 +212,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Do total de requisições"
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert={chartData.kpis.purchases.taxaAprovacao >= 80 ? "green" : chartData.kpis.purchases.taxaAprovacao >= 60 ? "yellow" : "red"}
+                  info={KPI_INFO.taxaAprovacaoCompras}
                 />
               </div>
 
@@ -211,6 +224,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Todas as requisições"
                   icon={<DollarSign className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.valorTotalCompras}
                 />
                 <KPICard
                   title="Pendentes de Aprovação"
@@ -218,6 +232,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Aguardando decisão"
                   icon={<Clock className="h-4 w-4" />}
                   alert={chartData.kpis.purchases.pendentes > 5 ? "yellow" : "green"}
+                  info={KPI_INFO.pendentesAprovacao}
                 />
                 <KPICard
                   title="Em Processo de Compra"
@@ -225,6 +240,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Cotações e aprovações"
                   icon={<ShoppingCart className="h-4 w-4" />}
                   alert="yellow"
+                  info={KPI_INFO.requisicoesEmProcesso}
                 />
               </div>
 
@@ -288,6 +304,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Total no projeto"
                   icon={<Package className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.totalMateriais}
                 />
                 <KPICard
                   title="Materiais Disponíveis"
@@ -295,6 +312,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Prontos para uso"
                   icon={<Package className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.unidadesEmStock}
                 />
                 <KPICard
                   title="Em Uso no Projeto"
@@ -302,6 +320,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Atualmente utilizados"
                   icon={<Package className="h-4 w-4" />}
                   alert="yellow"
+                  info={KPI_INFO.consumosMaterial}
                 />
                 <KPICard
                   title="Reservados"
@@ -309,6 +328,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Aguardando uso"
                   icon={<Clock className="h-4 w-4" />}
                   alert="yellow"
+                  info={{ description: "Materiais reservados para o projeto mas que ainda não foram efetivamente utilizados.", formula: "COUNT(materiais WHERE status = 'reservado')" }}
                 />
               </div>
 
@@ -344,6 +364,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Alocados ao projeto"
                   icon={<Users className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.totalFuncionarios}
                 />
                 <KPICard
                   title="Custo Hora Médio"
@@ -351,6 +372,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Por colaborador"
                   icon={<TrendingUp className="h-4 w-4" />}
                   alert="green"
+                  info={KPI_INFO.custoHoraMedio}
                 />
                 <KPICard
                   title="Categorias"
@@ -358,12 +380,13 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Diferentes perfis"
                   icon={<Users className="h-4 w-4" />}
                   alert="green"
+                  info={{ description: "Quantidade de categorias profissionais distintas (ex.: Oficial, Auxiliar, Técnico Superior) entre os colaboradores alocados.", formula: "COUNT(DISTINCT funcionarios.categoria)" }}
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="safety" className="space-y-6 mt-6">
-              <IncidentChart data={chartData.chartData.incidents} />
+              <IncidentChart data={chartData.chartData.incidents} info={KPI_INFO.graficoIncidentes} />
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <KPICard
@@ -372,6 +395,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="No período"
                   icon={<ShieldCheck className="h-4 w-4" />}
                   alert={chartData.chartData.incidents.length === 0 ? "green" : "red"}
+                  info={KPI_INFO.totalIncidentes}
                 />
                 <KPICard
                   title="Média Mensal"
@@ -379,6 +403,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Incidentes por mês"
                   icon={<AlertTriangle className="h-4 w-4" />}
                   alert="yellow"
+                  info={{ description: "Média de incidentes registrados por mês no período em análise.", formula: "total_incidentes / nº_meses" }}
                 />
                 <KPICard
                   title="Índice de Segurança"
@@ -386,6 +411,7 @@ export function ProjectChartsModal({ projectId, projectName }: ProjectChartsModa
                   subtitle="Status geral"
                   icon={<ShieldCheck className="h-4 w-4" />}
                   alert={chartData.chartData.incidents.length === 0 ? "green" : "red"}
+                  info={{ description: "Indicador qualitativo da segurança do projeto. 100% quando não há incidentes registrados; alerta caso contrário.", formula: "incidentes == 0 ? 100% : 'Precisa Melhorar'" }}
                 />
               </div>
             </TabsContent>

@@ -9,6 +9,8 @@ import { formatCurrency } from "@/utils/formatters";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
 import { Clock, CheckCircle, ShoppingCart, FileText, Package } from "lucide-react";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 import type { RequisicoesResumo } from "@/hooks/useDashboardGeral";
 
 interface RequisitionsAnalyticsModalProps {
@@ -141,24 +143,29 @@ export function RequisitionsAnalyticsModal({
               <DonutChart 
                 data={chartData} 
                 title={`Taxa de Aprovação: ${requisicoesResumo.taxa_aprovacao.toFixed(1)}%`}
+                info={KPI_INFO.graficoDonut}
               />
             </div>
 
             {/* KPIs */}
             <div className="grid grid-cols-2 gap-3">
-              <Card className="p-4 flex flex-col items-center justify-center">
+              <Card className="p-4 flex flex-col items-center justify-center relative">
+                <div className="absolute top-2 right-2"><InfoTooltip {...KPI_INFO.totalRequisicoes} title="Total" /></div>
                 <p className="text-3xl font-bold">{requisicoesResumo.total}</p>
                 <p className="text-sm text-muted-foreground">Total</p>
               </Card>
-              <Card className="p-4 flex flex-col items-center justify-center">
+              <Card className="p-4 flex flex-col items-center justify-center relative">
+                <div className="absolute top-2 right-2"><InfoTooltip {...KPI_INFO.requisicoesPendentes} title="Pendentes" /></div>
                 <p className="text-3xl font-bold text-warning">{requisicoesResumo.pendentes}</p>
                 <p className="text-sm text-muted-foreground">Pendentes</p>
               </Card>
-              <Card className="p-4 flex flex-col items-center justify-center">
+              <Card className="p-4 flex flex-col items-center justify-center relative">
+                <div className="absolute top-2 right-2"><InfoTooltip {...KPI_INFO.requisicoesEmAprovacao} title="Em Aprovação" /></div>
                 <p className="text-3xl font-bold text-primary">{requisicoesResumo.aprovacao}</p>
                 <p className="text-sm text-muted-foreground">Em Aprovação</p>
               </Card>
-              <Card className="p-4 flex flex-col items-center justify-center">
+              <Card className="p-4 flex flex-col items-center justify-center relative">
+                <div className="absolute top-2 right-2"><InfoTooltip {...KPI_INFO.requisicoesAprovadas} title="Aprovadas" /></div>
                 <p className="text-3xl font-bold text-chart-1">{requisicoesResumo.aprovadas}</p>
                 <p className="text-sm text-muted-foreground">Aprovadas</p>
               </Card>

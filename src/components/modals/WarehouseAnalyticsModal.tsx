@@ -7,6 +7,7 @@ import { TopMaterialsChart } from "@/components/charts/TopMaterialsChart";
 import { ConsumptionByProjectChart } from "@/components/charts/ConsumptionByProjectChart";
 import { CriticalStockChart } from "@/components/charts/CriticalStockChart";
 import { Package, TrendingUp, PieChart, AlertTriangle, Calendar } from "lucide-react";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface WarehouseAnalyticsModalProps {
   open: boolean;
@@ -77,20 +78,21 @@ export function WarehouseAnalyticsModal({ open, onOpenChange }: WarehouseAnalyti
             <TabsContent value="fluxo" className="mt-0 h-full">
               <MaterialFlowChart 
                 days={parseInt(selectedDays)} 
-                title={`Fluxo de Materiais - ${PERIOD_OPTIONS.find(o => o.value === selectedDays)?.label}`} 
+                title={`Fluxo de Materiais - ${PERIOD_OPTIONS.find(o => o.value === selectedDays)?.label}`}
+                info={KPI_INFO.graficoMaterialFlow}
               />
             </TabsContent>
 
             <TabsContent value="top" className="mt-0 h-full">
-              <TopMaterialsChart limit={10} title="Top 10 Materiais Mais Movimentados" />
+              <TopMaterialsChart limit={10} title="Top 10 Materiais Mais Movimentados" info={KPI_INFO.graficoTopMateriais} />
             </TabsContent>
 
             <TabsContent value="consumo" className="mt-0 h-full">
-              <ConsumptionByProjectChart title="Consumo de Materiais por Projecto" />
+              <ConsumptionByProjectChart title="Consumo de Materiais por Projecto" info={KPI_INFO.graficoConsumoProjeto} />
             </TabsContent>
 
             <TabsContent value="critico" className="mt-0 h-full">
-              <CriticalStockChart title="Materiais em Stock Crítico" />
+              <CriticalStockChart title="Materiais em Stock Crítico" info={KPI_INFO.graficoCriticalStock} />
             </TabsContent>
           </div>
         </Tabs>
