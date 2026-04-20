@@ -3,6 +3,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUpCircle, ArrowDownCircle, Wallet } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import { useCashFlowSummary } from "@/hooks/useCashFlow";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface CashFlowKPICardsProps {
   projectId: number;
@@ -36,12 +38,14 @@ export function CashFlowKPICards({ projectId }: CashFlowKPICardsProps) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      {/* Total Entradas */}
       <Card className="border-green-200 dark:border-green-800">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Entradas</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm font-medium text-muted-foreground">Total Entradas</p>
+                <InfoTooltip {...KPI_INFO.totalEntradas} title="Total Entradas" />
+              </div>
               <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                 {formatCurrency(summary?.total_entradas || 0)}
               </p>
@@ -58,12 +62,14 @@ export function CashFlowKPICards({ projectId }: CashFlowKPICardsProps) {
         </CardContent>
       </Card>
 
-      {/* Total Saídas */}
       <Card className="border-red-200 dark:border-red-800">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Total Saídas</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm font-medium text-muted-foreground">Total Saídas</p>
+                <InfoTooltip {...KPI_INFO.totalSaidas} title="Total Saídas" />
+              </div>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                 {formatCurrency(summary?.total_saidas || 0)}
               </p>
@@ -75,12 +81,14 @@ export function CashFlowKPICards({ projectId }: CashFlowKPICardsProps) {
         </CardContent>
       </Card>
 
-      {/* Saldo */}
       <Card className={saldoPositivo ? "border-blue-200 dark:border-blue-800" : "border-red-200 dark:border-red-800"}>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Saldo</p>
+              <div className="flex items-center gap-1">
+                <p className="text-sm font-medium text-muted-foreground">Saldo</p>
+                <InfoTooltip {...KPI_INFO.saldoLiquido} title="Saldo" />
+              </div>
               <p className={`text-2xl font-bold ${
                 saldoPositivo 
                   ? "text-blue-600 dark:text-blue-400" 
