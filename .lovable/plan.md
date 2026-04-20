@@ -1,129 +1,65 @@
 
-# Plano: Sistema de Tooltips Informativos (Ícone "i") em KPIs e Gráficos
 
-## Objetivo
-Adicionar um ícone de informação (`i`) discreto no canto superior direito de **todos os cards KPI, gráficos e secções analíticas** da plataforma. Ao passar o mouse (ou tocar, no mobile), mostra um tooltip explicando:
-1. **O que o card/gráfico mostra**
-2. **A fórmula ou lógica de cálculo usada**
+# Plano: Completar tooltips "i" em gráficos e módulos restantes
 
-## Análise da Plataforma
+## Diagnóstico
 
-Identifiquei os seguintes componentes reutilizáveis que precisam ser estendidos:
+A primeira passagem só tocou **componentes-base** (`KPICard`, `SmartKPICard`) e algumas secções financeiras. Ficou em falta:
 
-### Componentes KPI (núcleo)
-- `src/components/KPICard.tsx` — KPI base usado em quase todo lado
-- `src/components/charts/SmartKPICard.tsx` — KPI estilizado (financeiro)
-- `src/components/common/KPIGrid.tsx` — Grelha que distribui KPIs
-- `src/components/mobile/MobileKPIGrid.tsx` — Versão mobile
+1. **Os 22 gráficos** em `src/components/charts/*` — cada um renderiza o seu próprio `<Card><CardHeader><CardTitle>` (não usam `ChartCardHeader` nem `ExpandableChartWrapper`), por isso o ícone `i` nunca aparece.
+2. **Módulos com KPIs/cards próprios** que não passam por `KPICard`:
+   - `pages/RhPage.tsx` — KPIs Total/Fixos/Temporários/Oficiais/Técnicos (divs simples)
+   - `components/warehouse/WarehouseReportSection.tsx` — KPIs Entradas/Saídas/Consumos/Devoluções
+   - `dashboard/DashboardTarefasSection.tsx` — KPIs Total/Concluídas/Em Andamento/Atrasadas
+   - `dashboard/DashboardArmazemSection.tsx`, `DashboardRequisicoesSection.tsx`, `DashboardDRESection.tsx`, `DashboardProjetosSection.tsx`, `DashboardFinancasSection.tsx`, `DashboardRelatoriosFOASection.tsx`
+   - `modals/ProjectChartsModal.tsx` (KPIs do tab "Compras", "RH", "Segurança")
+   - `modals/RequisitionsAnalyticsModal.tsx`, `WarehouseAnalyticsModal.tsx`, `FinanceAnalyticsModal.tsx`
 
-### Componentes Gráficos (todos em `src/components/charts/`)
-- BurndownChart, CashFlowAreaChart, ConsumptionByProjectChart, CostCenterUtilizationChart, CriticalStockChart, DonutChart, GaugeChart, GroupedBarChart, HeatmapTable, HorizontalBarChart, IncidentChart, MaterialFlowChart, RadarChart, SCurveChart, SparklineChart, StackedBarChart, StageComparisonChart, StageCostsPieChart, SupplierBalanceTreemap, TimelineChart, TimelineComparisonChart, TopMaterialsChart, PPCChart
-- Wrapper: `ExpandableChartWrapper.tsx`
+## Estratégia
 
-### Secções com KPIs/gráficos diretos
-- `dashboard/*` (DashboardKPISection, DashboardFinancasSection, etc.)
-- `financial/*` (CashFlowKPICards, FluxoCaixaKPICards, FornecedoresKPICards, GastosObraKPICards, ClientesKPICards, etc.)
-- `projects/ProjectsKPISection.tsx`, `ProjectKPICards.tsx`
+Manter o que já existe e adicionar `<InfoTooltip>` em **dois sítios padronizados**:
 
-## Estratégia (centralizada, não repetitiva)
+### A) Para cada chart em `src/components/charts/*`
+Adicionar prop opcional `info?: InfoTooltipContent` e renderizar o ícone ao lado do botão `Maximize2`. Também passar para o `<DialogTitle>` do modal expandido.
 
-Em vez de tocar em centenas de ficheiros, criamos **componentes wrapper reutilizáveis** e adicionamos a prop `info` aos componentes base. Quem consome passa a info; quem não passa, nada muda.
-
-### Passo 1 — Criar componente base `InfoTooltip`
-**Novo ficheiro**: `src/components/common/InfoTooltip.tsx`
-
-- Ícone `Info` (lucide-react), tamanho pequeno, cor `text-muted-foreground`
-- Usa `Tooltip` do shadcn (`@/components/ui/tooltip`) — já existe
-- Props: `title?`, `description`, `formula?`, `side?` (default: "left")
-- No mobile, abre com tap (usar `onClick` + estado interno) já que hover não funciona em touch
-- Conteúdo formatado com título em **bold**, descrição normal, e bloco "Fórmula:" em `font-mono` quando existir
-
-### Passo 2 — Criar wrapper `ChartCardHeader`
-**Novo ficheiro**: `src/components/common/ChartCardHeader.tsx`
-
-- Header padronizado para gráficos: título + ícone `i` no canto direito
-- Drop-in para qualquer gráfico embrulhado em `<Card>`
-
-### Passo 3 — Estender componentes base com prop `info`
-
-| Ficheiro | Alteração |
-|----------|-----------|
-| `src/components/KPICard.tsx` | Adicionar prop opcional `info?: { description: string; formula?: string }` e renderizar `<InfoTooltip>` no header |
-| `src/components/charts/SmartKPICard.tsx` | Mesmo tratamento |
-| `src/components/common/KPIGrid.tsx` | Repassar `info` do item para `KPICard` |
-| `src/components/mobile/MobileKPIGrid.tsx` | Repassar `info` |
-| `src/components/charts/ExpandableChartWrapper.tsx` | Adicionar prop `info` e mostrar ícone ao lado do título |
-
-### Passo 4 — Preencher conteúdo de info em todos os consumidores
-
-Criar um **dicionário central de descrições** para evitar duplicação e facilitar manutenção:
-
-**Novo ficheiro**: `src/lib/kpiDescriptions.ts`
-
-```ts
-export const KPI_INFO = {
-  projetosAtivos: {
-    description: "Número de projetos com status diferente de 'Concluído' ou 'Cancelado'.",
-    formula: "COUNT(projetos WHERE status NOT IN ('Concluído','Cancelado'))"
-  },
-  projetosAtrasados: {
-    description: "Projetos ativos cuja data fim prevista já passou.",
-    formula: "COUNT(projetos ativos WHERE data_fim_prevista < hoje)"
-  },
-  avancoMedio: {
-    description: "Média aritmética do avanço físico de todos os projetos ativos.",
-    formula: "SUM(avanco_fisico) / COUNT(projetos ativos)"
-  },
-  // ... + ~50 entradas cobrindo todos os KPIs/gráficos
-};
+```tsx
+<CardTitle className="flex items-center gap-2 ...">
+  <Icon /> {title}
+  {info && <InfoTooltip {...info} title={info.title || title} />}  // novo
+</CardTitle>
 ```
 
-Depois, em cada secção que monta KPIs (ex.: `ProjectsKPISection`, `DashboardKPISection`, `FluxoCaixaKPICards`, etc.), adiciona-se `info: KPI_INFO.xxx` ao item correspondente.
+Os 22 ficheiros: `SCurveChart`, `BurndownChart`, `GaugeChart`, `IncidentChart`, `StackedBarChart`, `GroupedBarChart`, `HorizontalBarChart`, `DonutChart`, `RadarChart`, `TimelineChart`, `TimelineComparisonChart`, `HeatmapTable`, `MaterialFlowChart`, `CashFlowAreaChart`, `ConsumptionByProjectChart`, `CostCenterUtilizationChart`, `CriticalStockChart`, `StageComparisonChart`, `StageCostsPieChart`, `SupplierBalanceTreemap`, `TopMaterialsChart`, `SparklineChart`.
 
-### Passo 5 — Aplicar nos gráficos
+Cada um recebe um default sensato a partir de `KPI_INFO` (ex.: `SCurveChart` → `KPI_INFO.graficoSCurve`), aplicado no consumidor.
 
-Para cada gráfico em `src/components/charts/*`, substituir o `CardHeader` atual por `<ChartCardHeader title="..." info={...} />` quando o gráfico estiver dentro de um Card próprio. Para gráficos sem Card (usados como filhos), adicionar o ícone ao lado do título no componente pai.
+### B) Para KPIs "manuais" (divs em vez de `KPICard`)
+Substituir o `<div>` solto por `<KPICard ... info={KPI_INFO.xxx} />` quando faz sentido, OU adicionar o ícone manualmente no header da secção/card.
 
-## Ficheiros a Criar
-1. `src/components/common/InfoTooltip.tsx`
-2. `src/components/common/ChartCardHeader.tsx`
-3. `src/lib/kpiDescriptions.ts`
+Ficheiros a tocar:
+- `RhPage.tsx` (5 KPIs RH)
+- `WarehouseReportSection.tsx` (4 KPIs movimentos)
+- `DashboardTarefasSection.tsx`, `DashboardArmazemSection.tsx`, `DashboardRequisicoesSection.tsx`, `DashboardDRESection.tsx`, `DashboardProjetosSection.tsx`, `DashboardFinancasSection.tsx`, `DashboardRelatoriosFOASection.tsx`
+- `ProjectChartsModal.tsx` (KPIs nos tabs Compras/RH/Segurança usam `<KPICard>` — basta passar `info`)
+- `RequisitionsAnalyticsModal.tsx`, `WarehouseAnalyticsModal.tsx`, `FinanceAnalyticsModal.tsx`
 
-## Ficheiros a Modificar (resumo)
-- **Base (5)**: `KPICard.tsx`, `SmartKPICard.tsx`, `KPIGrid.tsx`, `MobileKPIGrid.tsx`, `ExpandableChartWrapper.tsx`
-- **Secções de KPIs (~12)**: `ProjectsKPISection`, `ProjectKPICards`, `DashboardKPISection`, `DashboardFinancasSection`, `DashboardProjetosSection`, `DashboardArmazemSection`, `DashboardTarefasSection`, `DashboardRequisicoesSection`, `DashboardDRESection`, `DashboardRelatoriosFOASection`, `CashFlowKPICards`, `FluxoCaixaKPICards`, `FornecedoresKPICards`, `GastosObraKPICards`, `ClientesKPICards`
-- **Gráficos (~22)**: todos em `src/components/charts/` que tenham Card próprio
-- **Outros**: `IntegratedFinancialDashboard`, `EnhancedFinancialDashboard`, `ExpandedFinancialDashboard`, `ExecutiveFOADashboard`, `FinancialOverview`, `DiscrepancyReport`, `StageProgressCard`
+### C) Acrescentar entradas em falta a `kpiDescriptions.ts`
+Adicionar chaves para: `funcionariosFixos`, `funcionariosTemporarios`, `funcionariosOficiais`, `funcionariosTecnicos`, `entradasMaterial`, `saidasMaterial`, `consumosMaterial`, `devolucoesMaterial`, `tarefasEmAndamento`, `taxaConclusaoTarefas`, `requisicoesEmProcesso`, `taxaAprovacaoCompras`, `valorTotalRequisicoes`, `pendentesAprovacao`, `leadTimeMedio`, `taxaUtilizacao`, `ppcProjeto`.
 
-## Comportamento UX
+## Resultado por imagem do utilizador
 
-- **Desktop**: hover no ícone → tooltip aparece após ~150ms, fica visível enquanto o mouse estiver sobre o ícone ou tooltip
-- **Mobile/Touch**: tap no ícone → popover aparece, fecha ao tocar fora
-- **Posição**: `side="left"` por defeito para não sair do card; `align="start"`
-- **Estilo**: largura máxima `max-w-xs` (288px), padding confortável, fórmula em bloco `<code>` com fundo subtil
+| Imagem | Onde ficará o ícone "i" |
+|--------|--------------------------|
+| Tarefas (8/Taxa/Atrasadas/Em Andamento) | em cada KPICard do topo |
+| RH (Total/Fixos/Temporários/Oficiais/Técnicos) | em cada KPI |
+| Armazém - Relatórios (Entradas/Saídas/Consumos/Devoluções) | em cada KPI |
+| Modal Gráficos > Compras (6 KPIs) | em cada KPICard |
+| Modal Gráficos > Visão Geral (PPC/Lead-time/Taxa Utilização + S-Curve + PPC + Burndown) | nos KPIs e no header de cada chart |
 
-## Resultado Visual
+## Execução
+1. Estender os 22 charts com prop `info` + render do ícone
+2. Estender `kpiDescriptions.ts` com ~15 entradas novas
+3. Wirar `info={KPI_INFO.xxx}` em cada consumidor (modais + dashboard sections + RhPage + WarehouseReportSection + ProjectChartsModal)
 
-```text
-┌─────────────────────────────────┐
-│ Projetos Ativos          📊  ⓘ  │ ← ícone "i" aqui
-├─────────────────────────────────┤
-│ 12                              │
-│ 3 concluídos, 1 cancelado       │
-└─────────────────────────────────┘
+Estimativa: ~30 ficheiros, alterações pequenas e mecânicas.
 
-   Hover →  ┌──────────────────────────────┐
-            │ Projetos Ativos              │
-            │                              │
-            │ Número de projetos com       │
-            │ status diferente de          │
-            │ 'Concluído' ou 'Cancelado'.  │
-            │                              │
-            │ Fórmula:                     │
-            │ COUNT(projetos WHERE         │
-            │ status NOT IN (...))         │
-            └──────────────────────────────┘
-```
-
-## Estimativa de Esforço
-~40 ficheiros tocados, mas a maioria são alterações de 1-3 linhas (adicionar `info={KPI_INFO.xxx}`). O grosso do trabalho é escrever o conteúdo das descrições/fórmulas em `kpiDescriptions.ts`.
