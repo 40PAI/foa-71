@@ -6,6 +6,7 @@ import { Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface DonutChartProps {
   data: Array<{
@@ -15,6 +16,7 @@ interface DonutChartProps {
     status?: 'pendente' | 'cotacoes' | 'aprovado' | 'oc-gerada' | 'liquidado';
   }>;
   title: string;
+  info?: InfoTooltipContentType;
 }
 
 // Cores fixas do design system para cada índice
@@ -43,7 +45,7 @@ const chartConfig = {
   },
 };
 
-export function DonutChart({ data, title }: DonutChartProps) {
+export function DonutChart({ data, title, info }: DonutChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
@@ -117,7 +119,10 @@ export function DonutChart({ data, title }: DonutChartProps) {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <span className="truncate">{title}</span>
+              {info && <InfoTooltip {...info} title={info.title || title} />}
+            </CardTitle>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

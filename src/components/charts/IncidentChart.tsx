@@ -1,6 +1,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface IncidentChartProps {
   data: Array<{
@@ -9,6 +10,7 @@ interface IncidentChartProps {
     incidente?: number;
     "near-miss"?: number;
   }>;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -22,7 +24,7 @@ const chartConfig = {
   },
 };
 
-export function IncidentChart({ data }: IncidentChartProps) {
+export function IncidentChart({ data, info }: IncidentChartProps) {
   const totalIncidents = data.reduce((acc, item) => acc + item.total, 0);
   const incidenteCount = data.reduce((acc, item) => acc + (item.incidente || 0), 0);
   const nearMissCount = data.reduce((acc, item) => acc + (item["near-miss"] || 0), 0);
@@ -35,7 +37,10 @@ export function IncidentChart({ data }: IncidentChartProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Incidentes por Mês</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">Incidentes por Mês</h3>
+          {info && <InfoTooltip {...info} title={info.title || "Incidentes por Mês"} />}
+        </div>
         <ChartContainer config={chartConfig} className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data}>

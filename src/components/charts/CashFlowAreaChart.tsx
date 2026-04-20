@@ -9,11 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface CashFlowAreaChartProps {
   projectId?: number;
   months?: number;
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -31,7 +33,7 @@ const chartConfig = {
   },
 };
 
-export function CashFlowAreaChart({ projectId, months = 12, title = "Fluxo de Caixa Mensal" }: CashFlowAreaChartProps) {
+export function CashFlowAreaChart({ projectId, months = 12, title = "Fluxo de Caixa Mensal", info }: CashFlowAreaChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useCashFlowMonthly(projectId, months);
 
@@ -150,6 +152,7 @@ export function CashFlowAreaChart({ projectId, months = 12, title = "Fluxo de Ca
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription>Últimos {months} meses de movimentações</CardDescription>
             </div>

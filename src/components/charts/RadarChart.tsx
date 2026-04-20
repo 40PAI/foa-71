@@ -1,6 +1,7 @@
 import { Radar, RadarChart as RechartsRadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/utils/formatters";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface RadarChartProps {
   data: Array<{
@@ -10,6 +11,7 @@ interface RadarChartProps {
     maxValue: number;
   }>;
   title: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -51,13 +53,16 @@ const mockData = [
   }
 ];
 
-export function RadarChart({ data, title }: RadarChartProps) {
+export function RadarChart({ data, title, info }: RadarChartProps) {
   // Use mock data if no real data is available or if data is empty
   const chartData = data && data.length > 0 ? data : mockData;
   
   return (
     <div className="space-y-2">
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {info && <InfoTooltip {...info} title={info.title || title} />}
+      </div>
       <ChartContainer config={chartConfig} className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
           <RechartsRadarChart data={chartData}>

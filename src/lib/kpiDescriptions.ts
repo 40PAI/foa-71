@@ -145,6 +145,30 @@ export const KPI_INFO = {
     description: "Soma do valor de requisições ainda não aprovadas.",
     formula: "SUM(requisicoes.valor WHERE status IN ('Pendente','Em Análise'))",
   },
+  requisicoesEmAprovacao: {
+    description: "Requisições atualmente em fluxo de cotação ou aprovação técnica.",
+    formula: "COUNT(requisicoes WHERE status IN ('Cotações','Aprovação Qualidade','Aprovação Direção'))",
+  },
+  requisicoesEmProcesso: {
+    description: "Requisições ainda em qualquer fase do fluxo de aprovação (não rejeitadas nem totalmente concluídas).",
+    formula: "COUNT(requisicoes WHERE status NOT IN ('Liquidado','Rejeitado','Cancelado'))",
+  },
+  taxaAprovacaoCompras: {
+    description: "Percentual de requisições aprovadas em relação ao total submetido.",
+    formula: "(aprovadas / total_requisicoes) × 100",
+  },
+  pendentesAprovacao: {
+    description: "Requisições aguardando decisão da direção ou área técnica.",
+    formula: "COUNT(requisicoes WHERE status IN ('Pendente','Aprovação Qualidade','Aprovação Direção'))",
+  },
+  desvioOrcamental: {
+    description: "Diferença percentual entre o gasto e o orçamento (positivo = excedeu).",
+    formula: "(gasto / orcamento - 1) × 100",
+  },
+  saldoDisponivelProjeto: {
+    description: "Valor ainda disponível do orçamento do projeto.",
+    formula: "orcamento - gasto",
+  },
 
   // ===== Armazém / Materiais =====
   totalMateriais: {
@@ -163,6 +187,30 @@ export const KPI_INFO = {
     description: "Valor total dos materiais consumidos/saídos no mês corrente.",
     formula: "SUM(saídas WHERE mês = mês_atual)",
   },
+  entradasMaterial: {
+    description: "Total de unidades que entraram no armazém no período (compras, devoluções, transferências de entrada).",
+    formula: "SUM(movimentacoes WHERE tipo IN ('entrada','transferencia_entrada'))",
+  },
+  saidasMaterial: {
+    description: "Total de unidades que saíram do armazém para uso/transferência no período.",
+    formula: "SUM(movimentacoes WHERE tipo IN ('saida','transferencia_saida'))",
+  },
+  consumosMaterial: {
+    description: "Total de unidades efetivamente consumidas em obra no período.",
+    formula: "SUM(movimentacoes WHERE tipo = 'consumo')",
+  },
+  devolucoesMaterial: {
+    description: "Total de unidades devolvidas ao armazém após uso parcial ou cancelamento.",
+    formula: "SUM(movimentacoes WHERE tipo = 'devolucao')",
+  },
+  unidadesEmStock: {
+    description: "Soma da quantidade total atualmente disponível no armazém para todos os materiais.",
+    formula: "SUM(materiais.quantidade_stock)",
+  },
+  saudeStock: {
+    description: "Percentual de materiais com stock acima do nível mínimo.",
+    formula: "(materiais_não_críticos / total_materiais) × 100",
+  },
 
   // ===== RH / Funcionários =====
   totalFuncionarios: {
@@ -180,6 +228,26 @@ export const KPI_INFO = {
   custoMensalRH: {
     description: "Custo total mensal estimado com salários dos funcionários ativos.",
     formula: "SUM(funcionarios_ativos.salario)",
+  },
+  funcionariosFixos: {
+    description: "Colaboradores com vínculo fixo (efetivos), com contrato permanente.",
+    formula: "COUNT(funcionarios WHERE tipo_colaborador = 'Fixo')",
+  },
+  funcionariosTemporarios: {
+    description: "Colaboradores com vínculo temporário ou por contrato a prazo.",
+    formula: "COUNT(funcionarios WHERE tipo_colaborador = 'Temporário')",
+  },
+  funcionariosOficiais: {
+    description: "Colaboradores com categoria profissional 'Oficial' (técnicos qualificados).",
+    formula: "COUNT(funcionarios WHERE categoria = 'Oficial')",
+  },
+  funcionariosTecnicos: {
+    description: "Colaboradores com categoria 'Técnico Superior' (engenheiros, arquitetos, etc.).",
+    formula: "COUNT(funcionarios WHERE categoria = 'Técnico Superior')",
+  },
+  custoHoraMedio: {
+    description: "Custo médio por hora dos colaboradores alocados ao projeto.",
+    formula: "AVG(funcionarios_alocados.custo_hora)",
   },
 
   // ===== DRE =====
@@ -233,13 +301,33 @@ export const KPI_INFO = {
     description: "Tarefas com status concluída.",
     formula: "COUNT(tarefas WHERE status = 'concluída')",
   },
+  tarefasEmAndamento: {
+    description: "Tarefas atualmente em execução (iniciadas mas ainda não concluídas).",
+    formula: "COUNT(tarefas WHERE status = 'em_andamento')",
+  },
   tarefasAtrasadas: {
     description: "Tarefas não concluídas cujo prazo já passou.",
     formula: "COUNT(tarefas WHERE status != 'concluída' AND data_fim < hoje)",
   },
+  taxaConclusaoTarefas: {
+    description: "Percentual de tarefas concluídas em relação ao total planejado.",
+    formula: "(tarefas_concluídas / total_tarefas) × 100",
+  },
   ppcSemanal: {
     description: "Percentual de Planejamento Concluído: tarefas planejadas para a semana que foram efetivamente concluídas.",
     formula: "(tarefas_concluídas / tarefas_planejadas) × 100",
+  },
+  ppcProjeto: {
+    description: "PPC consolidado do projeto: percentual médio de cumprimento do planeamento ao longo de todas as semanas.",
+    formula: "AVG(ppc_semanal) por projeto",
+  },
+  leadTimeMedio: {
+    description: "Tempo médio (em dias) entre a requisição de compra e a entrega/recepção do material.",
+    formula: "AVG(data_recepcao - data_requisicao)",
+  },
+  taxaUtilizacaoEquipamentos: {
+    description: "Percentual de tempo em que os equipamentos estão efetivamente em uso vs. disponíveis.",
+    formula: "(horas_utilizadas / horas_disponíveis) × 100",
   },
 
   // ===== Segurança =====

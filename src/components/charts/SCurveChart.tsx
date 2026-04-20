@@ -18,6 +18,7 @@ import { TrendingUp, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface SCurveChartProps {
   data: Array<{
@@ -26,6 +27,7 @@ interface SCurveChartProps {
     financeiro: number;
     tempo: number;
   }>;
+  info?: InfoTooltipContentType;
 }
 
 // Padrão semântico: chart-1=Baseline, chart-2=Físico, chart-3=Financeiro
@@ -44,7 +46,7 @@ const chartConfig = {
   },
 };
 
-export function SCurveChart({ data }: SCurveChartProps) {
+export function SCurveChart({ data, info }: SCurveChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Calcular estatísticas para mostrar no header
@@ -150,6 +152,7 @@ export function SCurveChart({ data }: SCurveChartProps) {
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />
               S-Curve: Avanço Físico × Financeiro × Temporal
+              {info && <InfoTooltip {...info} title={info.title || "S-Curve"} />}
             </CardTitle>
             <div className="flex items-center gap-2">
               {hasMultiplePoints && gap > 0 && (

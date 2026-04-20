@@ -8,11 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface TopMaterialsChartProps {
   projectId?: number;
   limit?: number;
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 // Cores por categoria semântica usando o padrão do design system
@@ -69,7 +71,7 @@ function getMaterialColor(nome: string, index: number): string {
   return DEFAULT_PALETTE[index % DEFAULT_PALETTE.length];
 }
 
-export function TopMaterialsChart({ projectId, limit = 10, title = "Top Materiais Movimentados" }: TopMaterialsChartProps) {
+export function TopMaterialsChart({ projectId, limit = 10, title = "Top Materiais Movimentados", info }: TopMaterialsChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useTopMaterials(projectId, limit);
 
@@ -175,6 +177,7 @@ export function TopMaterialsChart({ projectId, limit = 10, title = "Top Materiai
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription>Materiais com maior volume de movimentação</CardDescription>
             </div>

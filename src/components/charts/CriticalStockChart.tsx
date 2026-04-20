@@ -8,9 +8,11 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface CriticalStockChartProps {
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const getStatusColor = (status: string) => {
@@ -29,7 +31,7 @@ const getProgressColor = (status: string) => {
   }
 };
 
-export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockChartProps) {
+export function CriticalStockChart({ title = "Stock Crítico", info }: CriticalStockChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useCriticalStock();
 
@@ -151,6 +153,7 @@ export function CriticalStockChart({ title = "Stock Crítico" }: CriticalStockCh
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-red-600" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription>Materiais abaixo do nível mínimo</CardDescription>
             </div>
