@@ -7,6 +7,7 @@ import { Clock, AlertTriangle, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface TimelineChartProps {
   data: Array<{
@@ -16,6 +17,7 @@ interface TimelineChartProps {
     ppc_semanal: number;
   }>;
   title: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -33,7 +35,7 @@ const chartConfig = {
   },
 };
 
-export function TimelineChart({ data, title }: TimelineChartProps) {
+export function TimelineChart({ data, title, info }: TimelineChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const hasMultiplePoints = data.length > 3;
@@ -177,6 +179,7 @@ export function TimelineChart({ data, title }: TimelineChartProps) {
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
               {title}
+              {info && <InfoTooltip {...info} title={info.title || title} />}
             </CardTitle>
             <div className="flex items-center gap-2">
               {hasMultiplePoints && (
