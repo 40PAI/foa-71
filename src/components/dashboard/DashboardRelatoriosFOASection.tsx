@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { ProjectSelector } from "@/components/ProjectSelector";
 import { useProjects } from "@/hooks/useProjects";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
 
 export function DashboardRelatoriosFOASection() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -110,7 +111,13 @@ export function DashboardRelatoriosFOASection() {
         {/* Configurações */}
         <Card>
           <CardHeader>
-            <CardTitle>Configuracoes do Relatorio</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Configuracoes do Relatorio</CardTitle>
+              <InfoTooltip
+                title="Configurações do Relatório"
+                description="Selecione o projeto, o tipo de relatório (Resumo Executivo, DRE, Reembolsos ou Completo) e o período antes de gerar o PDF/Excel."
+              />
+            </div>
             <CardDescription>Selecione o projeto e o tipo de relatorio</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -181,7 +188,13 @@ export function DashboardRelatoriosFOASection() {
         {/* Ações */}
         <Card>
           <CardHeader>
-            <CardTitle>Gerar Relatorios</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle>Gerar Relatorios</CardTitle>
+              <InfoTooltip
+                title="Gerar Relatórios"
+                description="Exporta o relatório financeiro selecionado em PDF (com branding FOA) ou em Excel completo, contendo DRE, reembolsos e resumo executivo."
+              />
+            </div>
             <CardDescription>Escolha o formato de exportacao</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">

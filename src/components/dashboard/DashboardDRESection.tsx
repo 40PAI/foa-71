@@ -15,6 +15,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { generateDREPDF } from "@/utils/pdfGenerator";
 import { DREChartsSection } from "@/components/financial/DREChartsSection";
 import { DREConsolidadoView } from "@/components/financial/DREConsolidadoView";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
 
 export function DashboardDRESection() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -99,7 +100,14 @@ export function DashboardDRESection() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
-              <CardTitle>DRE - Demonstração de Resultados</CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle>DRE - Demonstração de Resultados</CardTitle>
+                <InfoTooltip
+                  title="DRE - Demonstração de Resultados"
+                  description="Demonstração de Resultados do Exercício do projeto, agrupada por centro de custo. Mostra receitas (cliente, FOF, FOA), custos totais e resultado líquido por mês."
+                  formula="Resultado = Receita Cliente + FOF + FOA Auto - Custos Totais"
+                />
+              </div>
               <CardDescription>
                 {selectedProject ? `Projeto: ${selectedProject.nome}` : "Selecione um projeto"}
               </CardDescription>
