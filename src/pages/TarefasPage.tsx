@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CheckCircle, Clock, AlertTriangle, Target, User, Calendar, Plus, Edit, Layers, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 export function TarefasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -15,6 +15,8 @@ import { useMovimentosFinanceiros } from "@/hooks/useMovimentosFinanceiros";
 import { toast } from "sonner";
 import { MovimentacoesFinanceirasCard } from "@/components/financial/MovimentacoesFinanceirasCard";
 import { ProjectGuard } from "@/components/common/ProjectGuard";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 export default function CentrosCustoPage() {
   const { selectedProjectId } = useProjectContext();
@@ -124,10 +126,11 @@ export default function CentrosCustoPage() {
         {/* KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card className="max-h-28">
-            <CardHeader size="sm" className="pb-1">
+            <CardHeader size="sm" className="pb-1 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Orçamento Total
               </CardTitle>
+              <InfoTooltip {...KPI_INFO.orcamentoCentroCusto} title="Orçamento Total" />
             </CardHeader>
             <CardContent size="sm">
               <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalOrcamento)}</div>
@@ -135,10 +138,11 @@ export default function CentrosCustoPage() {
           </Card>
 
           <Card className="max-h-28">
-            <CardHeader size="sm" className="pb-1">
+            <CardHeader size="sm" className="pb-1 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Total Custo
               </CardTitle>
+              <InfoTooltip {...KPI_INFO.gastoCentroCusto} title="Total Custo" />
             </CardHeader>
             <CardContent size="sm">
               <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalGasto)}</div>
@@ -149,10 +153,11 @@ export default function CentrosCustoPage() {
           </Card>
 
           <Card className="max-h-28">
-            <CardHeader size="sm" className="pb-1">
+            <CardHeader size="sm" className="pb-1 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
                 Saldo Disponível
               </CardTitle>
+              <InfoTooltip {...KPI_INFO.saldoCentroCusto} title="Saldo Disponível" />
             </CardHeader>
             <CardContent size="sm">
               <div className="text-base sm:text-lg lg:text-xl font-bold truncate">{formatCurrencyInput(totalSaldo)}</div>
@@ -160,11 +165,12 @@ export default function CentrosCustoPage() {
           </Card>
 
           <Card className="max-h-28">
-            <CardHeader size="sm" className="pb-1">
+            <CardHeader size="sm" className="pb-1 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3 text-amber-500" />
                 Em Alerta
               </CardTitle>
+              <InfoTooltip {...KPI_INFO.centrosEmAlerta} title="Em Alerta" />
             </CardHeader>
             <CardContent size="sm">
               <div className="text-base sm:text-lg lg:text-xl font-bold">{centrosEmAlerta}</div>
@@ -178,8 +184,8 @@ export default function CentrosCustoPage() {
         {/* Gráficos */}
         {movimentos && movimentos.length > 0 && (
           <div className="grid gap-3 sm:gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2">
-            <GraficoLinhaMovimentos movimentos={movimentos} />
-            <GraficoBarrasCategorias movimentos={movimentos} />
+            <GraficoLinhaMovimentos movimentos={movimentos} info={KPI_INFO.graficoEvolucaoTemporalCC} />
+            <GraficoBarrasCategorias movimentos={movimentos} info={KPI_INFO.graficoDespesasCategoriaCC} />
           </div>
         )}
 

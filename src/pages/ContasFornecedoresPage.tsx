@@ -21,6 +21,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { ContasCorrentesSection } from "@/components/financial/ContasCorrentesSection";
 import { format } from "date-fns";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 export default function ContasFornecedoresPage() {
   const { projectData } = useProjectState();
@@ -62,7 +64,10 @@ export default function ContasFornecedoresPage() {
         <Card className="max-h-28">
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Contas</CardTitle>
-            <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+            <div className="flex items-center gap-1">
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              <InfoTooltip {...KPI_INFO.totalContasFornecedores} title="Total Contas" />
+            </div>
           </CardHeader>
           <CardContent size="sm">
             <div className="text-lg sm:text-xl lg:text-2xl font-bold">{kpis.totalContas}</div>
@@ -72,6 +77,7 @@ export default function ContasFornecedoresPage() {
         <Card className="max-h-28">
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Crédito Total</CardTitle>
+            <InfoTooltip {...KPI_INFO.creditoTotalFornecedores} title="Crédito Total" />
           </CardHeader>
           <CardContent size="sm">
             <div className="text-base sm:text-lg lg:text-xl font-bold text-green-600 truncate">{formatCurrency(kpis.totalCredito)}</div>
@@ -81,6 +87,7 @@ export default function ContasFornecedoresPage() {
         <Card className="max-h-28">
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Débito Total</CardTitle>
+            <InfoTooltip {...KPI_INFO.debitoTotalFornecedores} title="Débito Total" />
           </CardHeader>
           <CardContent size="sm">
             <div className="text-base sm:text-lg lg:text-xl font-bold text-red-600 truncate">{formatCurrency(kpis.totalDebito)}</div>
@@ -90,6 +97,7 @@ export default function ContasFornecedoresPage() {
         <Card className="max-h-28">
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Saldo Líquido</CardTitle>
+            <InfoTooltip {...KPI_INFO.saldoLiquidoFornecedores} title="Saldo Líquido" />
           </CardHeader>
           <CardContent size="sm">
             <div className={`text-base sm:text-lg lg:text-xl font-bold truncate ${kpis.saldoLiquido >= 0 ? "text-green-600" : "text-red-600"}`}>
@@ -105,7 +113,13 @@ export default function ContasFornecedoresPage() {
       {/* Tabela de Contas */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Contas Correntes por Fornecedor</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Contas Correntes por Fornecedor
+            <InfoTooltip
+              description="Listagem detalhada das contas correntes por fornecedor com créditos, débitos e saldo atual."
+              title="Contas Correntes por Fornecedor"
+            />
+          </CardTitle>
           <div className="flex gap-2">
             <Button onClick={() => setContaModalOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />

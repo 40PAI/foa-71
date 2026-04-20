@@ -26,6 +26,8 @@ import { ReembolsoFOAModal } from "@/components/modals/ReembolsoFOAModal";
 import { formatCurrency } from "@/utils/currency";
 import { format, differenceInDays, parseISO } from "date-fns";
 import { isCredito, type FonteCredito } from "@/types/dividas";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 const fonteIcons = {
   FOF: Building2,
@@ -200,7 +202,10 @@ export function DividaFOAPage() {
         <Card>
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Créditos</CardTitle>
-            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+            <div className="flex items-center gap-1">
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-600" />
+              <InfoTooltip {...KPI_INFO.totalCreditosDivida} title="Total Créditos" />
+            </div>
           </CardHeader>
           <CardContent size="sm">
             <div className="text-base sm:text-lg lg:text-xl font-bold text-green-600 truncate">
@@ -215,7 +220,10 @@ export function DividaFOAPage() {
         <Card>
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Total Amortizado</CardTitle>
-            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+            <div className="flex items-center gap-1">
+              <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4 text-orange-600" />
+              <InfoTooltip {...KPI_INFO.totalAmortizadoDivida} title="Total Amortizado" />
+            </div>
           </CardHeader>
           <CardContent size="sm">
             <div className="text-base sm:text-lg lg:text-xl font-bold text-orange-600 truncate">
@@ -230,7 +238,10 @@ export function DividaFOAPage() {
         <Card className={totaisGerais.divida_total > 0 ? "border-destructive" : "border-green-600"}>
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Dívida Total</CardTitle>
-            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+            <div className="flex items-center gap-1">
+              <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+              <InfoTooltip {...KPI_INFO.dividaTotal} title="Dívida Total" />
+            </div>
           </CardHeader>
           <CardContent size="sm">
             <div className={`text-base sm:text-lg lg:text-xl font-bold truncate ${totaisGerais.divida_total > 0 ? "text-destructive" : "text-green-600"}`}>
@@ -245,7 +256,10 @@ export function DividaFOAPage() {
         <Card className={alertasVencimento.length > 0 ? "border-warning" : ""}>
           <CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs sm:text-sm font-medium">Próx. Vencimento</CardTitle>
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+            <div className="flex items-center gap-1">
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-amber-600" />
+              <InfoTooltip {...KPI_INFO.proximoVencimento} title="Próx. Vencimento" />
+            </div>
           </CardHeader>
           <CardContent size="sm">
             <div className="text-base sm:text-lg lg:text-xl font-bold text-amber-600 truncate">
@@ -299,6 +313,7 @@ export function DividaFOAPage() {
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
             Dívidas por Fonte
+            <InfoTooltip {...KPI_INFO.dividasPorFonte} title="Dívidas por Fonte" />
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -325,7 +340,10 @@ export function DividaFOAPage() {
       {/* Histórico com Tabs */}
       <Card>
         <CardHeader>
-          <CardTitle>Histórico de Movimentos</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Histórico de Movimentos
+            <InfoTooltip {...KPI_INFO.graficoHistoricoMovimentosDivida} title="Histórico de Movimentos" />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
