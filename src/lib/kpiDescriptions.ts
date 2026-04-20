@@ -423,6 +423,105 @@ export const KPI_INFO = {
     description: "Histórico do indicador PPC (Percentual de Planejamento Concluído) por semana.",
     formula: "(tarefas_concluídas_semana / tarefas_planejadas_semana) × 100",
   },
+
+  // ===== Centros de Custo (página) =====
+  orcamentoCentroCusto: {
+    description: "Soma do orçamento mensal alocado aos centros de custo do projeto selecionado.",
+    formula: "SUM(centros_custo.orcamento_mensal)",
+  },
+  gastoCentroCusto: {
+    description: "Total efetivamente gasto (saídas) nos centros de custo no período.",
+    formula: "SUM(movimentos_financeiros WHERE tipo='saída' AND centro_custo_id IN selecionados)",
+  },
+  saldoCentroCusto: {
+    description: "Saldo disponível em cada centro de custo: orçamento menos gasto.",
+    formula: "orçamento - gasto",
+  },
+  centrosEmAlerta: {
+    description: "Número de centros de custo cuja utilização orçamentária já atingiu ou ultrapassou 80%.",
+    formula: "COUNT(centros WHERE percentual_utilizado >= 80)",
+  },
+  graficoEvolucaoTemporalCC: {
+    description: "Evolução temporal das entradas e saídas financeiras do centro de custo ao longo do tempo.",
+    formula: "SUM(movimentos) GROUP BY data, tipo",
+  },
+  graficoDespesasCategoriaCC: {
+    description: "Distribuição das despesas do centro de custo por categoria principal (Material, Mão de Obra, etc.).",
+    formula: "SUM(saídas) GROUP BY categoria",
+  },
+
+  // ===== Contas Fornecedores (página) =====
+  totalContasFornecedores: {
+    description: "Número de contas correntes ativas com fornecedores do projeto.",
+    formula: "COUNT(contas_correntes_fornecedores)",
+  },
+  creditoTotalFornecedores: {
+    description: "Soma de todos os créditos (faturas/dívidas a pagar) lançados nas contas correntes de fornecedores.",
+    formula: "SUM(lancamentos.credito)",
+  },
+  debitoTotalFornecedores: {
+    description: "Soma de todos os débitos (pagamentos efetuados) lançados nas contas correntes de fornecedores.",
+    formula: "SUM(lancamentos.debito)",
+  },
+  saldoLiquidoFornecedores: {
+    description: "Saldo líquido consolidado das contas com fornecedores: débitos menos créditos. Negativo significa dívida pendente.",
+    formula: "SUM(débitos) - SUM(créditos)",
+  },
+
+  // ===== Dívida FOA (página) =====
+  totalCreditosDivida: {
+    description: "Soma de todos os créditos/financiamentos recebidos de todas as fontes (FOF, Bancos, Fornecedores, Outros).",
+    formula: "SUM(créditos) por fonte",
+  },
+  totalAmortizadoDivida: {
+    description: "Soma de todos os pagamentos/amortizações já realizados sobre as dívidas de todas as fontes.",
+    formula: "SUM(amortizações)",
+  },
+  dividaTotal: {
+    description: "Saldo devedor consolidado: total de créditos recebidos menos total já amortizado.",
+    formula: "total_créditos - total_amortizado",
+  },
+  proximoVencimento: {
+    description: "Data do próximo vencimento dentro dos próximos 30 dias entre os créditos pendentes.",
+    formula: "MIN(data_vencimento WHERE data_vencimento BETWEEN hoje AND hoje+30)",
+  },
+  dividasPorFonte: {
+    description: "Dívida líquida (crédito - amortização) agrupada por fonte: FOF, Bancos, Fornecedores e Outros.",
+    formula: "Por fonte: SUM(créditos) - SUM(amortizações)",
+  },
+  graficoHistoricoMovimentosDivida: {
+    description: "Histórico cronológico de todos os movimentos (créditos, amortizações, juros) por fonte.",
+  },
+
+  // ===== Tarefas (página) =====
+  tarefasEmAndamentoLista: {
+    description: "Tarefas atualmente em execução no projeto selecionado.",
+    formula: "COUNT(tarefas WHERE status = 'Em Andamento')",
+  },
+
+  // ===== Compras (página) =====
+  valorTotalRequisicoesCompra: {
+    description: "Valor financeiro total das requisições ativas no projeto selecionado.",
+    formula: "SUM(requisicoes.valor)",
+  },
+  leadTimeRequisicoes: {
+    description: "Tempo médio (em dias) entre a criação da requisição e a recepção do material/serviço.",
+    formula: "AVG(data_recepcao - data_requisicao)",
+  },
+  pendentesCompras: {
+    description: "Requisições aguardando aprovação de qualidade ou direção.",
+    formula: "COUNT(requisicoes WHERE status IN ('Aprovação Qualidade','Aprovação Direção'))",
+  },
+  graficoFluxoRequisicoes: {
+    description: "Lista detalhada de todas as requisições com status, urgência e valor — fluxo completo de aprovação.",
+  },
+  limitesAprovacaoCompras: {
+    description: "Limites configurados para aprovação automática vs aprovação financeira vs aprovação direção, baseados no orçamento do projeto.",
+    formula: "limite_base × {1, 3.33}",
+  },
+  observacoesRequisicoes: {
+    description: "Observações importantes registradas nas requisições deste projeto que merecem atenção.",
+  },
 } as const satisfies Record<string, KpiInfoEntry>;
 
 export type KpiInfoKey = keyof typeof KPI_INFO;
