@@ -1,6 +1,7 @@
 import React from "react";
 import { KPICard } from "@/components/KPICard";
 import { cn } from "@/lib/utils";
+import type { InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface KPIItem {
   title: string;
@@ -8,6 +9,7 @@ interface KPIItem {
   subtitle?: string;
   icon?: React.ReactNode;
   alert?: string;
+  info?: InfoTooltipContent;
 }
 
 interface KPIGridProps {
@@ -37,6 +39,7 @@ export function KPIGrid({ items, columns = 4, className }: KPIGridProps) {
           subtitle={item.subtitle}
           icon={item.icon}
           alert={item.alert as any || "green"}
+          info={item.info}
         />
       ))}
     </div>

@@ -3,6 +3,8 @@ import { TrendingUp, TrendingDown, Wallet, Activity } from "lucide-react";
 import { CashFlowSummary } from "@/types/cashflow";
 import { formatCurrency } from "@/utils/formatters";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip, InfoTooltipContent } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 interface FluxoCaixaKPICardsProps {
   summary?: CashFlowSummary;
@@ -30,20 +32,30 @@ export function FluxoCaixaKPICards({ summary, isLoading }: FluxoCaixaKPICardsPro
     return null;
   }
 
-  const kpis = [
+  const kpis: Array<{
+    title: string;
+    value: number;
+    description: string;
+    icon: typeof TrendingUp;
+    color: string;
+    isCount?: boolean;
+    info: InfoTooltipContent;
+  }> = [
     {
       title: "Total Entradas",
       value: summary.total_entradas,
       description: "Recebimentos",
       icon: TrendingUp,
-      color: "text-green-600 dark:text-green-400"
+      color: "text-green-600 dark:text-green-400",
+      info: KPI_INFO.totalEntradas,
     },
     {
       title: "Total Saídas",
       value: summary.total_saidas,
       description: "Pagamentos",
       icon: TrendingDown,
-      color: "text-red-600 dark:text-red-400"
+      color: "text-red-600 dark:text-red-400",
+      info: KPI_INFO.totalSaidas,
     },
     {
       title: "Saldo Atual",
@@ -52,7 +64,8 @@ export function FluxoCaixaKPICards({ summary, isLoading }: FluxoCaixaKPICardsPro
       icon: Wallet,
       color: summary.saldo >= 0 
         ? "text-blue-600 dark:text-blue-400" 
-        : "text-red-600 dark:text-red-400"
+        : "text-red-600 dark:text-red-400",
+      info: KPI_INFO.saldoLiquido,
     },
     {
       title: "Total Movimentos",
@@ -60,7 +73,11 @@ export function FluxoCaixaKPICards({ summary, isLoading }: FluxoCaixaKPICardsPro
       description: "Registros",
       icon: Activity,
       color: "text-purple-600 dark:text-purple-400",
-      isCount: true
+      isCount: true,
+      info: {
+        description: "Quantidade total de registros de movimentos financeiros (entradas + saídas) no período.",
+        formula: "COUNT(movimentos)",
+      },
     }
   ];
 
@@ -71,11 +88,14 @@ export function FluxoCaixaKPICards({ summary, isLoading }: FluxoCaixaKPICardsPro
         return (
           <Card key={kpi.title}>
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  {kpi.title}
-                </p>
-                <Icon className={`h-5 w-5 ${kpi.color}`} />
+              <div className="flex items-center justify-between mb-2 gap-1">
+                <div className="flex items-center gap-1 min-w-0">
+                  <p className="text-sm font-medium text-muted-foreground truncate">
+                    {kpi.title}
+                  </p>
+                  <InfoTooltip {...kpi.info} title={kpi.title} />
+                </div>
+                <Icon className={`h-5 w-5 ${kpi.color} shrink-0`} />
               </div>
               <div className="space-y-1">
                 <p className="text-2xl font-bold">

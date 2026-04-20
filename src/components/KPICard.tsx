@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react";
+import { InfoTooltip, InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface KPICardProps {
   title: string;
@@ -9,9 +10,10 @@ interface KPICardProps {
   trend?: 'up' | 'down' | 'neutral';
   alert?: 'green' | 'yellow' | 'red';
   icon?: React.ReactNode;
+  info?: InfoTooltipContent;
 }
 
-export function KPICard({ title, value, subtitle, trend, alert, icon }: KPICardProps) {
+export function KPICard({ title, value, subtitle, trend, alert, icon, info }: KPICardProps) {
   const getAlertColor = () => {
     switch (alert) {
       case 'green': return 'bg-green-500';
@@ -35,7 +37,10 @@ export function KPICard({ title, value, subtitle, trend, alert, icon }: KPICardP
         <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-1 min-w-0 flex-1 truncate">
           {title}
         </CardTitle>
-        {icon && <div className="text-muted-foreground shrink-0 ml-1">{icon}</div>}
+        <div className="flex items-center gap-1 shrink-0 ml-1">
+          {info && <InfoTooltip {...info} title={info.title || title} />}
+          {icon && <div className="text-muted-foreground">{icon}</div>}
+        </div>
       </CardHeader>
       <CardContent size="sm" className="space-y-0.5">
         <div className="flex items-start justify-between min-w-0 gap-1">

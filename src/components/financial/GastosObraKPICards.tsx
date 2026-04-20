@@ -5,6 +5,7 @@ import { GastoObraSummary } from "@/hooks/useGastosObra";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
 
 interface GastosObraKPICardsProps {
   summary: GastoObraSummary;
@@ -29,8 +30,15 @@ export function GastosObraKPICards({
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Recebimento FOA</CardTitle>
-            <ArrowUpCircle className="h-4 w-4 text-green-600" />
+            <div className="flex items-center gap-1 min-w-0">
+              <CardTitle className="text-sm font-medium truncate">Recebimento FOA</CardTitle>
+              <InfoTooltip
+                title="Recebimento FOA"
+                description="Total recebido do cliente para financiar a obra (entradas FOA)."
+                formula="SUM(movimentos WHERE subtipo = 'recebimento_cliente')"
+              />
+            </div>
+            <ArrowUpCircle className="h-4 w-4 text-green-600 shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -42,8 +50,15 @@ export function GastosObraKPICards({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">FOF Financiamento</CardTitle>
-            <ArrowDownCircle className="h-4 w-4 text-red-600" />
+            <div className="flex items-center gap-1 min-w-0">
+              <CardTitle className="text-sm font-medium truncate">FOF Financiamento</CardTitle>
+              <InfoTooltip
+                title="FOF Financiamento"
+                description="Saídas relativas ao financiamento FOF (Fundo Operacional de Financiamento) do projeto."
+                formula="SUM(saídas WHERE tipo = 'FOF')"
+              />
+            </div>
+            <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -55,8 +70,15 @@ export function GastosObraKPICards({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">FOA Auto Financiamento</CardTitle>
-            <ArrowDownCircle className="h-4 w-4 text-red-600" />
+            <div className="flex items-center gap-1 min-w-0">
+              <CardTitle className="text-sm font-medium truncate">FOA Auto Financiamento</CardTitle>
+              <InfoTooltip
+                title="FOA Auto Financiamento"
+                description="Saídas referentes ao auto-financiamento da obra pela FOA."
+                formula="SUM(saídas WHERE tipo = 'FOA Auto')"
+              />
+            </div>
+            <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -68,8 +90,15 @@ export function GastosObraKPICards({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Custo</CardTitle>
-            <ArrowDownCircle className="h-4 w-4 text-red-600" />
+            <div className="flex items-center gap-1 min-w-0">
+              <CardTitle className="text-sm font-medium truncate">Total de Custo</CardTitle>
+              <InfoTooltip
+                title="Total de Custo"
+                description="Soma de todas as saídas/despesas registadas para a obra, independentemente da origem."
+                formula="SUM(movimentos WHERE tipo = 'saída')"
+              />
+            </div>
+            <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
@@ -81,8 +110,15 @@ export function GastosObraKPICards({
 
         <Card className={saldoPositivo ? "border-green-200 bg-green-50/50 dark:bg-green-950/20" : "border-red-200 bg-red-50/50 dark:bg-red-950/20"}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <Wallet className={`h-4 w-4 ${saldoPositivo ? "text-green-600" : "text-red-600"}`} />
+            <div className="flex items-center gap-1 min-w-0">
+              <CardTitle className="text-sm font-medium truncate">Saldo</CardTitle>
+              <InfoTooltip
+                title="Saldo da Obra"
+                description="Saldo atual da obra: total de entradas (recebimentos) menos total de saídas (custos)."
+                formula="entradas - custos"
+              />
+            </div>
+            <Wallet className={`h-4 w-4 ${saldoPositivo ? "text-green-600" : "text-red-600"} shrink-0`} />
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${saldoPositivo ? "text-green-600" : "text-red-600"}`}>

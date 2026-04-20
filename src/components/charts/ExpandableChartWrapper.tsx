@@ -3,17 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Maximize2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface ExpandableChartWrapperProps {
   title: string;
   children: (isExpanded: boolean) => ReactNode;
   expandedHeight?: string;
+  info?: InfoTooltipContent;
 }
 
 export function ExpandableChartWrapper({ 
   title, 
   children,
-  expandedHeight = "h-[500px]"
+  expandedHeight = "h-[500px]",
+  info,
 }: ExpandableChartWrapperProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -24,7 +27,10 @@ export function ExpandableChartWrapper({
       <Dialog open={isExpanded} onOpenChange={setIsExpanded}>
         <DialogContent className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {title}
+              {info && <InfoTooltip {...info} title={info.title || title} side="bottom" />}
+            </DialogTitle>
           </DialogHeader>
           <div className={expandedHeight}>
             {children(true)}

@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Calendar, Clock, DollarSign, TrendingUp } from "lucide-react";
 import { KPIGrid } from "@/components/common/KPIGrid";
 import { formatCurrency } from "@/utils/formatters";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 import type { ExtendedProject } from "@/types/project";
 
 interface ProjectsKPISectionProps {
@@ -38,28 +39,32 @@ export function ProjectsKPISection({ projects }: ProjectsKPISectionProps) {
         value: projetosAtivos.length,
         subtitle: `${projetosConcluidos} concluídos, ${projetosCancelados} cancelados`,
         icon: <Calendar className="h-4 w-4" />,
-        alert: projetosAtivos.length > 0 ? "green" : "yellow"
+        alert: projetosAtivos.length > 0 ? "green" : "yellow",
+        info: KPI_INFO.projetosAtivos,
       },
       {
         title: "Projetos Atrasados", 
         value: projetosAtrasados,
         subtitle: `${projetosAtivos.length > 0 ? ((projetosAtrasados / projetosAtivos.length) * 100).toFixed(0) : 0}% dos ativos`,
         icon: <Clock className="h-4 w-4" />,
-        alert: projetosAtrasados > 0 ? "red" : "green"
+        alert: projetosAtrasados > 0 ? "red" : "green",
+        info: KPI_INFO.projetosAtrasados,
       },
       {
         title: "Avanço Médio",
         value: `${mediaAvanco.toFixed(0)}%`,
         subtitle: "Avanço físico dos ativos", 
         icon: <TrendingUp className="h-4 w-4" />,
-        alert: mediaAvanco >= 80 ? "green" : mediaAvanco >= 60 ? "yellow" : "red"
+        alert: mediaAvanco >= 80 ? "green" : mediaAvanco >= 60 ? "yellow" : "red",
+        info: KPI_INFO.avancoMedio,
       },
       {
         title: "Orçamento Total",
         value: formatCurrency(orcamentoTotal),
         subtitle: "Soma de todos os projetos",
         icon: <DollarSign className="h-4 w-4" />,
-        alert: "green"
+        alert: "green",
+        info: KPI_INFO.orcamentoTotal,
       }
     ];
   }, [projects]);
