@@ -7,6 +7,7 @@ import { TrendingDown, AlertTriangle, Maximize2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface BurndownChartProps {
   data: Array<{
@@ -15,6 +16,7 @@ interface BurndownChartProps {
     real: number;
     status: string;
   }>;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -28,7 +30,7 @@ const chartConfig = {
   },
 };
 
-export function BurndownChart({ data }: BurndownChartProps) {
+export function BurndownChart({ data, info }: BurndownChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Verificar se os dados são temporais (mês/ano) ou por tarefa
@@ -158,6 +160,7 @@ export function BurndownChart({ data }: BurndownChartProps) {
             <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <TrendingDown className="h-4 w-4 sm:h-5 sm:w-5" />
               Burndown de Tarefas
+              {info && <InfoTooltip {...info} title={info.title || "Burndown de Tarefas"} />}
             </CardTitle>
             <div className="flex items-center gap-2">
               {isTemporalData && (

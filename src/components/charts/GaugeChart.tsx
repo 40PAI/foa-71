@@ -6,11 +6,13 @@ import { Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface GaugeChartProps {
   value: number;
   title: string;
   unit?: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -24,7 +26,7 @@ const chartConfig = {
   },
 };
 
-export function GaugeChart({ value, title, unit = "%" }: GaugeChartProps) {
+export function GaugeChart({ value, title, unit = "%", info }: GaugeChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const data = [
@@ -93,7 +95,10 @@ export function GaugeChart({ value, title, unit = "%" }: GaugeChartProps) {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+              <span>{title}</span>
+              {info && <InfoTooltip {...info} title={info.title || title} />}
+            </CardTitle>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
