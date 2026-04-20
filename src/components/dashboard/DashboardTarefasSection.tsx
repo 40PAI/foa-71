@@ -3,6 +3,8 @@ import { Progress } from "@/components/ui/progress";
 import type { TarefasResumo, ProjetoTarefas } from "@/hooks/useDashboardGeral";
 import { useNavigate } from "react-router-dom";
 import { useProjectContext } from "@/contexts/ProjectContext";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 interface DashboardTarefasSectionProps {
   tarefasResumo: TarefasResumo;
   topProjetosTarefas: ProjetoTarefas[];
@@ -26,26 +28,41 @@ export function DashboardTarefasSection({
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Total</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Total</p>
+              <InfoTooltip {...KPI_INFO.totalTarefas} title="Total de Tarefas" />
+            </div>
             <p className="text-xl font-bold">{tarefasResumo.total}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Concluídas</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Concluídas</p>
+              <InfoTooltip {...KPI_INFO.tarefasConcluidas} title="Tarefas Concluídas" />
+            </div>
             <p className="text-xl font-bold text-green-600">{tarefasResumo.concluidas}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Em Andamento</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Em Andamento</p>
+              <InfoTooltip {...KPI_INFO.tarefasEmAndamento} title="Tarefas em Andamento" />
+            </div>
             <p className="text-xl font-bold text-blue-600">{tarefasResumo.em_andamento}</p>
           </div>
           <div className="p-3 border rounded-lg bg-card">
-            <p className="text-xs text-muted-foreground">Atrasadas</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Atrasadas</p>
+              <InfoTooltip {...KPI_INFO.tarefasAtrasadas} title="Tarefas Atrasadas" />
+            </div>
             <p className="text-xl font-bold text-red-600">{tarefasResumo.atrasadas}</p>
           </div>
         </div>
 
         <div className="p-4 border rounded-lg bg-card">
           <div className="flex justify-between items-center mb-2">
-            <p className="text-sm font-medium">Taxa de Conclusão</p>
+            <div className="flex items-center gap-1">
+              <p className="text-sm font-medium">Taxa de Conclusão</p>
+              <InfoTooltip {...KPI_INFO.taxaConclusaoTarefas} title="Taxa de Conclusão" />
+            </div>
             <p className="text-lg font-bold">{tarefasResumo.taxa_conclusao.toFixed(1)}%</p>
           </div>
           <Progress value={tarefasResumo.taxa_conclusao} className="h-2" />
