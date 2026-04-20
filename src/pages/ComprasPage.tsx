@@ -20,6 +20,8 @@ import { MobileKPIGrid } from "@/components/mobile/MobileKPIGrid";
 import { MobileDataCard } from "@/components/mobile/MobileDataCard";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 // Mobile quick select for projects
 function MobileProjectQuickSelect({ onSelect }: { onSelect: (id: number) => void }) {
@@ -216,6 +218,7 @@ export function ComprasPage() {
           subtitle="Ativas no projeto"
           icon={<FileText className="h-3 w-3" />}
           alert="green"
+          info={KPI_INFO.totalRequisicoes}
         />
         <KPICard
           title="Pendentes"
@@ -223,6 +226,7 @@ export function ComprasPage() {
           subtitle={totalRequisicoes > 0 ? `${((pendentesAprovacao / totalRequisicoes) * 100).toFixed(0)}% do total` : "0%"}
           icon={<Clock className="h-3 w-3" />}
           alert={pendentesAprovacao > 2 ? "red" : pendentesAprovacao > 0 ? "yellow" : "green"}
+          info={KPI_INFO.pendentesCompras}
         />
         <KPICard
           title="Valor Total"
@@ -230,6 +234,7 @@ export function ComprasPage() {
           subtitle="Requisições ativas"
           icon={<AlertTriangle className="h-3 w-3" />}
           alert="green"
+          info={KPI_INFO.valorTotalRequisicoesCompra}
         />
         <KPICard
           title="Lead-time"
@@ -237,12 +242,16 @@ export function ComprasPage() {
           subtitle="Tempo médio"
           icon={<Clock className="h-3 w-3" />}
           alert={(leadTimeMedio ?? 0) > 7 ? "red" : (leadTimeMedio ?? 0) > 5 ? "yellow" : "green"}
+          info={KPI_INFO.leadTimeRequisicoes}
         />
       </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Fluxo de Requisições de Compra</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Fluxo de Requisições de Compra
+            <InfoTooltip {...KPI_INFO.graficoFluxoRequisicoes} title="Fluxo de Requisições" />
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {requisitions.length === 0 ? (
@@ -383,7 +392,10 @@ export function ComprasPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Limites de Aprovação</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            Limites de Aprovação
+            <InfoTooltip {...KPI_INFO.limitesAprovacaoCompras} title="Limites de Aprovação" />
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
@@ -408,7 +420,10 @@ export function ComprasPage() {
       {requisitions.filter(r => r.observacoes).length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Observações Importantes</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Observações Importantes
+              <InfoTooltip {...KPI_INFO.observacoesRequisicoes} title="Observações" />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
