@@ -103,7 +103,10 @@ export function GraficoBarrasCategorias({ movimentos, info }: GraficoBarrasCateg
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Despesas por Categoria</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Despesas por Categoria
+              {info && <InfoTooltip {...info} title="Despesas por Categoria" />}
+            </CardTitle>
             <TooltipProvider>
               <TooltipUI>
                 <TooltipTrigger asChild>
