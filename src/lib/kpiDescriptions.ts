@@ -181,6 +181,26 @@ export const KPI_INFO = {
     description: "Custo total mensal estimado com salários dos funcionários ativos.",
     formula: "SUM(funcionarios_ativos.salario)",
   },
+  funcionariosFixos: {
+    description: "Colaboradores com vínculo fixo (efetivos), com contrato permanente.",
+    formula: "COUNT(funcionarios WHERE tipo_colaborador = 'Fixo')",
+  },
+  funcionariosTemporarios: {
+    description: "Colaboradores com vínculo temporário ou por contrato a prazo.",
+    formula: "COUNT(funcionarios WHERE tipo_colaborador = 'Temporário')",
+  },
+  funcionariosOficiais: {
+    description: "Colaboradores com categoria profissional 'Oficial' (técnicos qualificados).",
+    formula: "COUNT(funcionarios WHERE categoria = 'Oficial')",
+  },
+  funcionariosTecnicos: {
+    description: "Colaboradores com categoria 'Técnico Superior' (engenheiros, arquitetos, etc.).",
+    formula: "COUNT(funcionarios WHERE categoria = 'Técnico Superior')",
+  },
+  custoHoraMedio: {
+    description: "Custo médio por hora dos colaboradores alocados ao projeto.",
+    formula: "AVG(funcionarios_alocados.custo_hora)",
+  },
 
   // ===== DRE =====
   receitaBruta: {
