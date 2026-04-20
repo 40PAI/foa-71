@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { useSonnerToast } from '@/hooks/use-sonner-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface StageCostsPieChartProps {
   projectId: number | null;
+  info?: InfoTooltipContentType;
 }
 
 const COLORS = [
@@ -24,7 +26,7 @@ const COLORS = [
   'hsl(var(--accent))'
 ];
 
-export function StageCostsPieChart({ projectId }: StageCostsPieChartProps) {
+export function StageCostsPieChart({ projectId, info }: StageCostsPieChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading, totals } = useStageComparison(projectId);
   const toast = useSonnerToast();
@@ -181,7 +183,10 @@ export function StageCostsPieChart({ projectId }: StageCostsPieChartProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Custos por Etapa</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span>Custos por Etapa</span>
+                {info && <InfoTooltip {...info} title={info.title || "Custos por Etapa"} />}
+              </CardTitle>
               <CardDescription>
                 Distribuição percentual dos custos planejados
               </CardDescription>

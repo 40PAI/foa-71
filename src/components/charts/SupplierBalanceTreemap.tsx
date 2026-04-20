@@ -9,10 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface SupplierBalanceTreemapProps {
   projectId?: number;
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const COLORS = [
@@ -86,7 +88,7 @@ const CustomContent = ({ x = 0, y = 0, width = 0, height = 0, index = 0, name = 
   );
 };
 
-export function SupplierBalanceTreemap({ projectId, title = "Saldos por Fornecedor" }: SupplierBalanceTreemapProps) {
+export function SupplierBalanceTreemap({ projectId, title = "Saldos por Fornecedor", info }: SupplierBalanceTreemapProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useSupplierBalancesChart(projectId);
 
@@ -197,6 +199,7 @@ export function SupplierBalanceTreemap({ projectId, title = "Saldos por Forneced
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription>Top 10 fornecedores por saldo</CardDescription>
             </div>

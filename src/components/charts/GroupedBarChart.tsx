@@ -6,6 +6,7 @@ import { Download, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface GroupedBarChartProps {
   data: any[];
@@ -16,6 +17,7 @@ interface GroupedBarChartProps {
   formatValue?: (value: number) => string;
   onExport?: () => void;
   height?: number;
+  info?: InfoTooltipContentType;
 }
 
 export function GroupedBarChart({
@@ -26,7 +28,8 @@ export function GroupedBarChart({
   xAxisKey,
   formatValue = (value) => value.toString(),
   onExport,
-  height = 400
+  height = 400,
+  info
 }: GroupedBarChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -85,7 +88,10 @@ export function GroupedBarChart({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{title}</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <span>{title}</span>
+                {info && <InfoTooltip {...info} title={info.title || title} />}
+              </CardTitle>
               {description && <CardDescription>{description}</CardDescription>}
             </div>
             <div className="flex items-center gap-2">

@@ -8,9 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface ConsumptionByProjectChartProps {
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const COLORS = [
@@ -30,7 +32,7 @@ const chartConfig = {
   },
 };
 
-export function ConsumptionByProjectChart({ title = "Consumo por Projeto" }: ConsumptionByProjectChartProps) {
+export function ConsumptionByProjectChart({ title = "Consumo por Projeto", info }: ConsumptionByProjectChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useConsumptionByProject();
 
@@ -181,6 +183,7 @@ export function ConsumptionByProjectChart({ title = "Consumo por Projeto" }: Con
               <CardTitle className="flex items-center gap-2">
                 <Flame className="h-5 w-5" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription>Distribuição de consumo entre obras</CardDescription>
             </div>

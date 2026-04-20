@@ -9,10 +9,12 @@ import { clampPercentage, formatPercentageWithExcess } from "@/lib/helpers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface CostCenterUtilizationChartProps {
   projectId?: number;
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -29,7 +31,7 @@ const getBarColor = (percentual: number) => {
   return "hsl(142, 76%, 36%)"; // Normal
 };
 
-export function CostCenterUtilizationChart({ projectId, title = "Utilização por Centro de Custo" }: CostCenterUtilizationChartProps) {
+export function CostCenterUtilizationChart({ projectId, title = "Utilização por Centro de Custo", info }: CostCenterUtilizationChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useCostCenterUtilization(projectId);
 
@@ -173,6 +175,7 @@ export function CostCenterUtilizationChart({ projectId, title = "Utilização po
               <CardTitle className="flex items-center gap-2">
                 <PieChartIcon className="h-5 w-5" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription className="flex flex-wrap gap-2 mt-1">
                 {exceededCount > 0 && (

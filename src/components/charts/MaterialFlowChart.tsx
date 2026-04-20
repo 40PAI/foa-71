@@ -7,11 +7,13 @@ import { useMaterialFlow } from "@/hooks/useMaterialChartData";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface MaterialFlowChartProps {
   projectId?: number;
   days?: number;
   title?: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -37,7 +39,7 @@ const chartConfig = {
   },
 };
 
-export function MaterialFlowChart({ projectId, days = 90, title = "Fluxo de Materiais" }: MaterialFlowChartProps) {
+export function MaterialFlowChart({ projectId, days = 90, title = "Fluxo de Materiais", info }: MaterialFlowChartProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { data, isLoading } = useMaterialFlow(projectId, days);
 
@@ -206,6 +208,7 @@ export function MaterialFlowChart({ projectId, days = 90, title = "Fluxo de Mate
               <CardTitle className="flex items-center gap-2 text-base font-semibold">
                 <Package className="h-4 w-4 text-primary" />
                 {title}
+                {info && <InfoTooltip {...info} title={info.title || title} />}
               </CardTitle>
               <CardDescription className="text-xs">
                 Últimos {days} dias de movimentações
