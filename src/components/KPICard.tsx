@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle } from "lucide-react";
+import { InfoTooltip, InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface KPICardProps {
   title: string;
@@ -9,6 +10,7 @@ interface KPICardProps {
   trend?: 'up' | 'down' | 'neutral';
   alert?: 'green' | 'yellow' | 'red';
   icon?: React.ReactNode;
+  info?: InfoTooltipContent;
 }
 
 export function KPICard({ title, value, subtitle, trend, alert, icon }: KPICardProps) {
