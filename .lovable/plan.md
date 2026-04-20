@@ -1,194 +1,129 @@
 
-# Plano de Optimização: Eliminação do Delay de Carregamento Entre Páginas
+# Plano: Sistema de Tooltips Informativos (Ícone "i") em KPIs e Gráficos
 
-## Problema Identificado
+## Objetivo
+Adicionar um ícone de informação (`i`) discreto no canto superior direito de **todos os cards KPI, gráficos e secções analíticas** da plataforma. Ao passar o mouse (ou tocar, no mobile), mostra um tooltip explicando:
+1. **O que o card/gráfico mostra**
+2. **A fórmula ou lógica de cálculo usada**
 
-Quando o utilizador navega entre páginas, aparece um skeleton loading (placeholders cinzentos pulsantes) durante alguns segundos antes do conteúdo real aparecer. Isso acontece porque:
+## Análise da Plataforma
 
-1. **Lazy Loading de Componentes**: Todas as páginas usam `React.lazy()` com `Suspense`, o que mostra um fallback enquanto carrega o código JavaScript da página
-2. **Lazy Loading de Dados**: Cada página faz queries ao Supabase que também têm os seus próprios estados de loading
-3. **Duplo Loading**: O utilizador vê primeiro o skeleton do `Suspense` (código JS) e depois potencialmente outro skeleton enquanto os dados carregam
+Identifiquei os seguintes componentes reutilizáveis que precisam ser estendidos:
 
-## Análise Técnica
+### Componentes KPI (núcleo)
+- `src/components/KPICard.tsx` — KPI base usado em quase todo lado
+- `src/components/charts/SmartKPICard.tsx` — KPI estilizado (financeiro)
+- `src/components/common/KPIGrid.tsx` — Grelha que distribui KPIs
+- `src/components/mobile/MobileKPIGrid.tsx` — Versão mobile
 
-### Fluxo Actual (com delay visível):
-```text
-Clique → Suspense Fallback (skeleton) → Código JS carrega → Query inicia → Loading de dados → Conteúdo
-         |_____________________________|                    |__________________|
-                  ~500-1500ms                                    ~200-800ms
-```
+### Componentes Gráficos (todos em `src/components/charts/`)
+- BurndownChart, CashFlowAreaChart, ConsumptionByProjectChart, CostCenterUtilizationChart, CriticalStockChart, DonutChart, GaugeChart, GroupedBarChart, HeatmapTable, HorizontalBarChart, IncidentChart, MaterialFlowChart, RadarChart, SCurveChart, SparklineChart, StackedBarChart, StageComparisonChart, StageCostsPieChart, SupplierBalanceTreemap, TimelineChart, TimelineComparisonChart, TopMaterialsChart, PPCChart
+- Wrapper: `ExpandableChartWrapper.tsx`
 
-### Fluxo Optimizado (quase instantâneo):
-```text
-Clique → Código já em cache → Dados já em cache (placeholderData) → Conteúdo imediato
-         |____________________________|________________________________|
-                                     ~50-100ms
-```
+### Secções com KPIs/gráficos diretos
+- `dashboard/*` (DashboardKPISection, DashboardFinancasSection, etc.)
+- `financial/*` (CashFlowKPICards, FluxoCaixaKPICards, FornecedoresKPICards, GastosObraKPICards, ClientesKPICards, etc.)
+- `projects/ProjectsKPISection.tsx`, `ProjectKPICards.tsx`
 
-## Causas Identificadas
+## Estratégia (centralizada, não repetitiva)
 
-| Problema | Localização | Impacto |
-|----------|-------------|---------|
-| **Suspense fallback visível** | `MainContent.tsx` + `MobileMainContent.tsx` | Skeleton aparece a cada navegação |
-| **Prefetch apenas no hover (desktop)** | `AppSidebar.tsx` | Dados não estão prontos ao clicar |
-| **Prefetch só inicia aos 500ms** | `AllProviders.tsx` (BackgroundPrefetch) | Delay inicial muito longo |
-| **Não há prefetch do código JS** | Sem implementação | Lazy components não são preloaded |
-| **staleTime muito alto** | Hooks com `staleTime: 10min` | Dados antigos mas não re-fetched |
+Em vez de tocar em centenas de ficheiros, criamos **componentes wrapper reutilizáveis** e adicionamos a prop `info` aos componentes base. Quem consome passa a info; quem não passa, nada muda.
 
----
+### Passo 1 — Criar componente base `InfoTooltip`
+**Novo ficheiro**: `src/components/common/InfoTooltip.tsx`
 
-## Solução Proposta (6 Partes)
+- Ícone `Info` (lucide-react), tamanho pequeno, cor `text-muted-foreground`
+- Usa `Tooltip` do shadcn (`@/components/ui/tooltip`) — já existe
+- Props: `title?`, `description`, `formula?`, `side?` (default: "left")
+- No mobile, abre com tap (usar `onClick` + estado interno) já que hover não funciona em touch
+- Conteúdo formatado com título em **bold**, descrição normal, e bloco "Fórmula:" em `font-mono` quando existir
 
-### Parte 1: Prefetch do Código JavaScript no Hover
+### Passo 2 — Criar wrapper `ChartCardHeader`
+**Novo ficheiro**: `src/components/common/ChartCardHeader.tsx`
 
-Adicionar preload dos chunks de código JavaScript quando o utilizador passa o mouse sobre os links do sidebar. Isso carrega o código antes do clique.
+- Header padronizado para gráficos: título + ícone `i` no canto direito
+- Drop-in para qualquer gráfico embrulhado em `<Card>`
 
-**Ficheiro**: `src/hooks/usePrefetchPage.ts`
-
-**Alteração**:
-```typescript
-// Adicionar preload de componentes lazy
-const preloadDashboard = () => import("@/pages/DashboardGeralPage");
-const preloadProjetos = () => import("@/pages/ProjetosPage");
-// ... etc
-
-// Expor funções de preload
-return {
-  prefetchDashboard: () => {
-    preloadDashboard(); // Preload do código JS
-    // Prefetch dos dados (já existe)
-    queryClient.prefetchQuery({...});
-  },
-  // ...
-};
-```
-
-### Parte 2: Background Prefetch Mais Agressivo
-
-Reduzir o delay do prefetch em background e preload de todas as rotas principais.
-
-**Ficheiro**: `src/contexts/AllProviders.tsx`
-
-**Alteração**:
-```typescript
-useEffect(() => {
-  if (user) {
-    // Iniciar prefetch IMEDIATAMENTE (sem delay)
-    // Preload código JS de todas as rotas principais
-    import("@/pages/DashboardGeralPage");
-    import("@/pages/ProjetosPage");
-    import("@/pages/ConsolidatedFinancasPage");
-    // etc...
-
-    // Prefetch dados após 100ms (muito mais rápido)
-    const timer = setTimeout(() => {
-      prefetch.prefetchDashboard();
-      prefetch.prefetchProjetos();
-      // ...
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }
-}, [user, selectedProjectId, prefetch]);
-```
-
-### Parte 3: Minimizar Suspense Fallback
-
-Usar um fallback mais minimalista e rápido (ou nenhum) para o Suspense principal, já que os dados vão ter `placeholderData`.
-
-**Ficheiro**: `src/components/MainContent.tsx`
-
-**Alteração**:
-```typescript
-// Usar fallback minimalista ou nenhum
-<Suspense fallback={null}>
-  <Routes>
-    {/* ... */}
-  </Routes>
-</Suspense>
-```
-
-**OU** criar um fallback muito mais leve:
-```typescript
-<Suspense fallback={<MinimalLoadingIndicator />}>
-```
-
-### Parte 4: Prefetch no Mobile com Touch Optimizado
-
-Garantir que o prefetch mobile inicia no `onTouchStart` (já implementado) mas também fazer preload do código.
-
-**Ficheiro**: `src/components/layout/MobileBottomNav.tsx`
-
-**Alteração**:
-- Adicionar preload do código JS junto com prefetch dos dados
-
-### Parte 5: Usar staleTime Dinâmico
-
-Implementar lógica para mostrar dados cached imediatamente enquanto faz refetch em background.
-
-**Alteração nos hooks de dados**:
-```typescript
-return useQuery({
-  queryKey: [...],
-  placeholderData: (previousData) => previousData, // Já existe!
-  staleTime: 2 * 60 * 1000, // Reduzir de 10min para 2min
-  refetchOnMount: 'always', // Refetch em background mas mostrar cached
-});
-```
-
-### Parte 6: Preload de Chunks Críticos no Index
-
-Adicionar preload hints no HTML para chunks críticos.
-
-**Ficheiro**: `index.html`
-
-**Alteração**:
-```html
-<!-- Preload critical chunks -->
-<link rel="modulepreload" href="/src/pages/DashboardGeralPage.tsx">
-```
-
----
-
-## Ficheiros a Modificar
+### Passo 3 — Estender componentes base com prop `info`
 
 | Ficheiro | Alteração |
 |----------|-----------|
-| `src/hooks/usePrefetchPage.ts` | Adicionar preload de código JS |
-| `src/contexts/AllProviders.tsx` | Prefetch imediato ao login |
-| `src/components/MainContent.tsx` | Fallback minimalista |
-| `src/components/layout/MobileMainContent.tsx` | Fallback minimalista |
-| `src/components/AppSidebar.tsx` | Adicionar preload no hover |
-| `src/components/layout/MobileBottomNav.tsx` | Preload no touch |
-| `src/pages/DashboardGeralPage.tsx` | Ajustar loading condition |
-| `src/hooks/useDashboardGeral.ts` | Reduzir staleTime |
-| `src/hooks/useConsolidatedFinancialData.ts` | Reduzir staleTime |
-| `src/components/loading/PageLoadingFallback.tsx` | Versão mais minimalista opcional |
+| `src/components/KPICard.tsx` | Adicionar prop opcional `info?: { description: string; formula?: string }` e renderizar `<InfoTooltip>` no header |
+| `src/components/charts/SmartKPICard.tsx` | Mesmo tratamento |
+| `src/components/common/KPIGrid.tsx` | Repassar `info` do item para `KPICard` |
+| `src/components/mobile/MobileKPIGrid.tsx` | Repassar `info` |
+| `src/components/charts/ExpandableChartWrapper.tsx` | Adicionar prop `info` e mostrar ícone ao lado do título |
 
----
+### Passo 4 — Preencher conteúdo de info em todos os consumidores
 
-## Resultado Esperado
+Criar um **dicionário central de descrições** para evitar duplicação e facilitar manutenção:
 
-### Antes (Actual):
-```text
-Clique → Skeleton (1-2s) → Conteúdo
+**Novo ficheiro**: `src/lib/kpiDescriptions.ts`
+
+```ts
+export const KPI_INFO = {
+  projetosAtivos: {
+    description: "Número de projetos com status diferente de 'Concluído' ou 'Cancelado'.",
+    formula: "COUNT(projetos WHERE status NOT IN ('Concluído','Cancelado'))"
+  },
+  projetosAtrasados: {
+    description: "Projetos ativos cuja data fim prevista já passou.",
+    formula: "COUNT(projetos ativos WHERE data_fim_prevista < hoje)"
+  },
+  avancoMedio: {
+    description: "Média aritmética do avanço físico de todos os projetos ativos.",
+    formula: "SUM(avanco_fisico) / COUNT(projetos ativos)"
+  },
+  // ... + ~50 entradas cobrindo todos os KPIs/gráficos
+};
 ```
 
-### Depois (Optimizado):
+Depois, em cada secção que monta KPIs (ex.: `ProjectsKPISection`, `DashboardKPISection`, `FluxoCaixaKPICards`, etc.), adiciona-se `info: KPI_INFO.xxx` ao item correspondente.
+
+### Passo 5 — Aplicar nos gráficos
+
+Para cada gráfico em `src/components/charts/*`, substituir o `CardHeader` atual por `<ChartCardHeader title="..." info={...} />` quando o gráfico estiver dentro de um Card próprio. Para gráficos sem Card (usados como filhos), adicionar o ícone ao lado do título no componente pai.
+
+## Ficheiros a Criar
+1. `src/components/common/InfoTooltip.tsx`
+2. `src/components/common/ChartCardHeader.tsx`
+3. `src/lib/kpiDescriptions.ts`
+
+## Ficheiros a Modificar (resumo)
+- **Base (5)**: `KPICard.tsx`, `SmartKPICard.tsx`, `KPIGrid.tsx`, `MobileKPIGrid.tsx`, `ExpandableChartWrapper.tsx`
+- **Secções de KPIs (~12)**: `ProjectsKPISection`, `ProjectKPICards`, `DashboardKPISection`, `DashboardFinancasSection`, `DashboardProjetosSection`, `DashboardArmazemSection`, `DashboardTarefasSection`, `DashboardRequisicoesSection`, `DashboardDRESection`, `DashboardRelatoriosFOASection`, `CashFlowKPICards`, `FluxoCaixaKPICards`, `FornecedoresKPICards`, `GastosObraKPICards`, `ClientesKPICards`
+- **Gráficos (~22)**: todos em `src/components/charts/` que tenham Card próprio
+- **Outros**: `IntegratedFinancialDashboard`, `EnhancedFinancialDashboard`, `ExpandedFinancialDashboard`, `ExecutiveFOADashboard`, `FinancialOverview`, `DiscrepancyReport`, `StageProgressCard`
+
+## Comportamento UX
+
+- **Desktop**: hover no ícone → tooltip aparece após ~150ms, fica visível enquanto o mouse estiver sobre o ícone ou tooltip
+- **Mobile/Touch**: tap no ícone → popover aparece, fecha ao tocar fora
+- **Posição**: `side="left"` por defeito para não sair do card; `align="start"`
+- **Estilo**: largura máxima `max-w-xs` (288px), padding confortável, fórmula em bloco `<code>` com fundo subtil
+
+## Resultado Visual
+
 ```text
-Clique → Conteúdo (quase instantâneo, ~100-200ms)
-         ou
-Clique → Spinner mínimo (100ms) → Conteúdo
+┌─────────────────────────────────┐
+│ Projetos Ativos          📊  ⓘ  │ ← ícone "i" aqui
+├─────────────────────────────────┤
+│ 12                              │
+│ 3 concluídos, 1 cancelado       │
+└─────────────────────────────────┘
+
+   Hover →  ┌──────────────────────────────┐
+            │ Projetos Ativos              │
+            │                              │
+            │ Número de projetos com       │
+            │ status diferente de          │
+            │ 'Concluído' ou 'Cancelado'.  │
+            │                              │
+            │ Fórmula:                     │
+            │ COUNT(projetos WHERE         │
+            │ status NOT IN (...))         │
+            └──────────────────────────────┘
 ```
 
----
-
-## Prioridades de Implementação
-
-1. **Alta Prioridade**: Preload de código JS no hover/touch
-2. **Alta Prioridade**: Background prefetch mais agressivo
-3. **Média Prioridade**: Reduzir staleTime dos hooks
-4. **Média Prioridade**: Fallback minimalista do Suspense
-5. **Baixa Prioridade**: Preload hints no HTML
-
-A combinação destas optimizações vai fazer com que a navegação entre páginas seja praticamente instantânea, similar a sites que carregam "no instante".
+## Estimativa de Esforço
+~40 ficheiros tocados, mas a maioria são alterações de 1-3 linhas (adicionar `info={KPI_INFO.xxx}`). O grosso do trabalho é escrever o conteúdo das descrições/fórmulas em `kpiDescriptions.ts`.
