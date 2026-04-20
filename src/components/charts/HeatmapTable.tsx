@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface HeatmapData {
   frente: string;
@@ -15,9 +16,10 @@ interface HeatmapTableProps {
   data: HeatmapData[];
   title: string;
   categories: string[];
+  info?: InfoTooltipContentType;
 }
 
-export function HeatmapTable({ data, title, categories }: HeatmapTableProps) {
+export function HeatmapTable({ data, title, categories, info }: HeatmapTableProps) {
   const getIntensityColor = (intensity: 'low' | 'medium' | 'high') => {
     switch (intensity) {
       case 'high':
@@ -34,7 +36,10 @@ export function HeatmapTable({ data, title, categories }: HeatmapTableProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          <span>{title}</span>
+          {info && <InfoTooltip {...info} title={info.title || title} />}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">

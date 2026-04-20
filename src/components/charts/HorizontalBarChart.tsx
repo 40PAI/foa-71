@@ -1,6 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/utils/formatters";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface HorizontalBarChartProps {
   data: Array<{
@@ -11,6 +12,7 @@ interface HorizontalBarChartProps {
   title?: string;
   valueFormatter?: (value: number) => string;
   maxHeight?: number;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -41,7 +43,8 @@ export function HorizontalBarChart({
   data, 
   title, 
   valueFormatter = formatCurrency,
-  maxHeight = 250
+  maxHeight = 250,
+  info
 }: HorizontalBarChartProps) {
   // Altura compacta: barras menores mas legíveis
   const barHeight = 14;
@@ -51,7 +54,12 @@ export function HorizontalBarChart({
 
   return (
     <div className="w-full">
-      {title && <h3 className="text-sm font-semibold mb-1">{title}</h3>}
+      {(title || info) && (
+        <div className="flex items-center gap-1 mb-1">
+          {title && <h3 className="text-sm font-semibold">{title}</h3>}
+          {info && <InfoTooltip {...info} title={info.title || title} />}
+        </div>
+      )}
       <ChartContainer config={chartConfig} className="w-full" style={{ minHeight: `${chartHeight}px` }}>
         <ResponsiveContainer width="100%" height={chartHeight}>
           <BarChart 

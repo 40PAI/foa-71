@@ -2,6 +2,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/utils/formatters";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface StackedBarChartProps {
   data: Array<{
@@ -11,6 +12,7 @@ interface StackedBarChartProps {
     desvio: number;
   }>;
   title: string;
+  info?: InfoTooltipContentType;
 }
 
 const chartConfig = {
@@ -24,10 +26,13 @@ const chartConfig = {
   },
 };
 
-export function StackedBarChart({ data, title }: StackedBarChartProps) {
+export function StackedBarChart({ data, title, info }: StackedBarChartProps) {
   return (
     <div className="space-y-2">
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <div className="flex items-center gap-2">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {info && <InfoTooltip {...info} title={info.title || title} />}
+      </div>
       <ChartContainer config={chartConfig} className="h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data}>
