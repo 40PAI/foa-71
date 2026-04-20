@@ -163,6 +163,30 @@ export const KPI_INFO = {
     description: "Valor total dos materiais consumidos/saídos no mês corrente.",
     formula: "SUM(saídas WHERE mês = mês_atual)",
   },
+  entradasMaterial: {
+    description: "Total de unidades que entraram no armazém no período (compras, devoluções, transferências de entrada).",
+    formula: "SUM(movimentacoes WHERE tipo IN ('entrada','transferencia_entrada'))",
+  },
+  saidasMaterial: {
+    description: "Total de unidades que saíram do armazém para uso/transferência no período.",
+    formula: "SUM(movimentacoes WHERE tipo IN ('saida','transferencia_saida'))",
+  },
+  consumosMaterial: {
+    description: "Total de unidades efetivamente consumidas em obra no período.",
+    formula: "SUM(movimentacoes WHERE tipo = 'consumo')",
+  },
+  devolucoesMaterial: {
+    description: "Total de unidades devolvidas ao armazém após uso parcial ou cancelamento.",
+    formula: "SUM(movimentacoes WHERE tipo = 'devolucao')",
+  },
+  unidadesEmStock: {
+    description: "Soma da quantidade total atualmente disponível no armazém para todos os materiais.",
+    formula: "SUM(materiais.quantidade_stock)",
+  },
+  saudeStock: {
+    description: "Percentual de materiais com stock acima do nível mínimo.",
+    formula: "(materiais_não_críticos / total_materiais) × 100",
+  },
 
   // ===== RH / Funcionários =====
   totalFuncionarios: {
