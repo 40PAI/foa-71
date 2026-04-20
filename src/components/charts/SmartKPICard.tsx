@@ -9,6 +9,7 @@ import {
   DollarSign,
   Activity
 } from "lucide-react";
+import { InfoTooltip, InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface SmartKPICardProps {
   title: string;
@@ -19,6 +20,7 @@ interface SmartKPICardProps {
   type?: 'financial' | 'performance' | 'alert' | 'success' | 'warning';
   icon?: React.ComponentType<any>;
   animated?: boolean;
+  info?: InfoTooltipContent;
 }
 
 export function SmartKPICard({ 
@@ -29,7 +31,8 @@ export function SmartKPICard({
   trendValue, 
   type = 'performance',
   icon: Icon,
-  animated = true 
+  animated = true,
+  info,
 }: SmartKPICardProps) {
   
   const getCardStyles = () => {
@@ -80,11 +83,14 @@ export function SmartKPICard({
   return (
     <Card className={`${getCardStyles()} ${animated ? 'hover:scale-105 transition-all duration-200' : ''}`}>
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-2">
             {title}
           </CardTitle>
-          <DisplayIcon className={`h-3 w-3 sm:h-4 sm:w-4 ${getValueColor()} flex-shrink-0`} />
+          <div className="flex items-center gap-1 shrink-0">
+            {info && <InfoTooltip {...info} title={info.title || title} />}
+            <DisplayIcon className={`h-3 w-3 sm:h-4 sm:w-4 ${getValueColor()}`} />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">
