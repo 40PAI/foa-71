@@ -21,6 +21,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 const MOVEMENT_TYPE_LABELS: Record<string, string> = {
   entrada: "Entrada",
@@ -234,8 +236,11 @@ export function WarehouseReportSection() {
                 <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
                   <PackagePlus className="h-5 w-5 text-green-600" />
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Entradas</p>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Entradas</p>
+                    <InfoTooltip {...KPI_INFO.entradasMaterial} title="Entradas" />
+                  </div>
                   <p className="text-xl font-bold text-green-600">+{data?.resumo?.entradas_quantidade || 0}</p>
                   <p className="text-xs text-muted-foreground">{data?.resumo?.entradas || 0} movim.</p>
                 </div>
@@ -246,8 +251,11 @@ export function WarehouseReportSection() {
                 <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/30">
                   <PackageMinus className="h-5 w-5 text-orange-600" />
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Saídas</p>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Saídas</p>
+                    <InfoTooltip {...KPI_INFO.saidasMaterial} title="Saídas" />
+                  </div>
                   <p className="text-xl font-bold text-orange-600">-{data?.resumo?.saidas_quantidade || 0}</p>
                   <p className="text-xs text-muted-foreground">{data?.resumo?.saidas || 0} movim.</p>
                 </div>
@@ -258,8 +266,11 @@ export function WarehouseReportSection() {
                 <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30">
                   <Hammer className="h-5 w-5 text-red-600" />
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Consumos</p>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Consumos</p>
+                    <InfoTooltip {...KPI_INFO.consumosMaterial} title="Consumos" />
+                  </div>
                   <p className="text-xl font-bold text-red-600">-{data?.resumo?.consumos_quantidade || 0}</p>
                   <p className="text-xs text-muted-foreground">{data?.resumo?.consumos || 0} movim.</p>
                 </div>
@@ -270,8 +281,11 @@ export function WarehouseReportSection() {
                 <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                   <RotateCcw className="h-5 w-5 text-blue-600" />
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Devoluções</p>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">Devoluções</p>
+                    <InfoTooltip {...KPI_INFO.devolucoesMaterial} title="Devoluções" />
+                  </div>
                   <p className="text-xl font-bold text-blue-600">+{data?.resumo?.devolucoes_quantidade || 0}</p>
                   <p className="text-xs text-muted-foreground">{data?.resumo?.devolucoes || 0} movim.</p>
                 </div>
