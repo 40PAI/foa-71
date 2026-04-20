@@ -1,17 +1,20 @@
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
+import { InfoTooltip, type InfoTooltipContent as InfoTooltipContentType } from "@/components/common/InfoTooltip";
 
 interface SparklineChartProps {
   data: Array<{ value: number }>;
   color?: string;
   height?: number;
   showTrend?: boolean;
+  info?: InfoTooltipContentType;
 }
 
 export function SparklineChart({ 
   data, 
   color = "hsl(var(--primary))", 
   height = 40,
-  showTrend = true 
+  showTrend = true,
+  info
 }: SparklineChartProps) {
   if (!data || data.length < 2) {
     return (
@@ -67,6 +70,7 @@ export function SparklineChart({
           {isPositive ? '↑' : '↓'} {Math.abs(Number(trendPercent))}%
         </span>
       )}
+      {info && <InfoTooltip {...info} />}
     </div>
   );
 }
