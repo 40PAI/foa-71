@@ -7,6 +7,7 @@ import { Maximize2, ZoomOut, RotateCcw } from "lucide-react";
 import { Tooltip as TooltipUI, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 import { pt } from "date-fns/locale";
+import { InfoTooltip, type InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface MovimentoData {
   data_movimento: string;
@@ -16,6 +17,7 @@ interface MovimentoData {
 
 interface GraficoLinhaMovimentosProps {
   movimentos: MovimentoData[];
+  info?: InfoTooltipContent;
 }
 
 // Constants for zoom
@@ -23,7 +25,7 @@ const MIN_ZOOM = 1;
 const MAX_ZOOM = 10;
 const ZOOM_SPEED = 0.15;
 
-export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosProps) {
+export function GraficoLinhaMovimentos({ movimentos, info }: GraficoLinhaMovimentosProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Zoom state
@@ -284,7 +286,10 @@ export function GraficoLinhaMovimentos({ movimentos }: GraficoLinhaMovimentosPro
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Evolução Temporal - Entradas, Saídas e Saldo</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Evolução Temporal - Entradas, Saídas e Saldo
+              {info && <InfoTooltip {...info} title="Evolução Temporal" />}
+            </CardTitle>
             <TooltipProvider>
               <TooltipUI>
                 <TooltipTrigger asChild>

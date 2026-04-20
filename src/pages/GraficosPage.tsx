@@ -43,6 +43,8 @@ import { useManagementDashboard } from "@/hooks/useManagementDashboard";
 import { useProjectChartData } from "@/hooks/useProjectChartData";
 import { SmartKPICard } from "@/components/charts/SmartKPICard";
 import { formatCurrency } from "@/utils/formatters";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
+import { InfoTooltip } from "@/components/common/InfoTooltip";
 
 // Componentes de placeholder para os gráficos interativos
 const InteractiveFinanceChart = () => (
@@ -185,10 +187,11 @@ const ProjectChartsContent = ({ projectId }: { projectId: number }) => {
           avanco_real: item.fisico,
           ppc_semanal: item.financeiro,
         })) || []} 
-        title="Avanço Temporal vs Linear" 
+        title="Avanço Temporal vs Linear"
+        info={KPI_INFO.graficoTimeline}
       />
-      <SCurveChart data={chartData?.chartData.sCurve || []} />
-      <BurndownChart data={chartData?.chartData.burndown || []} />
+      <SCurveChart data={chartData?.chartData.sCurve || []} info={KPI_INFO.graficoSCurve} />
+      <BurndownChart data={chartData?.chartData.burndown || []} info={KPI_INFO.graficoBurndown} />
     </div>
   );
 };
@@ -198,11 +201,11 @@ const FinanceChartsContent = ({ projectId }: { projectId: number }) => {
     <div className="space-y-6">
       {/* New Financial Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        <CashFlowAreaChart projectId={projectId} />
-        <CostCenterUtilizationChart projectId={projectId} />
+        <CashFlowAreaChart projectId={projectId} info={KPI_INFO.graficoCashFlow} />
+        <CostCenterUtilizationChart projectId={projectId} info={KPI_INFO.graficoCostCenterUtil} />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        <SupplierBalanceTreemap projectId={projectId} />
+        <SupplierBalanceTreemap projectId={projectId} info={KPI_INFO.graficoSupplierBalance} />
         <div>
           <IntegratedFinancialDashboard projectId={projectId} />
         </div>
@@ -252,13 +255,14 @@ const PurchaseChartsContent = ({ projectId }: { projectId: number }) => {
   return (
     <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
       <div className="xl:col-span-1">
-        <DonutChart data={donutData} title="Requisições por Categoria" />
+        <DonutChart data={donutData} title="Requisições por Categoria" info={KPI_INFO.graficoDonut} />
       </div>
       <div className="xl:col-span-1">
         <HeatmapTable 
           data={heatmapData} 
           title="Breakdown por Categoria"
           categories={["Pendente", "Aprovado", "Valor (k€)"]}
+          info={KPI_INFO.graficoHeatmap}
         />
       </div>
     </div>
@@ -270,12 +274,12 @@ const WarehouseChartsContent = ({ projectId }: { projectId: number }) => {
     <div className="space-y-6">
       {/* New Material Charts */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        <MaterialFlowChart projectId={projectId} />
-        <TopMaterialsChart projectId={projectId} />
+        <MaterialFlowChart projectId={projectId} info={KPI_INFO.graficoMaterialFlow} />
+        <TopMaterialsChart projectId={projectId} info={KPI_INFO.graficoTopMateriais} />
       </div>
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
-        <ConsumptionByProjectChart />
-        <CriticalStockChart />
+        <ConsumptionByProjectChart info={KPI_INFO.graficoConsumoProjeto} />
+        <CriticalStockChart info={KPI_INFO.graficoCriticalStock} />
       </div>
     </div>
   );

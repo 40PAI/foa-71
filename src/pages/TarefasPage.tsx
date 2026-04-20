@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { CheckCircle, Clock, AlertTriangle, Target, User, Calendar, Plus, Edit, Layers, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { KPI_INFO } from "@/lib/kpiDescriptions";
 
 export function TarefasPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -178,6 +179,7 @@ export function TarefasPage() {
           subtitle="Ativas no projeto"
           icon={<Target className="h-4 w-4" />}
           alert="green"
+          info={KPI_INFO.totalTarefas}
         />
         <KPICard
           title="Taxa de Conclusão"
@@ -185,6 +187,7 @@ export function TarefasPage() {
           subtitle={`${tarefasConcluidas} de ${totalTarefas} concluídas`}
           icon={<CheckCircle className="h-4 w-4" />}
           alert={(percentualConclusao ?? 0) >= 80 ? "green" : (percentualConclusao ?? 0) >= 60 ? "yellow" : "red"}
+          info={KPI_INFO.taxaConclusaoTarefas}
         />
         <KPICard
           title="Tarefas Atrasadas"
@@ -192,6 +195,7 @@ export function TarefasPage() {
           subtitle={tarefasAtrasadas > 0 ? "Requer atenção" : "Todas em dia"}
           icon={<AlertTriangle className="h-4 w-4" />}
           alert={tarefasAtrasadas > 0 ? "red" : "green"}
+          info={KPI_INFO.tarefasAtrasadas}
         />
         <KPICard
           title="Em Andamento"
@@ -199,6 +203,7 @@ export function TarefasPage() {
           subtitle="Tarefas ativas"
           icon={<Clock className="h-4 w-4" />}
           alert="green"
+          info={KPI_INFO.tarefasEmAndamentoLista}
         />
       </div>
 

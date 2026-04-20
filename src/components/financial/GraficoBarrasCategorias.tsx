@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Maximize2 } from "lucide-react";
 import { Tooltip as TooltipUI, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoTooltip, type InfoTooltipContent } from "@/components/common/InfoTooltip";
 
 interface MovimentoData {
   categoria: string;
@@ -14,9 +15,10 @@ interface MovimentoData {
 
 interface GraficoBarrasCategoriasProps {
   movimentos: MovimentoData[];
+  info?: InfoTooltipContent;
 }
 
-export function GraficoBarrasCategorias({ movimentos }: GraficoBarrasCategoriasProps) {
+export function GraficoBarrasCategorias({ movimentos, info }: GraficoBarrasCategoriasProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Agrupar despesas por categoria
@@ -101,7 +103,10 @@ export function GraficoBarrasCategorias({ movimentos }: GraficoBarrasCategoriasP
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Despesas por Categoria</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              Despesas por Categoria
+              {info && <InfoTooltip {...info} title="Despesas por Categoria" />}
+            </CardTitle>
             <TooltipProvider>
               <TooltipUI>
                 <TooltipTrigger asChild>
