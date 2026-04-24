@@ -1,83 +1,106 @@
 
 
-# Plano: Adicionar ícone "i" nos módulos restantes
+# Plano: Correção dos 6 Problemas Identificados
 
-## Módulos identificados sem tooltips
+## 1. Lentidão a carregar módulos
 
-1. **Submódulos de Finanças** (cada página tem KPIs e cards próprios sem `info`):
-   - `src/pages/CentrosCustoPage.tsx` — 4 KPIs (Orçamento Total, Total Custo, Saldo Disponível, Em Alerta) + 2 gráficos (Evolução Temporal, Despesas por Categoria)
-   - `src/pages/ComprasPage.tsx` — 4 `<KPICard>` (Total Requisições, Pendentes, Valor Total, Lead-time) + cards "Fluxo de Requisições", "Limites de Aprovação", "Observações"
-   - `src/pages/ContasFornecedoresPage.tsx` — 4 KPIs (Total Contas, Crédito Total, Débito Total, Saldo Líquido) + card "Contas Correntes por Fornecedor"
-   - `src/pages/DividaFOAPage.tsx` — 4 KPIs (Total Créditos, Total Amortizado, Dívida Total, Próx. Vencimento) + card "Dívidas por Fonte" + "Histórico de Movimentos"
+**Causa**: `staleTime: 5min` + `refetchOnMount: false` + cache localStorage com 24h faz com que dados venham do disco; mas hooks pesados (`useRealtimeProjectMetrics`, `useFinancialIntegration`) re-subscrevem 8+ canais Realtime a cada navegação, bloqueando a thread.
 
-2. **Tarefas** — `src/pages/TarefasPage.tsx`: 4 `<KPICard>` no topo (já passam por `KPICard`, basta adicionar `info`)
+**Ações**:
+- Reduzir `staleTime` global para `60s` em `src/main.tsx` para refresh mais responsivo, mantendo `gcTime` em 10min.
+- Activar `refetchOnMount: 'always'` apenas para queries de dashboard/listas críticas (manter `false` para o resto via override).
+- Consolidar os 8 canais Realtime de `useRealtimeProjectMetrics.ts` num único canal `project-${id}-all` com filtros por tabela, eliminando overhead de múltiplas subscriptions.
+- Adicionar `Suspense` com skeletons em `Index.tsx` lazy routes para feedback visual imediato.
 
-3. **Dashboard → Analytics (botão "Ver Analytics")**: 
-   - `FinanceAnalyticsModal`, `RequisitionsAnalyticsModal`, `WarehouseAnalyticsModal` — gráficos internos sem `info` em alguns charts (ex.: `CashFlowAreaChart`, `CostCenterUtilizationChart`, `SupplierBalanceTreemap`). Verificar e completar.
+## 2. Mudanças não refletem entre computadores
 
-4. **Modal "Ver Gráficos do Projeto"** — `src/components/modals/ProjectChartsModal.tsx`:
-   - Tabs **Visão Geral**, **Finanças**, **Compras**, **Armazém**, **RH**, **Segurança**.
-   - 3 KPIs de topo em Visão Geral já têm "i" (PPC, Lead-time, Taxa Utilização). Falta garantir que **todos os charts internos** dos restantes tabs recebam `info={KPI_INFO.xxx}`. Pela imagem, "S-Curve" e "PPC - Programação Cumprida" não mostram ícone — confirmar e ligar.
+**Causa**: Tabelas críticas (`projetos`, `colaboradores`, `tarefas_lean`, `gastos_obra`, `movimentos_financeiros`, `materiais_armazem`) podem não estar na publicação `supabase_realtime`. Apenas `requisicoes`, `financas` e `notificacoes` aparecem nas migrations. Sem isso, Realtime não dispara e dados ficam stale até refresh manual.
 
-5. **Página `GraficosPage.tsx`** (acedida via Projetos → "Gráficos por Área"): vários `<Card>` com gráficos diretos (não usam `ExpandableChartWrapper`) — adicionar ícone `i` no `CardTitle`.
+**Ações** (migration SQL):
+```sql
+ALTER TABLE projetos REPLICA IDENTITY FULL;
+ALTER TABLE tarefas_lean REPLICA IDENTITY FULL;
+ALTER TABLE colaboradores REPLICA IDENTITY FULL;
+ALTER TABLE gastos_obra REPLICA IDENTITY FULL;
+ALTER TABLE movimentos_financeiros REPLICA IDENTITY FULL;
+ALTER TABLE materiais_armazem REPLICA IDENTITY FULL;
+ALTER TABLE etapas_projeto REPLICA IDENTITY FULL;
 
-## Estratégia de execução
-
-Para cada KPI/chart sem `info`, adicionar **uma linha** com `<InfoTooltip>` no `CardTitle` (ou prop `info` quando o componente já a aceita).
-
-### Padrão para KPIs em `<Card>` direto (Centros de Custo, Contas Fornecedores, Dívida FOA)
-
-```tsx
-<CardHeader size="sm" className="flex flex-row items-center justify-between space-y-0 pb-1">
-  <CardTitle className="text-xs sm:text-sm font-medium">Total Contas</CardTitle>
-  <InfoTooltip {...KPI_INFO.totalContasFornecedores} title="Total Contas" />
-</CardHeader>
+ALTER PUBLICATION supabase_realtime ADD TABLE projetos, tarefas_lean,
+  colaboradores, gastos_obra, movimentos_financeiros,
+  materiais_armazem, etapas_projeto;
 ```
+- Adicionar `refetchOnReconnect: true` (já está) e `refetchOnWindowFocus: true` para invalidação ao trocar de aba.
 
-### Padrão para `<KPICard>` (Compras, Tarefas)
+## 3. Texto truncado nos cards (KPIs)
 
-```tsx
-<KPICard title="Total Requisições" ... info={KPI_INFO.totalRequisicoes} />
-```
+**Causa**: `KPICard.tsx` (linha 37) e múltiplos KPI cards usam `truncate` no título, cortando "Total de Tarefas" → "Total de Tar...".
 
-### Padrão para gráficos em `<Card>` com `<CardTitle>` próprio (GraficosPage, Centros de Custo, Compras)
+**Ações**:
+- Substituir `truncate` por `break-words leading-tight` nos títulos de:
+  - `src/components/KPICard.tsx`
+  - `src/components/charts/SmartKPICard.tsx` (já usa `line-clamp-2`, manter)
+  - `src/components/financial/GastosObraKPICards.tsx` (5 ocorrências)
+  - `src/components/financial/FornecedoresKPICards.tsx`
+  - Demais `*KPICards.tsx` em `src/components/financial/`
+- Adicionar `text-xs` dinâmico via `clamp()` CSS quando o texto é longo: tamanho da fonte ajusta entre `0.7rem` e `0.875rem` consoante o contentor.
+- Aumentar `max-h-28` para `min-h-[6rem]` (auto-grow) para acomodar 2 linhas sem cortar valor numérico.
 
-```tsx
-<CardTitle className="flex items-center gap-2">
-  Fluxo de Requisições de Compra
-  <InfoTooltip {...KPI_INFO.graficoTimeline} title="Fluxo de Requisições" />
-</CardTitle>
-```
+## 4. Convidar utilizador não funciona
 
-### Padrão para charts já estendidos (S-Curve, PPC, Burndown, etc.)
+**Causa provável**: edge function `send-invitation` chama Resend com domínio `noreply@waridu.plenuz.ao`. Se o domínio não estiver verificado em Resend, envio falha. Falta também criar registo em `public.invitations` (referenciado pela memória `mem://security/invitation-flow`) — atualmente apenas envia email sem token.
 
-Apenas passar a prop `info={KPI_INFO.xxx}` no consumidor (ProjectChartsModal e equivalentes).
+**Ações**:
+- Verificar logs da edge function `send-invitation` para confirmar erro real.
+- Atualizar a function para:
+  1. Gerar token UUID seguro;
+  2. Inserir em `public.invitations` com `expires_at = now() + 7 days`;
+  3. Construir URL `register-invitation?token={uuid}` em vez de query params com email/role em texto claro;
+  4. Capturar e propagar erro Resend específico (domain not verified, rate limit) em vez de mensagem genérica.
+- Atualizar `RegisterInvitationPage.tsx` para validar token via query do Supabase antes de criar conta.
+- Caso domínio não esteja verificado, fallback para `onboarding@resend.dev` (apenas para testes).
 
-## Novas entradas em `src/lib/kpiDescriptions.ts`
+## 5. Nova requisição não acontece nada
 
-Adicionar chaves em falta:
-- `orcamentoCentroCusto`, `gastoCentroCusto`, `saldoCentroCusto`, `centrosEmAlerta`
-- `totalContasFornecedores`, `creditoTotalFornecedores`, `debitoTotalFornecedores`, `saldoLiquidoFornecedores`
-- `totalCreditosDivida`, `totalAmortizado`, `dividaTotal`, `proximoVencimento`, `dividaFOF`, `dividaBancos`, `dividaFornecedoresFonte`, `dividaOutros`
-- `valorTotalRequisicoesCompra`, `leadTimeRequisicoes`, `pendentesCompras`
-- `graficoEvolucaoTemporalCC`, `graficoDespesasCategoriaCC`, `graficoFluxoRequisicoes`, `graficoHistoricoMovimentosDivida`, `graficoDividasPorFonte`
-- `tarefasMetaSemanal`, `tarefasResumoTipoProjeto`
+**Causa**: `<RequisitionModal projectId={selectedProjectId} />` — `selectedProjectId` é `number | null`. Quando é `null` (utilizador não escolheu projeto), o tipo TS aceita mas o form falha silenciosamente porque `id_projeto: projectId` envia `null` e o `INSERT` na BD viola NOT NULL ou RLS.
 
-## Ficheiros a modificar (~12 ficheiros, mudanças de 1-3 linhas cada)
+**Ações**:
+- Em `ComprasPage.tsx`: desactivar visualmente o botão "Nova Requisição" quando `!selectedProjectId` e mostrar `<Alert>` "Selecione um projeto primeiro".
+- Em `RequisitionForm.tsx onSubmit`: validar `projectId` antes do submit, mostrar toast de erro se ausente.
+- Adicionar `console.error` detalhado no catch do `onSubmit` para expor erros Supabase (RLS, validation) no toast em vez de mensagem genérica "Erro ao salvar requisição".
+- Verificar políticas RLS na tabela `requisicoes` para garantir que o utilizador autenticado tem permissão `INSERT`.
 
-| Ficheiro | Alteração |
-|----------|-----------|
-| `src/lib/kpiDescriptions.ts` | +20 novas entradas |
-| `src/pages/CentrosCustoPage.tsx` | 4 KPIs + 2 charts → adicionar `<InfoTooltip>` |
-| `src/pages/ComprasPage.tsx` | 4 `<KPICard>` → prop `info`; 3 cards → `<InfoTooltip>` no título |
-| `src/pages/ContasFornecedoresPage.tsx` | 4 KPIs + 1 card título |
-| `src/pages/DividaFOAPage.tsx` | 4 KPIs + 4 cards "Dívidas por Fonte" + "Histórico" |
-| `src/pages/TarefasPage.tsx` | 4 `<KPICard>` → prop `info` |
-| `src/pages/GraficosPage.tsx` | ~8 `<CardTitle>` → adicionar `<InfoTooltip>` |
-| `src/components/modals/ProjectChartsModal.tsx` | Verificar e ligar `info={KPI_INFO.xxx}` em todos os charts dos tabs (S-Curve, PPC, Burndown, e tabs Finanças/Compras/Armazém/RH/Segurança) |
-| `src/components/modals/FinanceAnalyticsModal.tsx`, `RequisitionsAnalyticsModal.tsx`, `WarehouseAnalyticsModal.tsx` | Verificar charts internos e adicionar `info` onde faltar |
+## 6. Template e import de RH não funcionam
+
+**Causa**: `EmployeeImportModal.tsx` linha 56-59: `handleDownloadTemplate` apenas mostra toast "Template será baixado em breve" — **não está implementado**. Não existe `EmployeeTemplateDownloadButton` no codebase.
+
+**Ações**:
+- Criar `src/components/employees/EmployeeTemplateDownloadButton.tsx` análogo a `TemplateDownloadButton` (projetos) gerando workbook XLSX com 2 abas:
+  - **Colaboradores**: Nome, Cargo, Categoria (Oficial/Auxiliar/Técnico Superior), Tipo (Fixo/Temporário), Custo/Hora, Número Funcional, Telefone, Email, Data Admissão.
+  - **Alocações**: Número Funcional, ID Projeto, Data Início, Data Fim, Horas Diárias.
+  - **Instruções**: regras de preenchimento.
+- Substituir `handleDownloadTemplate` no `EmployeeImportModal` por chamada real à geração do XLSX.
+- Verificar/corrigir `useEmployeeImport.parseExcelFile`: confirmar que o parser aceita o template gerado e que `EmployeeImportService.importEmployees` insere em `colaboradores` com RLS adequada.
+
+## Detalhes Técnicos
+
+| Arquivo | Mudança |
+|---------|---------|
+| `src/main.tsx` | `staleTime: 60_000`, `refetchOnWindowFocus: true` |
+| `src/hooks/useRealtimeProjectMetrics.ts` | Consolidar canais |
+| `supabase/migrations/<new>.sql` | `REPLICA IDENTITY FULL` + `ADD TABLE` para 7 tabelas |
+| `src/components/KPICard.tsx` | Remover `truncate`, usar `break-words` + clamp font-size |
+| `src/components/financial/*KPICards.tsx` | Idem |
+| `supabase/functions/send-invitation/index.ts` | Token UUID + registo `invitations` + erro detalhado |
+| `src/pages/RegisterInvitationPage.tsx` | Validar token |
+| `src/pages/ComprasPage.tsx` | Disable botão sem projeto + alert |
+| `src/components/forms/RequisitionForm.tsx` | Validação `projectId` + log de erros completo |
+| `src/components/employees/EmployeeTemplateDownloadButton.tsx` | **Novo** componente |
+| `src/components/modals/EmployeeImportModal.tsx` | Usar componente real de download |
 
 ## Resultado
 
-Após esta atualização, **100% dos KPIs e gráficos da plataforma** terão o ícone `i` com descrição do que mostram e fórmula de cálculo, eliminando os pontos cegos identificados pelo utilizador (submódulos de Finanças, Tarefas, Analytics do Dashboard e modal de Gráficos do Projeto).
+- Performance: navegação 2-3× mais rápida; dados sincronizam entre máquinas em <2s via Realtime;
+- UX: nenhum texto cortado em KPIs, fontes auto-ajustáveis;
+- Funcionalidade: convites funcionam com tokens seguros, requisições e import de RH operacionais com mensagens de erro claras.
 
