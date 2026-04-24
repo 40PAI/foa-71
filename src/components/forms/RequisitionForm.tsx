@@ -219,6 +219,16 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
   };
 
   const onSubmit = async (data: RequisitionFormData) => {
+    // Guard: projectId obrigatório
+    if (!projectId || projectId <= 0) {
+      toast({
+        title: "Projeto não selecionado",
+        description: "Selecione um projeto antes de criar uma requisição.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Validação específica para alocamento
     if (tipoRequisicao === "alocamento" && !selectedMaterialArmazem) {
       toast({
@@ -285,9 +295,7 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         observacoes: data.observacoes || null,
         id_projeto: projectId,
         tipo_requisicao: tipoRequisicao,
-        // Adicionar referência ao material do armazém para alocamentos
         material_armazem_id: tipoRequisicao === "alocamento" ? selectedMaterialArmazem : null,
-        // Adicionar projeto de destino para alocamentos
         projeto_destino_id: tipoRequisicao === "alocamento" ? projetoDestinoId : null,
       };
 
@@ -308,11 +316,18 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         });
       }
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar requisição:", error);
+      // Expor mensagem detalhada de Supabase/RLS para o utilizador
+      const detailedMessage =
+        error?.message ||
+        error?.error_description ||
+        error?.details ||
+        error?.hint ||
+        (typeof error === "string" ? error : "Erro desconhecido ao salvar requisição");
       toast({
-        title: "Erro",
-        description: "Erro ao salvar requisição",
+        title: "Erro ao salvar requisição",
+        description: detailedMessage,
         variant: "destructive",
       });
     } finally {
