@@ -32,9 +32,12 @@ export function KPICard({ title, value, subtitle, trend, alert, icon, info }: KP
   };
 
   return (
-    <Card className="relative min-w-0 h-auto max-h-28">
+    <Card className="relative min-w-0 h-auto min-h-[6rem]">
       <CardHeader size="sm" className="flex flex-row items-start justify-between space-y-0 pb-1">
-        <CardTitle className="text-xs sm:text-sm font-medium leading-tight pr-1 min-w-0 flex-1 truncate">
+        <CardTitle
+          className="font-medium leading-tight pr-1 min-w-0 flex-1 break-words hyphens-auto"
+          style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.875rem)" }}
+        >
           {title}
         </CardTitle>
         <div className="flex items-center gap-1 shrink-0 ml-1">
@@ -44,7 +47,7 @@ export function KPICard({ title, value, subtitle, trend, alert, icon, info }: KP
       </CardHeader>
       <CardContent size="sm" className="space-y-0.5">
         <div className="flex items-start justify-between min-w-0 gap-1">
-          <div className="text-sm sm:text-base lg:text-lg font-bold min-w-0 flex-1 break-all leading-tight">
+          <div className="font-bold min-w-0 flex-1 break-all leading-tight" style={{ fontSize: "clamp(0.85rem, 2.2vw, 1.125rem)" }}>
             {value}
           </div>
           <div className="shrink-0 flex items-center gap-1">
@@ -58,7 +61,7 @@ export function KPICard({ title, value, subtitle, trend, alert, icon, info }: KP
           </div>
         </div>
         {subtitle && (
-          <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight truncate">
+          <p className="text-muted-foreground leading-tight break-words" style={{ fontSize: "clamp(0.625rem, 1.2vw, 0.75rem)" }}>
             {subtitle}
           </p>
         )}

@@ -15,11 +15,11 @@ import "./styles/status-theme.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Global optimization settings (v5 syntax)
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      // Optimized for cross-device sync responsiveness
+      staleTime: 60 * 1000, // 1 minute (was 5min) — fresher data
+      gcTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: true, // refetch when user returns to tab
+      refetchOnMount: true, // refetch on mount to catch external changes
       refetchOnReconnect: true,
       retry: 2,
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
