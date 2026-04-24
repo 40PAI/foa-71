@@ -29,9 +29,9 @@ export function GastosObraKPICards({
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">Recebimento FOA</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <CardTitle className="font-medium break-words leading-tight min-w-0 flex-1" style={{ fontSize: "clamp(0.75rem, 1.4vw, 0.875rem)" }}>Recebimento FOA</CardTitle>
               <InfoTooltip
                 title="Recebimento FOA"
                 description="Total recebido do cliente para financiar a obra (entradas FOA)."
@@ -41,7 +41,7 @@ export function GastosObraKPICards({
             <ArrowUpCircle className="h-4 w-4 text-green-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="font-bold text-green-600 break-all leading-tight" style={{ fontSize: "clamp(1rem, 2.4vw, 1.5rem)" }}>
               {isLoading ? "..." : formatCurrency(summary.total_recebimento_foa)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Cliente</p>
@@ -49,9 +49,9 @@ export function GastosObraKPICards({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">FOF Financiamento</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <CardTitle className="font-medium break-words leading-tight min-w-0 flex-1" style={{ fontSize: "clamp(0.75rem, 1.4vw, 0.875rem)" }}>FOF Financiamento</CardTitle>
               <InfoTooltip
                 title="FOF Financiamento"
                 description="Saídas relativas ao financiamento FOF (Fundo Operacional de Financiamento) do projeto."
@@ -61,7 +61,7 @@ export function GastosObraKPICards({
             <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="font-bold text-red-600 break-all leading-tight" style={{ fontSize: "clamp(1rem, 2.4vw, 1.5rem)" }}>
               {isLoading ? "..." : formatCurrency(summary.total_fof_financiamento)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Saídas FOF</p>
@@ -69,9 +69,9 @@ export function GastosObraKPICards({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">FOA Auto Financiamento</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <CardTitle className="font-medium break-words leading-tight min-w-0 flex-1" style={{ fontSize: "clamp(0.75rem, 1.4vw, 0.875rem)" }}>FOA Auto Financiamento</CardTitle>
               <InfoTooltip
                 title="FOA Auto Financiamento"
                 description="Saídas referentes ao auto-financiamento da obra pela FOA."
@@ -81,7 +81,7 @@ export function GastosObraKPICards({
             <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="font-bold text-red-600 break-all leading-tight" style={{ fontSize: "clamp(1rem, 2.4vw, 1.5rem)" }}>
               {isLoading ? "..." : formatCurrency(summary.total_foa_auto)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Saídas FOA Auto</p>
@@ -89,9 +89,9 @@ export function GastosObraKPICards({
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">Total de Custo</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <CardTitle className="font-medium break-words leading-tight min-w-0 flex-1" style={{ fontSize: "clamp(0.75rem, 1.4vw, 0.875rem)" }}>Total de Custo</CardTitle>
               <InfoTooltip
                 title="Total de Custo"
                 description="Soma de todas as saídas/despesas registadas para a obra, independentemente da origem."
@@ -101,7 +101,7 @@ export function GastosObraKPICards({
             <ArrowDownCircle className="h-4 w-4 text-red-600 shrink-0" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="font-bold text-red-600 break-all leading-tight" style={{ fontSize: "clamp(1rem, 2.4vw, 1.5rem)" }}>
               {isLoading ? "..." : formatCurrency(summary.total_custos)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">Todas as saídas</p>
@@ -109,9 +109,9 @@ export function GastosObraKPICards({
         </Card>
 
         <Card className={saldoPositivo ? "border-green-200 bg-green-50/50 dark:bg-green-950/20" : "border-red-200 bg-red-50/50 dark:bg-red-950/20"}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div className="flex items-center gap-1 min-w-0">
-              <CardTitle className="text-sm font-medium truncate">Saldo</CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <CardTitle className="font-medium break-words leading-tight min-w-0 flex-1" style={{ fontSize: "clamp(0.75rem, 1.4vw, 0.875rem)" }}>Saldo</CardTitle>
               <InfoTooltip
                 title="Saldo da Obra"
                 description="Saldo atual da obra: total de entradas (recebimentos) menos total de saídas (custos)."
@@ -121,7 +121,7 @@ export function GastosObraKPICards({
             <Wallet className={`h-4 w-4 ${saldoPositivo ? "text-green-600" : "text-red-600"} shrink-0`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${saldoPositivo ? "text-green-600" : "text-red-600"}`}>
+            <div className={`font-bold break-all leading-tight ${saldoPositivo ? "text-green-600" : "text-red-600"}`} style={{ fontSize: "clamp(1rem, 2.4vw, 1.5rem)" }}>
               {isLoading ? "..." : formatCurrency(summary.saldo_atual)}
             </div>
             <p className="text-xs text-muted-foreground mt-1">{summary.total_movimentos} movimentos</p>

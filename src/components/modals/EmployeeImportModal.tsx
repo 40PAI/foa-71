@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { FileUp, Download, CheckCircle2, AlertCircle } from "lucide-react";
+import { FileUp, CheckCircle2, AlertCircle } from "lucide-react";
 import { useEmployeeImport } from "@/hooks/useEmployeeImport";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useQueryClient } from "@tanstack/react-query";
+import { EmployeeTemplateDownloadButton } from "@/components/employees/EmployeeTemplateDownloadButton";
 
 export function EmployeeImportModal() {
   const [open, setOpen] = useState(false);
@@ -53,11 +54,6 @@ export function EmployeeImportModal() {
     reset();
   };
 
-  const handleDownloadTemplate = () => {
-    toast.info('Template será baixado em breve');
-    // TODO: Implementar download de template real
-  };
-
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
       setOpen(isOpen);
@@ -80,13 +76,10 @@ export function EmployeeImportModal() {
             <div>
               <p className="font-medium">Template de Importação</p>
               <p className="text-sm text-muted-foreground">
-                Baixe o template Excel com 2 abas: Colaboradores e Alocações
+                Baixe o template Excel com 3 abas: Colaboradores, Alocações e Instruções
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-              <Download className="h-4 w-4 mr-2" />
-              Baixar Template
-            </Button>
+            <EmployeeTemplateDownloadButton />
           </div>
 
           {/* File Upload */}
