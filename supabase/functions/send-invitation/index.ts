@@ -62,8 +62,7 @@ serve(async (req) => {
           email,
           nome,
           cargo,
-          invited_by: invitedBy || "Equipe FOA",
-          status: "pending",
+          invited_by_name: invitedBy || "Equipe FOA",
         })
         .select("token")
         .single();
