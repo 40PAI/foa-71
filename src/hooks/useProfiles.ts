@@ -95,10 +95,10 @@ export function useInviteUser() {
         description: "Usuário convidado com sucesso.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "Erro",
-        description: "Erro ao convidar usuário. Tente novamente.",
+        description: error?.message || "Erro ao convidar usuário. Tente novamente.",
         variant: "destructive",
       });
       console.error('Error inviting user:', error);
