@@ -91,8 +91,9 @@ serve(async (req) => {
       }
     } catch (e) {
       console.error("Invitations table insert failed", e);
+      const message = e instanceof Error ? e.message : "Erro ao criar convite";
       return new Response(
-        JSON.stringify({ success: false, error: e?.message || "Erro ao criar convite" }),
+        JSON.stringify({ success: false, error: message }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
