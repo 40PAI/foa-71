@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 type Incident = Tables<"incidentes">;
 type IncidentInsert = TablesInsert<"incidentes">;
@@ -54,6 +54,46 @@ export function useCreateIncident() {
       
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    },
+  });
+}
+
+export function useUpdateIncident() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (incident: TablesUpdate<"incidentes"> & { id: number }) => {
+      const { id, ...updates } = incident;
+      const { data, error } = await supabase
+        .from("incidentes")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["incidents"] });
+    },
+  });
+}
+
+export function useDeleteIncident() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from("incidentes")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["incidents"] });
