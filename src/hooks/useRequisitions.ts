@@ -49,6 +49,8 @@ export function useCreateRequisition() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["project-details"] });
     },
   });
 }
@@ -73,6 +75,8 @@ export function useUpdateRequisition() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["project-details"] });
     },
   });
 }
@@ -97,6 +101,8 @@ export function useDeleteRequisition() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-kpis"] });
+      queryClient.invalidateQueries({ queryKey: ["project-details"] });
     },
   });
 }
