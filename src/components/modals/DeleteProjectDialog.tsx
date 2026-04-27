@@ -16,6 +16,7 @@ interface DeleteProjectDialogProps {
   projectName: string;
   onConfirm: () => void;
   isDeleting: boolean;
+  errorMessage?: string | null;
 }
 
 export function DeleteProjectDialog({
@@ -24,6 +25,7 @@ export function DeleteProjectDialog({
   projectName,
   onConfirm,
   isDeleting,
+  errorMessage,
 }: DeleteProjectDialogProps) {
   const handleConfirm = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -65,6 +67,11 @@ export function DeleteProjectDialog({
               <AlertTriangle className="h-4 w-4" />
               Esta ação não pode ser desfeita.
             </p>
+            {errorMessage ? (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+                {errorMessage}
+              </div>
+            ) : null}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
