@@ -6,9 +6,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { IncidentForm } from "@/components/forms/IncidentForm";
-import { useCreateIncident } from "@/hooks/useIncidents";
+import { useCreateIncident, useUpdateIncident } from "@/hooks/useIncidents";
 import { useToast } from "@/hooks/use-toast";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 interface IncidentModalProps {
   open: boolean;
@@ -20,14 +20,22 @@ interface IncidentModalProps {
 export function IncidentModal({ open, onOpenChange, incident, mode }: IncidentModalProps) {
   const { toast } = useToast();
   const createIncident = useCreateIncident();
+  const updateIncident = useUpdateIncident();
+  const isSaving = createIncident.isPending || updateIncident.isPending;
 
-  const handleSubmit = async (data: TablesInsert<"incidentes">) => {
+  const handleSubmit = async (data: TablesInsert<"incidentes"> | (TablesUpdate<"incidentes"> & { id: number })) => {
     try {
       if (mode === 'create') {
-        await createIncident.mutateAsync(data);
+        await createIncident.mutateAsync(data as TablesInsert<"incidentes">);
         toast({
           title: "Incidente criado",
           description: "O incidente foi registado com sucesso.",
+        });
+      } else {
+        await updateIncident.mutateAsync(data as TablesUpdate<"incidentes"> & { id: number });
+        toast({
+          title: "Incidente atualizado",
+          description: "O incidente foi atualizado com sucesso.",
         });
       }
       onOpenChange(false);
@@ -53,7 +61,7 @@ export function IncidentModal({ open, onOpenChange, incident, mode }: IncidentMo
             incident={incident}
             onSubmit={handleSubmit}
             onCancel={() => onOpenChange(false)}
-            isLoading={createIncident.isPending}
+            isLoading={isSaving}
           />
         </div>
       </DialogContent>
