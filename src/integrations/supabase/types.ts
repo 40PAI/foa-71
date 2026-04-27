@@ -3504,6 +3504,7 @@ export type Database = {
         Returns: number
       }
       check_budget_thresholds: { Args: never; Returns: undefined }
+      criar_notificacoes_stock_critico: { Args: never; Returns: undefined }
       delete_project_safely: { Args: { project_id: number }; Returns: Json }
       detect_financial_discrepancies: {
         Args: { p_project_id: number }
