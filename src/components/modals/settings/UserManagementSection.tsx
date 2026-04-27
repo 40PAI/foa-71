@@ -56,12 +56,11 @@ export function UserManagementSection() {
     try {
       console.log('Enviando convite para:', inviteForm.email);
       
-      // Send invitation using the edge function
       const { data, error } = await supabase.functions.invoke('send-invitation', {
         body: {
           email: inviteForm.email,
           nome: inviteForm.nome,
-          cargo: roleLabels[inviteForm.cargo as keyof typeof roleLabels],
+          cargo: inviteForm.cargo,
           invitedBy: profile?.nome || 'Administrador'
         }
       });
