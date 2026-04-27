@@ -13,8 +13,9 @@ interface AuthContextType {
   profile: UserProfile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, nome: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, nome: string, redirectTo?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<UserProfile | null>;
   hasRole: (role: UserRole) => boolean;
   isDirector: () => boolean;
   isCoordinator: () => boolean;
@@ -42,6 +43,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const loadProfile = async (userId: string) => {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    setProfile(profile);
+    return profile;
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -50,14 +61,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Fetch user profile
           setTimeout(async () => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
-            setProfile(profile);
+            await loadProfile(session.user.id);
           }, 0);
         } else {
           setProfile(null);
@@ -86,8 +91,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, nome: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+  const signUp = async (email: string, password: string, nome: string, redirectTo?: string) => {
+    const redirectUrl = redirectTo || `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -115,6 +120,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Even if signOut fails, we've already cleared local state
       console.log('Sign out error (local state cleared):', error);
     }
+  };
+
+  const refreshProfile = async () => {
+    if (!user?.id) return null;
+    return loadProfile(user.id);
   };
 
   const hasRole = (role: UserRole): boolean => {
@@ -175,6 +185,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
+    refreshProfile,
     hasRole,
     isDirector,
     isCoordinator,
