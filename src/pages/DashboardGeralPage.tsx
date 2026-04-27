@@ -7,7 +7,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Wallet, CheckSquare, ShoppingCart, BarChart3, FileText, Building2, XCircle, Lightbulb, RefreshCw, TrendingUp, Package, PieChart } from "lucide-react";
 import { useDashboardGeral } from "@/hooks/useDashboardGeral";
-import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -39,7 +38,6 @@ function DashboardGeralContent() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const permissions = useUserPermissions();
-  useRealtimeDashboard(); // Atualização automática em tempo real
   const { data: dashboardData, isLoading, error, refetch } = useDashboardGeral();
 
   // Collapsible section states
