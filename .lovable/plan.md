@@ -1,106 +1,74 @@
+Plano de melhoria profunda da plataforma
 
+Objetivo: deixar a plataforma mais fluida, consistente e funcional, corrigindo os problemas reportados em UX/UI/layout, textos cortados, convite de utilizadores, criação de requisições e importação RH.
 
-# Plano: Correção dos 6 Problemas Identificados
+1. Auditoria e correção global de UX/UI/Layout
+- Normalizar dimensões dos cards KPI para não ficarem excessivamente grandes ou pequenos entre páginas.
+- Criar uma regra visual consistente para grids de KPIs: espaçamento equilibrado, altura mínima controlada e largura responsiva.
+- Remover padrões que cortam texto em cards importantes (`truncate`, `line-clamp`, `overflow-hidden`) onde o conteúdo deve aparecer por completo.
+- Aplicar tipografia dinâmica com `clamp()` e wrapping controlado para títulos, subtítulos e valores, evitando exemplos como “total de tar...”.
+- Ajustar componentes comuns afetados:
+  - `KPICard`
+  - `SmartKPICard`
+  - `KPIGrid`
+  - `ResponsiveKPICard`
+  - `MobileKPIGrid`
+  - páginas com KPIs e cards principais, começando por Dashboard, Tarefas, Compras, Projetos, Finanças, Armazém e RH.
 
-## 1. Lentidão a carregar módulos
+2. Melhorar suavidade e reduzir lag
+- Rever a configuração global do React Query para reduzir refetches desnecessários que podem estar a causar lag.
+- Ajustar invalidações realtime para invalidarem as query keys corretas. Foi detetado que `useRealtimeProjectMetrics` invalida `['requisitions', projectId]`, mas o hook atual usa `['requisitions']`; isto pode causar dados desatualizados e refetches pouco eficientes.
+- Reduzir logs repetitivos de background prefetch/realtime na consola.
+- Evitar efeitos visuais pesados em massa, como `hover:scale-105` em muitos cards, substituindo por transições mais subtis.
+- Procurar renderizações e queries duplicadas em páginas principais, especialmente Dashboard e Compras.
 
-**Causa**: `staleTime: 5min` + `refetchOnMount: false` + cache localStorage com 24h faz com que dados venham do disco; mas hooks pesados (`useRealtimeProjectMetrics`, `useFinancialIntegration`) re-subscrevem 8+ canais Realtime a cada navegação, bloqueando a thread.
+3. Corrigir convite de utilizadores
+- Substituir o fluxo antigo em `useInviteUser`, que tenta usar `supabase.auth.admin.createUser()` no frontend. Isto não funciona no browser e é inseguro.
+- Unificar todos os convites para usarem a Edge Function `send-invitation`.
+- Corrigir a Edge Function `send-invitation`:
+  - validar input com segurança;
+  - guardar o cargo técnico correto no enum `user_role`, e não o label visual “Diretor Técnico”;
+  - manter o nome legível para o email;
+  - não falhar silenciosamente quando a inserção do convite falhar;
+  - melhorar mensagens de erro para o utilizador.
+- Corrigir `RegisterInvitationPage`, porque atualmente lê `inv.invited_by`, mas a tabela usa também `invited_by_name`; isto pode mostrar dados incorretos.
+- Validar que o convite cria registo em `invitations` e gera URL com token.
 
-**Ações**:
-- Reduzir `staleTime` global para `60s` em `src/main.tsx` para refresh mais responsivo, mantendo `gcTime` em 10min.
-- Activar `refetchOnMount: 'always'` apenas para queries de dashboard/listas críticas (manter `false` para o resto via override).
-- Consolidar os 8 canais Realtime de `useRealtimeProjectMetrics.ts` num único canal `project-${id}-all` com filtros por tabela, eliminando overhead de múltiplas subscriptions.
-- Adicionar `Suspense` com skeletons em `Index.tsx` lazy routes para feedback visual imediato.
+4. Corrigir criação de nova requisição
+- Rever o submit do `RequisitionForm` para garantir que qualquer falha de validação aparece claramente ao utilizador.
+- Garantir que a mutation insere todos os campos necessários e que o formulário não fica aparentemente “sem acontecer nada”.
+- Corrigir query invalidation após criar/editar/eliminar requisições para atualizar imediatamente a lista e os KPIs.
+- Verificar campos sensíveis da tabela `requisicoes`: `valor` é bigint e alguns campos são enums; vou normalizar os dados enviados para evitar erro silencioso de tipo/enum.
+- Melhorar feedback visual no modal: loading, erro detalhado e sucesso antes de fechar.
 
-## 2. Mudanças não refletem entre computadores
+5. Corrigir RH: baixar template e importar Excel
+- Corrigir `EmployeeImportModal`: há um bug de estado assíncrono. Depois de `await importEmployees(previewData)`, o código verifica `importResult` antigo, então o modal pode não fechar nem mostrar sucesso corretamente.
+- Corrigir importação para invalidar as queries corretas (`employees`, `colaboradores`, alocações RH) após sucesso.
+- Melhorar o botão de baixar template para capturar erros do `XLSX.writeFile()` e mostrar toast de sucesso/erro.
+- Validar compatibilidade entre o template gerado e o parser:
+  - abas `Colaboradores` e `Alocações`;
+  - cabeçalhos como `Nº Funcional`, `Hora Saída`, `Tipo Horário`;
+  - tipos de dados esperados.
+- Melhorar as mensagens de erro de importação para explicar exatamente qual linha/campo está errado.
 
-**Causa**: Tabelas críticas (`projetos`, `colaboradores`, `tarefas_lean`, `gastos_obra`, `movimentos_financeiros`, `materiais_armazem`) podem não estar na publicação `supabase_realtime`. Apenas `requisicoes`, `financas` e `notificacoes` aparecem nas migrations. Sem isso, Realtime não dispara e dados ficam stale até refresh manual.
+6. Corrigir erro de notificações que aparece na rede
+- Foi detetado um erro 404 em `verificar_notificacoes_periodicas`: a função existe, mas chama `criar_notificacoes_stock_critico()`, que não existe.
+- Criar uma migração para repor ou corrigir a função `criar_notificacoes_stock_critico()` ou ajustar `verificar_notificacoes_periodicas()` para não chamar função inexistente.
+- Isto deve remover erros repetidos de rede e ajudar na sensação de fluidez.
 
-**Ações** (migration SQL):
-```sql
-ALTER TABLE projetos REPLICA IDENTITY FULL;
-ALTER TABLE tarefas_lean REPLICA IDENTITY FULL;
-ALTER TABLE colaboradores REPLICA IDENTITY FULL;
-ALTER TABLE gastos_obra REPLICA IDENTITY FULL;
-ALTER TABLE movimentos_financeiros REPLICA IDENTITY FULL;
-ALTER TABLE materiais_armazem REPLICA IDENTITY FULL;
-ALTER TABLE etapas_projeto REPLICA IDENTITY FULL;
+7. Verificações após implementação
+- Executar build/lint para apanhar erros TypeScript/React.
+- Testar fluxo de convite via Edge Function e logs.
+- Testar criação de requisição com projeto selecionado.
+- Testar download do template RH e importação com o próprio template gerado.
+- Revisar visualmente páginas críticas com foco em:
+  - textos completos;
+  - cards equilibrados;
+  - ausência de overflow horizontal desnecessário;
+  - comportamento mobile/tablet/desktop.
 
-ALTER PUBLICATION supabase_realtime ADD TABLE projetos, tarefas_lean,
-  colaboradores, gastos_obra, movimentos_financeiros,
-  materiais_armazem, etapas_projeto;
-```
-- Adicionar `refetchOnReconnect: true` (já está) e `refetchOnWindowFocus: true` para invalidação ao trocar de aba.
-
-## 3. Texto truncado nos cards (KPIs)
-
-**Causa**: `KPICard.tsx` (linha 37) e múltiplos KPI cards usam `truncate` no título, cortando "Total de Tarefas" → "Total de Tar...".
-
-**Ações**:
-- Substituir `truncate` por `break-words leading-tight` nos títulos de:
-  - `src/components/KPICard.tsx`
-  - `src/components/charts/SmartKPICard.tsx` (já usa `line-clamp-2`, manter)
-  - `src/components/financial/GastosObraKPICards.tsx` (5 ocorrências)
-  - `src/components/financial/FornecedoresKPICards.tsx`
-  - Demais `*KPICards.tsx` em `src/components/financial/`
-- Adicionar `text-xs` dinâmico via `clamp()` CSS quando o texto é longo: tamanho da fonte ajusta entre `0.7rem` e `0.875rem` consoante o contentor.
-- Aumentar `max-h-28` para `min-h-[6rem]` (auto-grow) para acomodar 2 linhas sem cortar valor numérico.
-
-## 4. Convidar utilizador não funciona
-
-**Causa provável**: edge function `send-invitation` chama Resend com domínio `noreply@waridu.plenuz.ao`. Se o domínio não estiver verificado em Resend, envio falha. Falta também criar registo em `public.invitations` (referenciado pela memória `mem://security/invitation-flow`) — atualmente apenas envia email sem token.
-
-**Ações**:
-- Verificar logs da edge function `send-invitation` para confirmar erro real.
-- Atualizar a function para:
-  1. Gerar token UUID seguro;
-  2. Inserir em `public.invitations` com `expires_at = now() + 7 days`;
-  3. Construir URL `register-invitation?token={uuid}` em vez de query params com email/role em texto claro;
-  4. Capturar e propagar erro Resend específico (domain not verified, rate limit) em vez de mensagem genérica.
-- Atualizar `RegisterInvitationPage.tsx` para validar token via query do Supabase antes de criar conta.
-- Caso domínio não esteja verificado, fallback para `onboarding@resend.dev` (apenas para testes).
-
-## 5. Nova requisição não acontece nada
-
-**Causa**: `<RequisitionModal projectId={selectedProjectId} />` — `selectedProjectId` é `number | null`. Quando é `null` (utilizador não escolheu projeto), o tipo TS aceita mas o form falha silenciosamente porque `id_projeto: projectId` envia `null` e o `INSERT` na BD viola NOT NULL ou RLS.
-
-**Ações**:
-- Em `ComprasPage.tsx`: desactivar visualmente o botão "Nova Requisição" quando `!selectedProjectId` e mostrar `<Alert>` "Selecione um projeto primeiro".
-- Em `RequisitionForm.tsx onSubmit`: validar `projectId` antes do submit, mostrar toast de erro se ausente.
-- Adicionar `console.error` detalhado no catch do `onSubmit` para expor erros Supabase (RLS, validation) no toast em vez de mensagem genérica "Erro ao salvar requisição".
-- Verificar políticas RLS na tabela `requisicoes` para garantir que o utilizador autenticado tem permissão `INSERT`.
-
-## 6. Template e import de RH não funcionam
-
-**Causa**: `EmployeeImportModal.tsx` linha 56-59: `handleDownloadTemplate` apenas mostra toast "Template será baixado em breve" — **não está implementado**. Não existe `EmployeeTemplateDownloadButton` no codebase.
-
-**Ações**:
-- Criar `src/components/employees/EmployeeTemplateDownloadButton.tsx` análogo a `TemplateDownloadButton` (projetos) gerando workbook XLSX com 2 abas:
-  - **Colaboradores**: Nome, Cargo, Categoria (Oficial/Auxiliar/Técnico Superior), Tipo (Fixo/Temporário), Custo/Hora, Número Funcional, Telefone, Email, Data Admissão.
-  - **Alocações**: Número Funcional, ID Projeto, Data Início, Data Fim, Horas Diárias.
-  - **Instruções**: regras de preenchimento.
-- Substituir `handleDownloadTemplate` no `EmployeeImportModal` por chamada real à geração do XLSX.
-- Verificar/corrigir `useEmployeeImport.parseExcelFile`: confirmar que o parser aceita o template gerado e que `EmployeeImportService.importEmployees` insere em `colaboradores` com RLS adequada.
-
-## Detalhes Técnicos
-
-| Arquivo | Mudança |
-|---------|---------|
-| `src/main.tsx` | `staleTime: 60_000`, `refetchOnWindowFocus: true` |
-| `src/hooks/useRealtimeProjectMetrics.ts` | Consolidar canais |
-| `supabase/migrations/<new>.sql` | `REPLICA IDENTITY FULL` + `ADD TABLE` para 7 tabelas |
-| `src/components/KPICard.tsx` | Remover `truncate`, usar `break-words` + clamp font-size |
-| `src/components/financial/*KPICards.tsx` | Idem |
-| `supabase/functions/send-invitation/index.ts` | Token UUID + registo `invitations` + erro detalhado |
-| `src/pages/RegisterInvitationPage.tsx` | Validar token |
-| `src/pages/ComprasPage.tsx` | Disable botão sem projeto + alert |
-| `src/components/forms/RequisitionForm.tsx` | Validação `projectId` + log de erros completo |
-| `src/components/employees/EmployeeTemplateDownloadButton.tsx` | **Novo** componente |
-| `src/components/modals/EmployeeImportModal.tsx` | Usar componente real de download |
-
-## Resultado
-
-- Performance: navegação 2-3× mais rápida; dados sincronizam entre máquinas em <2s via Realtime;
-- UX: nenhum texto cortado em KPIs, fontes auto-ajustáveis;
-- Funcionalidade: convites funcionam com tokens seguros, requisições e import de RH operacionais com mensagens de erro claras.
-
+Detalhes técnicos
+- Será necessária uma migração Supabase pequena para corrigir a função de notificações em falta.
+- Não vou mexer diretamente em `src/integrations/supabase/types.ts`.
+- Não vou colocar roles em `profiles`; onde for preciso verificar permissões, será mantida a abordagem segura com `user_roles`/funções server-side já existente.
+- A plataforma está ligada ao Supabase externo `ujhvdmvrhewwelxdducw`; todas as alterações de backend serão feitas via migração/Edge Function.
