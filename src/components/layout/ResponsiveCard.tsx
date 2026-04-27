@@ -70,7 +70,7 @@ export function ResponsiveCard({
             {subtitle && (
               <p className={cn(
                 responsiveUtils.text.subtitle,
-                "line-clamp-2"
+                "break-words hyphens-auto leading-tight"
               )}>
                 {subtitle}
               </p>
@@ -122,7 +122,7 @@ export function ResponsiveKPICard({
       <CardHeader className="p-2 sm:p-3 lg:p-4 pb-1 sm:pb-2">
         <div className="flex items-start justify-between min-w-0 gap-1 sm:gap-2">
           <CardTitle className={cn(
-            "text-xs sm:text-sm font-medium leading-tight truncate flex-1",
+            "text-xs sm:text-sm font-medium leading-tight break-words hyphens-auto flex-1",
             "min-w-0"
           )} title={title}>
             {title}
@@ -150,7 +150,7 @@ export function ResponsiveKPICard({
         </div>
         {subtitle && (
           <p className={cn(
-            "text-xs text-muted-foreground line-clamp-2 leading-tight"
+            "text-xs text-muted-foreground break-words hyphens-auto leading-tight"
           )} title={subtitle}>
             {subtitle}
           </p>
