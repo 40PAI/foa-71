@@ -109,14 +109,26 @@ export function RegisterInvitationPage() {
     setIsLoading(true);
     try {
       const redirectTo = `${window.location.origin}/register-invitation?token=${encodeURIComponent(token)}`;
-      const { error } = await signUp(invitationData.email, formData.password, formData.nome, redirectTo);
+      const { data, error } = await signUp(invitationData.email, formData.password, formData.nome, redirectTo);
       if (error) throw error;
 
-      if (user) await acceptExistingUserInvitation();
+      const activeUser = user || data.user;
+      const activeSession = data.session;
+
+      if (activeUser && activeSession) {
+        const { data: accepted, error: acceptError } = await supabase.rpc("accept_invitation" as any, { p_token: token });
+        if (acceptError || !accepted?.success) {
+          throw new Error(accepted?.error || acceptError?.message || "Erro ao ativar convite.");
+        }
+        await refreshProfile();
+        toast({ title: "Conta ativada", description: "O seu acesso foi criado com sucesso." });
+        navigate("/");
+        return;
+      }
 
       toast({
         title: "Conta criada com sucesso",
-        description: "Se necessário, confirme o email e depois faça login na plataforma.",
+        description: "Abra o email recebido para confirmar o acesso e concluir a ativação.",
       });
       navigate("/auth", { state: { email: invitationData.email } });
     } catch (error: any) {
