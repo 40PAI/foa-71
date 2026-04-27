@@ -6,18 +6,21 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Plus, Edit, Trash2, AlertTriangle, Eye } from "lucide-react";
 import { IncidentModal } from "@/components/modals/IncidentModal";
-import { useIncidents } from "@/hooks/useIncidents";
+import { useDeleteIncident, useIncidents } from "@/hooks/useIncidents";
 import { useProjects } from "@/hooks/useProjects";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { ProjectGuard } from "@/components/ProjectGuard";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useProjectContext } from "@/contexts/ProjectContext";
+import { useToast } from "@/hooks/use-toast";
 
 export function SegurancaPage() {
   const [isIncidentModalOpen, setIsIncidentModalOpen] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const { selectedProjectId } = useProjectContext();
+  const { toast } = useToast();
+  const deleteIncident = useDeleteIncident();
   
   const { data: incidents, isLoading, error } = useIncidents(selectedProjectId || undefined);
   const { data: projects } = useProjects();
@@ -25,7 +28,9 @@ export function SegurancaPage() {
   const filteredIncidents = incidents || [];
 
   const handleViewIncident = (incident: any) => {
-    console.log('Visualizar incidente:', incident);
+    setSelectedIncident(incident);
+    setModalMode('edit');
+    setIsIncidentModalOpen(true);
   };
 
   const handleEditIncident = (incident: any) => {
@@ -34,8 +39,15 @@ export function SegurancaPage() {
     setIsIncidentModalOpen(true);
   };
 
-  const handleDeleteIncident = (incident: any) => {
-    console.log('Eliminar incidente:', incident);
+  const handleDeleteIncident = async (incident: any) => {
+    if (!window.confirm("Tem a certeza que deseja eliminar este registo de segurança?")) return;
+
+    try {
+      await deleteIncident.mutateAsync(incident.id);
+      toast({ title: "Registo eliminado", description: "O registo foi eliminado com sucesso." });
+    } catch (error) {
+      toast({ title: "Erro", description: "Não foi possível eliminar o registo.", variant: "destructive" });
+    }
   };
 
   const handleNewIncident = () => {
