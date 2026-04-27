@@ -46,6 +46,7 @@ export function useRealtimeProjectMetrics(projectId?: number) {
         "postgres_changes",
         { event: "*", schema: "public", table: "requisicoes", filter: `id_projeto=eq.${projectId}` },
         () => {
+          queryClient.invalidateQueries({ queryKey: ["requisitions"] });
           queryClient.invalidateQueries({ queryKey: ["requisitions", projectId] });
           invalidateProject();
         }

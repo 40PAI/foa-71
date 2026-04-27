@@ -79,30 +79,14 @@ export function useInviteUser() {
 
   return useMutation({
     mutationFn: async ({ email, nome, cargo }: { email: string; nome: string; cargo: string }) => {
-      // Create the user account via admin API
-      const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password: 'temp123456', // Temporary password - user will be asked to change
-        email_confirm: true,
-        user_metadata: {
-          nome
-        }
+      const { data, error } = await supabase.functions.invoke('send-invitation', {
+        body: { email, nome, cargo },
       });
 
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Não foi possível enviar o convite.');
 
-      // Update the profile with the correct role
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ 
-          cargo: cargo as any,
-          nome 
-        })
-        .eq('id', data.user.id);
-
-      if (profileError) throw profileError;
-
-      return data.user;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profiles'] });

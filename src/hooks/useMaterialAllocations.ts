@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesUpdate } from "@/integrations/supabase/types";
 
 export interface MaterialAllocationWithDetails {
   id: string;
@@ -113,7 +114,7 @@ export function useUpdateAllocation() {
       quantidade_consumida?: number;
       quantidade_devolvida?: number;
     }) => {
-      const updates: Record<string, number> = {};
+      const updates: TablesUpdate<"materiais_alocados"> = {};
       if (quantidade_consumida !== undefined) updates.quantidade_consumida = quantidade_consumida;
       if (quantidade_devolvida !== undefined) updates.quantidade_devolvida = quantidade_devolvida;
 

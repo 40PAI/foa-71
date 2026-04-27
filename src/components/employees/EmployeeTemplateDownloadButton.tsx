@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import * as XLSX from "xlsx";
+import { toast } from "sonner";
 
 interface EmployeeTemplateDownloadButtonProps {
   variant?: "outline" | "default";
@@ -15,6 +16,7 @@ export function EmployeeTemplateDownloadButton({
   label = "Baixar Template",
 }: EmployeeTemplateDownloadButtonProps) {
   const generateTemplate = () => {
+    try {
     const wb = XLSX.utils.book_new();
 
     // Sheet 1: Colaboradores
@@ -129,6 +131,12 @@ export function EmployeeTemplateDownloadButton({
     XLSX.utils.book_append_sheet(wb, ws3, "Instruções");
 
     XLSX.writeFile(wb, "template-colaboradores.xlsx");
+      toast.success("Template baixado com sucesso");
+    } catch (error: any) {
+      toast.error("Erro ao baixar template", {
+        description: error?.message || "Não foi possível gerar o ficheiro Excel.",
+      });
+    }
   };
 
   return (

@@ -17,6 +17,17 @@ interface InvitationRequest {
 }
 
 const APP_URL = "https://foa-gest.plenuz.ao";
+const roleLabels: Record<string, string> = {
+  diretor_tecnico: "Diretor Técnico",
+  encarregado_obra: "Encarregado de Obra",
+  assistente_compras: "Assistente de Compras",
+  departamento_hst: "Departamento de HST",
+  coordenacao_direcao: "Coordenação/Direção",
+};
+
+const labelToRole = Object.fromEntries(
+  Object.entries(roleLabels).map(([key, label]) => [label, key]),
+) as Record<string, string>;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -42,11 +53,13 @@ serve(async (req) => {
     const resend = new Resend(RESEND_API_KEY);
 
     const body: InvitationRequest = await req.json();
-    const { email, nome, cargo, invitedBy } = body;
+    const { email, nome, invitedBy } = body;
+    const cargo = labelToRole[body.cargo] || body.cargo;
+    const cargoLabel = roleLabels[cargo] || body.cargo;
 
-    if (!email || !nome || !cargo) {
+    if (!email || !nome || !cargo || !roleLabels[cargo]) {
       return new Response(
-        JSON.stringify({ success: false, error: "Campos obrigatórios em falta (email, nome, cargo)" }),
+        JSON.stringify({ success: false, error: "Campos obrigatórios ou cargo inválido (email, nome, cargo)" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -68,12 +81,21 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        console.warn("Could not insert invitation row (continuing without token):", insertError.message);
+        console.error("Could not insert invitation row:", insertError.message);
+        return new Response(
+          JSON.stringify({ success: false, error: insertError.message }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       } else {
         inviteToken = invite?.token ?? null;
       }
     } catch (e) {
-      console.warn("Invitations table not available, falling back to legacy URL", e);
+      console.error("Invitations table insert failed", e);
+      const message = e instanceof Error ? e.message : "Erro ao criar convite";
+      return new Response(
+        JSON.stringify({ success: false, error: message }),
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
     }
 
     // 2) Build registration URL — token-based when available, fallback to legacy params
@@ -95,7 +117,7 @@ serve(async (req) => {
             <h2>Olá ${nome}!</h2>
             <p>Você foi convidado(a) por <strong>${invitedBy || "Equipe FOA"}</strong> para fazer parte da equipe na Plataforma FOA SmartSite.</p>
             <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; margin: 15px 0;">
-              <p><strong>Cargo atribuído:</strong> ${cargo}</p>
+              <p><strong>Cargo atribuído:</strong> ${cargoLabel}</p>
               <p><strong>Email de acesso:</strong> ${email}</p>
             </div>
             <p>Para criar sua conta e acessar a plataforma, clique no link abaixo:</p>

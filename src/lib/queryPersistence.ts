@@ -81,9 +81,6 @@ export function loadQueryCache(queryClient: QueryClient) {
       }
     });
 
-    if (restoredCount > 0) {
-      console.log(`✅ Query cache restored INSTANTLY: ${restoredCount} queries from localStorage`);
-    }
   } catch (error) {
     console.warn("Failed to load query cache:", error);
     localStorage.removeItem(CACHE_KEY);
