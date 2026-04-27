@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
@@ -38,6 +39,7 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -113,6 +115,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null);
       setSession(null);
       setProfile(null);
+      queryClient.clear();
+      localStorage.removeItem("FOA_QUERY_CACHE");
       
       // Attempt to sign out from Supabase
       await supabase.auth.signOut();
