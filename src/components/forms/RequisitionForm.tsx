@@ -283,8 +283,9 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         descricao_tecnica: data.descricao_tecnica || null,
         quantidade_requisitada: data.quantidade_requisitada,
         unidade_medida: data.unidade_medida,
-        valor_unitario: tipoRequisicao === "alocamento" ? 0 : data.valor_unitario,
-        valor: tipoRequisicao === "alocamento" ? 0 : valorTotalState,
+        valor_unitario: tipoRequisicao === "alocamento" ? 0 : Number(data.valor_unitario || 0),
+        valor: tipoRequisicao === "alocamento" ? 0 : Math.round(Number(valorTotalState || 0)),
+        valor_liquido: tipoRequisicao === "alocamento" ? 0 : Number(valorTotalState || 0),
         percentual_imposto: data.percentual_imposto || 0,
         valor_imposto: data.valor_imposto || 0,
         percentual_desconto: data.percentual_desconto || 0,
@@ -297,6 +298,7 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
         tipo_requisicao: tipoRequisicao,
         material_armazem_id: tipoRequisicao === "alocamento" ? selectedMaterialArmazem : null,
         projeto_destino_id: tipoRequisicao === "alocamento" ? projetoDestinoId : null,
+        data_limite: new Date(Date.now() + data.prazo_limite_dias * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       };
 
       if (requisition) {
