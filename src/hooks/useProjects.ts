@@ -10,9 +10,10 @@ type ProjectUpdate = TablesUpdate<"projetos">;
 export function useProjects() {
   return useQuery({
     queryKey: ["projects"],
-    placeholderData: (previousData) => previousData,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("projetos")
@@ -182,6 +183,12 @@ export function useDeleteProject() {
       }
     },
     onSuccess: (_data, id) => {
+      queryClient.setQueryData<Project[] | undefined>(["projects"], (old) =>
+        old?.filter((project) => project.id !== id)
+      );
+      queryClient.setQueryData<Project[] | undefined>(["projetos"], (old) =>
+        old?.filter((project) => project.id !== id)
+      );
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       queryClient.invalidateQueries({ queryKey: ["projetos"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-geral"] });
