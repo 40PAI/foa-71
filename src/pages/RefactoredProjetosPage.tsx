@@ -38,6 +38,7 @@ export function RefactoredProjetosPage() {
     id: number;
     nome: string;
   } | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"todos" | ProjectStatus>("todos");
 
   // Contagens para tabs
@@ -184,18 +185,22 @@ export function RefactoredProjetosPage() {
   };
   const confirmDelete = async () => {
     if (!projectToDelete) return;
+    setDeleteError(null);
     try {
       await deleteProjectMutation.mutateAsync(projectToDelete.id);
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
+      setDeleteError(null);
       toast({
         title: "Sucesso",
         description: `Projeto "${projectToDelete.nome}" eliminado com sucesso`
       });
     } catch (error: any) {
+      const message = error.message || "Erro ao eliminar projeto. Tente novamente.";
+      setDeleteError(message);
       toast({
         title: "Erro ao Eliminar Projeto",
-        description: error.message || "Erro ao eliminar projeto. Tente novamente.",
+        description: message,
         variant: "destructive"
       });
     }
@@ -203,6 +208,7 @@ export function RefactoredProjetosPage() {
   const cancelDelete = () => {
     setDeleteDialogOpen(false);
     setProjectToDelete(null);
+    setDeleteError(null);
   };
   if (projectsLoading || kpisLoading) {
     return <LoadingSpinner />;
@@ -232,7 +238,7 @@ export function RefactoredProjetosPage() {
         {/* Lista de Projetos Mobile */}
         <MobileProjectsList projects={filteredProjects} kpis={kpis} onDelete={openDeleteDialog} onComplete={handleComplete} onCancel={handleCancel} isUpdating={updateProject.isPending} />
 
-        <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} />
+        <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} errorMessage={deleteError} />
       </div>;
   }
 
@@ -260,6 +266,6 @@ export function RefactoredProjetosPage() {
 
       
 
-      <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} />
+      <DeleteProjectDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen} projectName={projectToDelete?.nome || ""} onConfirm={confirmDelete} isDeleting={deleteProjectMutation.isPending} errorMessage={deleteError} />
     </div>;
 }
