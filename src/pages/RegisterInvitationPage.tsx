@@ -65,8 +65,18 @@ export function RegisterInvitationPage() {
 
   const acceptExistingUserInvitation = async () => {
     if (!token || !user) return;
+    if (formData.password !== formData.confirmPassword) {
+      toast({ title: "Erro", description: "As senhas não coincidem", variant: "destructive" });
+      return;
+    }
+    if (formData.password.length < 6) {
+      toast({ title: "Erro", description: "A senha deve ter pelo menos 6 caracteres", variant: "destructive" });
+      return;
+    }
     setIsLoading(true);
     try {
+      const { error: passwordError } = await supabase.auth.updateUser({ password: formData.password });
+      if (passwordError) throw passwordError;
       const { data, error } = await supabase.rpc("accept_invitation" as any, { p_token: token });
       if (error || !data?.success) throw new Error(data?.error || error?.message || "Erro ao aceitar convite.");
       await refreshProfile();
@@ -165,8 +175,18 @@ export function RegisterInvitationPage() {
           {user ? (
             <div className="space-y-4 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-primary" />
-              <p className="text-sm text-muted-foreground">Está autenticado. Aceite o convite para ativar o acesso nesta conta.</p>
-              <Button className="w-full" onClick={acceptExistingUserInvitation}>Aceitar Convite</Button>
+              <p className="text-sm text-muted-foreground">Defina a sua senha e aceite o convite para ativar o acesso nesta conta.</p>
+              <div className="text-left space-y-4">
+                <div>
+                  <Label htmlFor="existing-password">Senha</Label>
+                  <Input id="existing-password" type="password" value={formData.password} onChange={(e) => setFormData((p) => ({ ...p, password: e.target.value }))} required minLength={6} />
+                </div>
+                <div>
+                  <Label htmlFor="existing-confirm-password">Confirmar Senha</Label>
+                  <Input id="existing-confirm-password" type="password" value={formData.confirmPassword} onChange={(e) => setFormData((p) => ({ ...p, confirmPassword: e.target.value }))} required minLength={6} />
+                </div>
+              </div>
+              <Button className="w-full" onClick={acceptExistingUserInvitation}>Definir Senha e Aceitar Convite</Button>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
