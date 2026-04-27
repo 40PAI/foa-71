@@ -385,7 +385,17 @@ export function RequisitionForm({ projectId, requisition, onSuccess }: Requisiti
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, (errors) => {
+          const firstError = Object.values(errors)[0]?.message;
+          toast({
+            title: "Campos obrigatórios em falta",
+            description: typeof firstError === "string" ? firstError : "Revise os campos destacados antes de criar a requisição.",
+            variant: "destructive",
+          });
+        })}
+        className="space-y-6"
+      >
         {/* Seção 0: Tipo de Requisição */}
         <RequisitionTypeSelector
           value={tipoRequisicao}
