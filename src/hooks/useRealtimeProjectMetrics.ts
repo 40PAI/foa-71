@@ -13,6 +13,8 @@ export function useRealtimeProjectMetrics(projectId?: number) {
   useEffect(() => {
     if (!projectId) return;
 
+    const channelName = `project-${projectId}-all-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     const invalidateProject = () => {
       queryClient.invalidateQueries({ queryKey: ["project", projectId] });
       queryClient.invalidateQueries({ queryKey: ["project-details", projectId] });
@@ -20,7 +22,7 @@ export function useRealtimeProjectMetrics(projectId?: number) {
     };
 
     const channel = supabase
-      .channel(`project-${projectId}-all`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "projetos", filter: `id=eq.${projectId}` },
