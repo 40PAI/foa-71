@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MobileLayout } from "@/components/layout/MobileLayout";
 import { FOAAssistant } from "@/components/chat/FOAAssistant";
+import { useRealtimeDashboard } from "@/hooks/useRealtimeDashboard";
 
 const DesktopLayout = () => {
   const { state } = useSidebar();
@@ -30,6 +31,7 @@ const DesktopLayout = () => {
 
 const Index = () => {
   const isMobile = useIsMobile();
+  useRealtimeDashboard();
 
   // Mobile: Use dedicated mobile layout with bottom navigation
   if (isMobile) {

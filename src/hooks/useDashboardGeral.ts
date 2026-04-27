@@ -127,9 +127,10 @@ export function useDashboardGeral() {
 
   return useQuery({
     queryKey: ["dashboard-geral", user?.id],
-    placeholderData: (previousData) => previousData,
-    staleTime: 2 * 60 * 1000, // Reduzido para 2 minutos
-    gcTime: 15 * 60 * 1000, // Reduzido para 15 minutos
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       if (!user?.id) {
         throw new Error("Usuário não autenticado");
