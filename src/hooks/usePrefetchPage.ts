@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useProjectContext } from "@/contexts/ProjectContext";
+import { useProjectContextSafe } from "@/contexts/ProjectContext";
 
 // ============================================
 // PRELOAD JS CHUNKS (carrega código antes do clique)
@@ -33,7 +33,8 @@ export function preloadAllCriticalChunks() {
  */
 export function usePrefetchPage() {
   const queryClient = useQueryClient();
-  const { selectedProjectId } = useProjectContext();
+  const projectContext = useProjectContextSafe();
+  const selectedProjectId = projectContext?.selectedProjectId;
 
   const prefetchDashboard = () => {
     // Preload código JS
