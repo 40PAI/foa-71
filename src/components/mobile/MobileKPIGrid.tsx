@@ -69,12 +69,12 @@ export function MobileKPIGrid({ items, isLoading, columns = 2, className }: Mobi
         const color = item.color || "default";
         
         return (
-          <Card key={index} className="overflow-hidden">
+          <Card key={index} className="min-w-0 h-full">
             <CardContent className="p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide truncate">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-normal break-words leading-tight">
                       {item.label}
                     </p>
                     {item.info && (
@@ -88,7 +88,7 @@ export function MobileKPIGrid({ items, isLoading, columns = 2, className }: Mobi
                     {item.value}
                   </p>
                   {item.subtitle && (
-                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                    <p className="text-[10px] text-muted-foreground break-words leading-tight mt-0.5">
                       {item.subtitle}
                     </p>
                   )}
