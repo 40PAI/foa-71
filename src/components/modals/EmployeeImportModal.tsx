@@ -34,12 +34,14 @@ export function EmployeeImportModal() {
 
   const handleImport = async () => {
     if (previewData) {
-      await importEmployees(previewData);
-      if (importResult?.success) {
+      const result = await importEmployees(previewData);
+      if (result.success) {
         queryClient.invalidateQueries({ queryKey: ['employees'] });
+        queryClient.invalidateQueries({ queryKey: ['colaboradores'] });
+        queryClient.invalidateQueries({ queryKey: ['employees-by-project'] });
         const msg = importResult.alocacoesCount 
-          ? `${importResult.colaboradoresCount} colaboradores e ${importResult.alocacoesCount} alocações importados!`
-          : `${importResult.colaboradoresCount} colaboradores importados!`;
+          ? `${result.colaboradoresCount} colaboradores e ${result.alocacoesCount} alocações importados!`
+          : `${result.colaboradoresCount} colaboradores importados!`;
         toast.success(msg);
         setTimeout(() => {
           setOpen(false);
