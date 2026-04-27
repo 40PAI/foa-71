@@ -20,7 +20,7 @@ function App() {
   return (
     <Routes>
       <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
-      <Route path="/register-invitation" element={!user ? <RegisterInvitationPage /> : <Navigate to="/" />} />
+      <Route path="/register-invitation" element={<RegisterInvitationPage />} />
       <Route path="/*" element={user ? <Index /> : <Navigate to="/auth" />} />
     </Routes>
   );

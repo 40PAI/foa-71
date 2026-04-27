@@ -3379,6 +3379,7 @@ export type Database = {
       }
     }
     Functions: {
+      accept_invitation: { Args: { p_token: string }; Returns: Json }
       auto_categorize_expense: {
         Args: { descricao_texto: string }
         Returns: string
@@ -3785,6 +3786,18 @@ export type Database = {
       update_project_metrics_with_ppc: {
         Args: { project_id: number }
         Returns: undefined
+      }
+      validate_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          cargo: Database["public"]["Enums"]["app_role"]
+          email: string
+          expires_at: string
+          invited_by_name: string
+          nome: string
+          status: string
+          used_at: string
+        }[]
       }
       validate_project_spending_limit: {
         Args: { new_amount: number; project_id: number }

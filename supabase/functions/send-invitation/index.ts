@@ -1,22 +1,14 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface InvitationRequest {
-  email: string;
-  nome: string;
-  cargo: string;
-  invitedBy: string;
-}
-
 const APP_URL = "https://foa-gest.plenuz.ao";
+
 const roleLabels: Record<string, string> = {
   diretor_tecnico: "Diretor Técnico",
   encarregado_obra: "Encarregado de Obra",
@@ -29,153 +21,112 @@ const labelToRole = Object.fromEntries(
   Object.entries(roleLabels).map(([key, label]) => [label, key]),
 ) as Record<string, string>;
 
+const json = (body: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error:
-            "RESEND_API_KEY não configurada. Adicione a chave em Cloud → Secrets antes de enviar convites.",
-        }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const authHeader = req.headers.get("Authorization") || "";
+
+    if (!authHeader) {
+      return json({ success: false, error: "Sessão inválida. Faça login novamente." }, 401);
     }
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const resend = new Resend(RESEND_API_KEY);
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const adminClient = createClient(supabaseUrl, serviceKey);
 
-    const body: InvitationRequest = await req.json();
-    const { email, nome, invitedBy } = body;
-    const cargo = labelToRole[body.cargo] || body.cargo;
-    const cargoLabel = roleLabels[cargo] || body.cargo;
-
-    if (!email || !nome || !cargo || !roleLabels[cargo]) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Campos obrigatórios ou cargo inválido (email, nome, cargo)" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    const { data: userData, error: userError } = await callerClient.auth.getUser();
+    if (userError || !userData.user) {
+      return json({ success: false, error: "Sessão inválida. Faça login novamente." }, 401);
     }
 
-    console.log("Creating invitation for:", email, "role:", cargo);
+    const { data: profile } = await callerClient
+      .from("profiles")
+      .select("nome")
+      .eq("id", userData.user.id)
+      .maybeSingle();
 
-    // 1) Try to record invitation token in DB (best-effort).
-    let inviteToken: string | null = null;
-    try {
-      const { data: invite, error: insertError } = await supabase
-        .from("invitations")
-        .insert({
-          email,
-          nome,
-          cargo,
-          invited_by_name: invitedBy || "Equipe FOA",
-        })
-        .select("token")
-        .single();
-
-      if (insertError) {
-        console.error("Could not insert invitation row:", insertError.message);
-        return new Response(
-          JSON.stringify({ success: false, error: insertError.message }),
-          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      } else {
-        inviteToken = invite?.token ?? null;
-      }
-    } catch (e) {
-      console.error("Invitations table insert failed", e);
-      const message = e instanceof Error ? e.message : "Erro ao criar convite";
-      return new Response(
-        JSON.stringify({ success: false, error: message }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    // 2) Build registration URL — token-based when available, fallback to legacy params
-    const registrationUrl = inviteToken
-      ? `${APP_URL}/register-invitation?token=${encodeURIComponent(inviteToken)}`
-      : `${APP_URL}/register-invitation?email=${encodeURIComponent(email)}&role=${encodeURIComponent(cargo)}&invitedBy=${encodeURIComponent(invitedBy)}`;
-
-    // 3) Send email
-    const fromAddress = "Equipe FOA <onboarding@resend.dev>";
-
-    const emailResponse = await resend.emails.send({
-      from: fromAddress,
-      to: [email],
-      subject: "Convite para acessar a Plataforma FOA SmartSite",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #2563eb; text-align: center;">Convite para Plataforma FOA SmartSite</h1>
-          <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h2>Olá ${nome}!</h2>
-            <p>Você foi convidado(a) por <strong>${invitedBy || "Equipe FOA"}</strong> para fazer parte da equipe na Plataforma FOA SmartSite.</p>
-            <div style="background-color: #e0f2fe; padding: 15px; border-radius: 6px; margin: 15px 0;">
-              <p><strong>Cargo atribuído:</strong> ${cargoLabel}</p>
-              <p><strong>Email de acesso:</strong> ${email}</p>
-            </div>
-            <p>Para criar sua conta e acessar a plataforma, clique no link abaixo:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${registrationUrl}"
-                 style="background-color: #2563eb; color: white; padding: 12px 24px;
-                        text-decoration: none; border-radius: 6px; display: inline-block;">
-                Criar Conta e Acessar Plataforma
-              </a>
-            </div>
-            <p style="font-size: 12px; color: #64748b;">Este convite expira em 7 dias.</p>
-          </div>
-          <div style="text-align: center; color: #64748b; font-size: 14px; margin-top: 30px;">
-            <p>Se você não esperava este convite, pode ignorar este email.</p>
-            <p>© 2025 FOA SmartSite</p>
-          </div>
-        </div>
-      `,
+    const { data: canInvite, error: roleError } = await callerClient.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "diretor_tecnico",
+    });
+    const { data: canInviteAsCoordinator, error: coordinatorRoleError } = await callerClient.rpc("has_role", {
+      _user_id: userData.user.id,
+      _role: "coordenacao_direcao",
     });
 
-    if ((emailResponse as any)?.error) {
-      const err = (emailResponse as any).error;
-      console.error("Resend error:", err);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: err?.message || "Falha ao enviar email pelo Resend",
-          details: err,
-        }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+    if (roleError || coordinatorRoleError || (!canInvite && !canInviteAsCoordinator)) {
+      return json({ success: false, error: "Sem permissão para convidar utilizadores." }, 403);
     }
 
-    console.log("Email sent:", emailResponse);
+    const body = await req.json();
+    const email = String(body.email || "").trim().toLowerCase();
+    const nome = String(body.nome || "").trim();
+    const cargo = labelToRole[String(body.cargo || "")] || String(body.cargo || "");
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Convite enviado com sucesso!",
-        emailId: (emailResponse as any)?.data?.id,
-        token: inviteToken,
-      }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-  } catch (error: any) {
-    console.error("Error in send-invitation function:", error);
-    let errorMessage = error?.message || "Erro interno ao enviar convite";
-    if (errorMessage?.includes?.("API key")) {
-      errorMessage = "Chave do Resend inválida. Verifique RESEND_API_KEY.";
-    } else if (errorMessage?.includes?.("domain")) {
-      errorMessage =
-        "Domínio do remetente não verificado no Resend. Verifique seu domínio em resend.com/domains ou use o remetente de teste.";
-    } else if (errorMessage?.includes?.("rate limit")) {
-      errorMessage = "Limite de envios atingido. Tente novamente em alguns minutos.";
+    if (!email || !nome || !roleLabels[cargo]) {
+      return json({ success: false, error: "Preencha nome, email e cargo válido." }, 400);
     }
-    return new Response(
-      JSON.stringify({ success: false, error: errorMessage, details: error?.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+
+    const invitedByName = String(body.invitedBy || profile?.nome || "Administrador");
+
+    await adminClient
+      .from("invitations")
+      .update({ used_at: new Date().toISOString() })
+      .eq("email", email)
+      .is("used_at", null);
+
+    const { data: invitation, error: inviteError } = await adminClient
+      .from("invitations")
+      .insert({
+        email,
+        nome,
+        cargo,
+        invited_by: userData.user.id,
+        invited_by_name: invitedByName,
+      })
+      .select("token")
+      .single();
+
+    if (inviteError || !invitation?.token) {
+      return json({ success: false, error: inviteError?.message || "Erro ao criar convite." }, 500);
+    }
+
+    const registrationUrl = `${APP_URL}/register-invitation?token=${encodeURIComponent(invitation.token)}`;
+    const redirectTo = `${APP_URL}/register-invitation?token=${encodeURIComponent(invitation.token)}`;
+    const { error: authInviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+      redirectTo,
+      data: { nome, cargo, invitation_token: invitation.token },
+    });
+
+    if (authInviteError) {
+      const alreadyRegistered = authInviteError.message?.toLowerCase().includes("already") ||
+        authInviteError.message?.toLowerCase().includes("registered");
+      if (!alreadyRegistered) {
+        return json({ success: false, error: authInviteError.message }, 500);
+      }
+    }
+
+    return json({
+      success: true,
+      message: authInviteError
+        ? "Convite criado. O utilizador já existe; envie-lhe o link de registo ou peça para fazer login."
+        : "Convite enviado com sucesso.",
+      token: invitation.token,
+      registrationUrl,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro interno ao enviar convite.";
+    return json({ success: false, error: message }, 500);
   }
 });
