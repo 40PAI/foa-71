@@ -193,8 +193,6 @@ export function RefactoredProjetosPage() {
         description: `Projeto "${projectToDelete.nome}" eliminado com sucesso`
       });
     } catch (error: any) {
-      setDeleteDialogOpen(false);
-      setProjectToDelete(null);
       toast({
         title: "Erro ao Eliminar Projeto",
         description: error.message || "Erro ao eliminar projeto. Tente novamente.",

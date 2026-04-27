@@ -181,11 +181,21 @@ export function useDeleteProject() {
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["projetos"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-geral"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-kpis"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       queryClient.invalidateQueries({ queryKey: ["finances"] });
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["requisitions"] });
+      queryClient.invalidateQueries({ queryKey: ["materials-armazem"] });
+      queryClient.removeQueries({ queryKey: ["project", id] });
+      queryClient.removeQueries({ queryKey: ["project-details", id] });
+      queryClient.removeQueries({ queryKey: ["project-metrics", id] });
+      queryClient.removeQueries({ queryKey: ["project-chart-data", id] });
+      queryClient.removeQueries({ queryKey: ["project-stages", id] });
     },
   });
 }
