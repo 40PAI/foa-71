@@ -77,7 +77,7 @@ export function RegisterInvitationPage() {
             email: inv.email,
             nome: inv.nome,
             cargo: inv.cargo,
-            invitedBy: inv.invited_by,
+            invitedBy: inv.invited_by_name || "Equipe FOA",
             token: inv.token,
           });
           setFormData((prev) => ({ ...prev, nome: inv.nome }));
@@ -132,7 +132,7 @@ export function RegisterInvitationPage() {
         try {
           await supabase
             .from("invitations" as any)
-            .update({ status: "accepted", accepted_at: new Date().toISOString() })
+            .update({ used_at: new Date().toISOString() })
             .eq("token", invitationData.token);
         } catch (err) {
           console.warn("Could not mark invitation as accepted:", err);
