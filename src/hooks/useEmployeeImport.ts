@@ -52,6 +52,8 @@ export function useEmployeeImport() {
     } else {
       setProgress({ step: 'error', progress: 0, message: 'Erro na importação' });
     }
+
+    return result;
   };
 
   const reset = () => {
