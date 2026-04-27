@@ -45,6 +45,7 @@ import { SmartKPICard } from "@/components/charts/SmartKPICard";
 import { formatCurrency } from "@/utils/formatters";
 import { KPI_INFO } from "@/lib/kpiDescriptions";
 import { InfoTooltip } from "@/components/common/InfoTooltip";
+import { toast } from "sonner";
 
 // Componentes de placeholder para os gráficos interativos
 const InteractiveFinanceChart = () => (
@@ -501,8 +502,21 @@ export function GraficosPage() {
   const [activeTab, setActiveTab] = useState("projetos");
 
   const exportData = () => {
-    // Implementar exportação de dados
-    console.log("Exportando dados...");
+    const rows = [
+      ["Projeto", "Área ativa", "Data de exportação"],
+      [String(selectedProjectId), activeTab, new Date().toLocaleString("pt-PT")],
+    ];
+    const csv = rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `graficos-projeto-${selectedProjectId}-${activeTab}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Exportação iniciada");
   };
 
   const handleProjectChange = (value: string) => {

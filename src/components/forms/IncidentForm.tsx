@@ -31,6 +31,8 @@ export function IncidentForm({ incident, onSubmit, onCancel, isLoading }: Incide
   });
 
   const projectId = watch("id_projeto");
+  const tipo = watch("tipo");
+  const severidade = watch("severidade");
 
   const handleFormSubmit = (data: any) => {
     const formData = {
@@ -61,7 +63,7 @@ export function IncidentForm({ incident, onSubmit, onCancel, isLoading }: Incide
 
       <div className="space-y-2">
         <Label htmlFor="tipo">Tipo *</Label>
-        <Select onValueChange={(value) => setValue("tipo", value as any)}>
+        <Select value={tipo || ""} onValueChange={(value) => setValue("tipo", value as any, { shouldValidate: true })}>
           <SelectTrigger>
             <SelectValue placeholder="Selecionar tipo" />
           </SelectTrigger>
@@ -74,7 +76,7 @@ export function IncidentForm({ incident, onSubmit, onCancel, isLoading }: Incide
 
       <div className="space-y-2">
         <Label htmlFor="severidade">Severidade *</Label>
-        <Select onValueChange={(value) => setValue("severidade", value as any)}>
+        <Select value={severidade || ""} onValueChange={(value) => setValue("severidade", value as any, { shouldValidate: true })}>
           <SelectTrigger>
             <SelectValue placeholder="Selecionar severidade" />
           </SelectTrigger>
