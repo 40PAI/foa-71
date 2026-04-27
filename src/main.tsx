@@ -16,10 +16,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Optimized for cross-device sync responsiveness
-      staleTime: 60 * 1000, // 1 minute (was 5min) — fresher data
+      staleTime: 90 * 1000, // fresh without aggressive refetch churn
       gcTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: true, // refetch when user returns to tab
-      refetchOnMount: true, // refetch on mount to catch external changes
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
       refetchOnReconnect: true,
       retry: 2,
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
