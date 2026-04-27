@@ -6,7 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AllProviders } from "@/contexts/AllProviders";
-import { setupCachePersistence } from "@/lib/queryPersistence";
 import App from "./App.tsx";
 import "./index.css";
 import "./styles/status-theme.css";
@@ -16,10 +15,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Optimized for cross-device sync responsiveness
-      staleTime: 90 * 1000, // fresh without aggressive refetch churn
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      staleTime: 15 * 1000,
+      gcTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnMount: "always",
       refetchOnReconnect: true,
       retry: 2,
       retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -30,9 +29,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-// Setup automatic cache persistence (load on mount, save on unload/hide)
-setupCachePersistence(queryClient);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
