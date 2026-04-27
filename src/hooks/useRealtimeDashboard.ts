@@ -16,8 +16,10 @@ export function useRealtimeDashboard() {
   useEffect(() => {
     console.log('🔄 Configurando realtime para dashboard...');
 
-    const projectsChannel = supabase
-      .channel('dashboard-projects-changes')
+    const channelName = `dashboard-realtime-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    const dashboardChannel = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -30,10 +32,6 @@ export function useRealtimeDashboard() {
           invalidateRealtimeData(queryClient);
         }
       )
-      .subscribe();
-
-    const tasksChannel = supabase
-      .channel('dashboard-tasks-changes')
       .on(
         'postgres_changes',
         {
@@ -46,11 +44,6 @@ export function useRealtimeDashboard() {
           invalidateRealtimeData(queryClient);
         }
       )
-      .subscribe();
-
-    // NOVO: Escutar mudanças na tabela de requisições
-    const requisitionsChannel = supabase
-      .channel('dashboard-requisitions-changes')
       .on(
         'postgres_changes',
         {
@@ -65,10 +58,6 @@ export function useRealtimeDashboard() {
           queryClient.invalidateQueries({ queryKey: ['pending-approvals-optimized'] });
         }
       )
-      .subscribe();
-
-    const financialMovementsChannel = supabase
-      .channel('dashboard-financial-movements-changes')
       .on(
         'postgres_changes',
         {
@@ -85,10 +74,7 @@ export function useRealtimeDashboard() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(projectsChannel);
-      supabase.removeChannel(tasksChannel);
-      supabase.removeChannel(requisitionsChannel);
-      supabase.removeChannel(financialMovementsChannel);
+      supabase.removeChannel(dashboardChannel);
     };
   }, [queryClient]);
 }
