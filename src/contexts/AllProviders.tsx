@@ -8,7 +8,7 @@ import { AuthProvider } from "./AuthContext";
 import { ProjectProvider } from "./ProjectContext";
 import { usePrefetchPage, preloadAllCriticalChunks } from "@/hooks/usePrefetchPage";
 import { useAuth } from "./AuthContext";
-import { useProjectContext } from "./ProjectContext";
+import { useProjectContextSafe } from "./ProjectContext";
 
 interface AllProvidersProps {
   children: ReactNode;
@@ -18,7 +18,7 @@ interface AllProvidersProps {
 function BackgroundPrefetch() {
   const prefetch = usePrefetchPage();
   const { user } = useAuth();
-  const { selectedProjectId } = useProjectContext();
+  const selectedProjectId = useProjectContextSafe()?.selectedProjectId;
 
   useEffect(() => {
     if (user) {
