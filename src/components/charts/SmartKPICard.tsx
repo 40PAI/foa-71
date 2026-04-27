@@ -81,10 +81,10 @@ export function SmartKPICard({
   const DisplayIcon = Icon || getDefaultIcon();
 
   return (
-    <Card className={`${getCardStyles()} ${animated ? 'hover:scale-105 transition-all duration-200' : ''}`}>
+    <Card className={`${getCardStyles()} ${animated ? 'hover:shadow-md transition-shadow duration-200' : ''} min-w-0 h-full`}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground line-clamp-2">
+          <CardTitle className="font-medium text-muted-foreground break-words hyphens-auto leading-tight min-w-0" style={{ fontSize: "clamp(0.7rem, 1.4vw, 0.875rem)" }}>
             {title}
           </CardTitle>
           <div className="flex items-center gap-1 shrink-0">
@@ -95,7 +95,7 @@ export function SmartKPICard({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-1 sm:space-y-2">
-          <div className={`text-base sm:text-xl lg:text-2xl font-bold ${getValueColor()} ${animated ? 'animate-fade-in' : ''} break-all leading-tight`}>
+          <div className={`font-bold ${getValueColor()} ${animated ? 'animate-fade-in' : ''} break-words leading-tight`} style={{ fontSize: "clamp(0.95rem, 2vw, 1.5rem)" }}>
             {value}
           </div>
           
@@ -107,7 +107,7 @@ export function SmartKPICard({
                 </div>
               )}
               {trendValue && (
-                <span className={`text-xs sm:text-sm font-medium line-clamp-1 ${
+                <span className={`text-xs sm:text-sm font-medium break-words ${
                   trend === 'up' ? 'text-green-500' : 
                   trend === 'down' ? 'text-red-500' : 
                   'text-muted-foreground'
@@ -119,7 +119,7 @@ export function SmartKPICard({
           )}
           
           {subtitle && (
-            <div className="text-xs text-muted-foreground line-clamp-2">
+            <div className="text-xs text-muted-foreground break-words leading-tight">
               {subtitle}
             </div>
           )}
