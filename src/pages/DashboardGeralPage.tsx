@@ -93,7 +93,7 @@ function DashboardGeralContent() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Tentar novamente
           </Button>
-          <Button onClick={() => window.location.href = '/projetos'} variant="secondary">
+          <Button onClick={() => navigate('/projetos')} variant="secondary">
             <TrendingUp className="h-4 w-4 mr-2" />
             Ir para Projetos
           </Button>
