@@ -39,7 +39,7 @@ export function EmployeeImportModal() {
         queryClient.invalidateQueries({ queryKey: ['employees'] });
         queryClient.invalidateQueries({ queryKey: ['colaboradores'] });
         queryClient.invalidateQueries({ queryKey: ['employees-by-project'] });
-        const msg = importResult.alocacoesCount 
+        const msg = result.alocacoesCount 
           ? `${result.colaboradoresCount} colaboradores e ${result.alocacoesCount} alocações importados!`
           : `${result.colaboradoresCount} colaboradores importados!`;
         toast.success(msg);
