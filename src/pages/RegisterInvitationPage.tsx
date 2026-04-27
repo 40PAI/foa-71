@@ -61,7 +61,7 @@ export function RegisterInvitationPage() {
           }
 
           const inv = data as any;
-          if (inv.status === "accepted") {
+          if (inv.used_at) {
             setTokenError("Este convite já foi utilizado. Faça login normalmente.");
             setValidating(false);
             return;
